@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
-  Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio,
+  Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio, Globe2,
   Search, ShieldCheck, Tv2, X, LoaderCircle, CheckCircle2, AlertCircle,
 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import EpisodesManager from "./EpisodesManager";
+import SourcesGuide from "./SourcesGuide";
 
-type Section = "overview" | "movies" | "series" | "channels" | "episodes";
+type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources";
 type Movie = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string; poster_url: string | null };
 type Series = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string };
 type Channel = { id: string; name: string; category: string | null; is_published: boolean; country_code: string | null };
@@ -231,6 +232,7 @@ export default function App() {
     { id: "series" as const, label: "Series", icon: Clapperboard, count: stats.series },
     { id: "channels" as const, label: "TV en vivo", icon: Radio, count: stats.channels },
     { id: "episodes" as const, label: "Temporadas y episodios", icon: Clapperboard },
+    { id: "sources" as const, label: "Fuentes gratuitas", icon: Globe2 },
   ];
 
   const filteredMovies = movies.filter((m) => m.title.toLowerCase().includes(search.toLowerCase()));
@@ -250,6 +252,7 @@ export default function App() {
         <header className="topbar"><div><div className="eyebrow">SEBAS PLAY / ADMINISTRACIÓN</div><h2>{nav.find((n) => n.id === section)?.label}</h2></div><div className="top-actions"><div className="status-pill"><span /> Sistema conectado</div><button className="icon-btn" title="Actualizar catálogo" onClick={() => void loadCatalog()}><Activity size={18} /></button></div></header>
 
         {section === "episodes" && <EpisodesManager />}
+        {section === "sources" && <SourcesGuide />}
         {section === "overview" && <section className="content">
           <div className="welcome-banner"><div><div className="eyebrow">TU PLATAFORMA, TU CONTENIDO</div><h1>Bienvenido a <span>SEBAS PLAY</span></h1><p>Administra el contenido que se mostrará en tus aplicaciones.</p></div><div className="banner-icon"><Tv2 size={58} /></div></div>
           <div className="stat-grid">
