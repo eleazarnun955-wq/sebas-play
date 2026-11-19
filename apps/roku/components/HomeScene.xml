@@ -5,10 +5,10 @@
   </interface>
   <script type="text/brightscript" uri="HomeScene.brs" />
   <children>
-    <Poster id="background" uri="pkg:/images/background.jpg" width="1920" height="1080" />
-    <Label id="brand" text="SEBAS PLAY" translation="[100,55]" width="1000" height="90" />
-    <Label id="subtitle" text="Películas • Series • TV en vivo" translation="[105,145]" width="1000" height="50" />
-    <Label id="status" text="Conectando con tu catálogo..." translation="[105,220]" width="1500" height="55" />
+    <Rectangle width="1920" height="1080" color="0x080D1AFF" />
+    <Label id="brand" text="SEBAS PLAY" translation="[100,55]" width="1000" height="90" color="0xFFFFFFFF" />
+    <Label id="subtitle" text="Películas • Series • TV en vivo" translation="[105,145]" width="1000" height="50" color="0xC8D5E8FF" />
+    <Label id="status" text="Conectando con tu catálogo..." translation="[105,220]" width="1500" height="55" color="0xFFFFFFFF" />
     <RowList id="catalogRows" translation="[90,300]" itemSize="[1740,350]" rowItemSize="[[300,300]]" numRows="3" rowFocusAnimationStyle="fixedFocus" showRowLabel="true" />
   </children>
 </component>
