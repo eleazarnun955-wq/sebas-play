@@ -1,0 +1,22 @@
+{
+  "id": "/watch",
+  "name": "SEBAS PLAY",
+  "short_name": "SEBAS PLAY",
+  "description": "Películas, series y televisión en un solo lugar.",
+  "lang": "es-MX",
+  "start_url": "/watch",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "categories": ["entertainment", "video"],
+  "icons": [
+    {
+      "src": "/icons/sebas-play.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
