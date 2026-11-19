@@ -1,11 +1,10 @@
-' Configure these two values with the project's public Supabase URL and publishable key.
-' The publishable/anon key is intended for client apps; NEVER use service_role or secret keys.
-' GitHub Actions can inject these values from repository secrets before packaging.
-' Do not commit private credentials here.
+' Public Supabase client configuration for SEBAS PLAY Roku.
+' This is a publishable/anon key and is designed for client-side use.
+' Never replace it with a service_role or secret key.
 function SebasPlaySupabaseUrl() as string
     return "https://ououwdzxywmjpppzqxqy.supabase.co"
 end function
 
 function SebasPlayPublishableKey() as string
-    return "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
+    return "sb_publishable_y3FtFQtvnYVcmy2VTJaYDQ_QhZlj4tx"
 end function
