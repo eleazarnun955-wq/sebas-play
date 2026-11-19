@@ -1,0 +1,32 @@
+name: SEBAS PLAY Roku package
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "apps/roku/**"
+      - ".github/workflows/roku-package.yml"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Roku channel structure
+        run: |
+          test -f apps/roku/manifest
+          test -f apps/roku/source/main.brs
+          test -f apps/roku/components/HomeScene.xml
+          test -f apps/roku/components/CatalogTask.xml
+          test -f apps/roku/components/PlayerScene.xml
+          grep -q "title=SEBAS PLAY" apps/roku/manifest
+      - name: Package Roku channel
+        run: |
+          cd apps/roku
+          zip -r ../../SEBAS-PLAY-Roku.zip . -x "*.DS_Store"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-Roku-channel
+          path: SEBAS-PLAY-Roku.zip
+          retention-days: 14
