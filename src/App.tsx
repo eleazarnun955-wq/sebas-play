@@ -97,6 +97,32 @@ export default function App() {
     setSession(null);
   }
 
+  async function uploadPoster(file: File, target: "movie" | "series") {
+    if (!supabase) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(file.type)) {
+      notify("error", "Formato no permitido. Usa JPG, PNG, WEBP o AVIF.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      notify("error", "La portada debe pesar máximo 10 MB.");
+      return;
+    }
+    setSaving(true);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+    const path = `${Date.now()}-${safeName}`;
+    const { error } = await supabase.storage.from("sebas-play-posters").upload(path, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false,
+    });
+    setSaving(false);
+    if (error) { notify("error", `No se pudo subir la portada: ${error.message}`); return; }
+    const { data } = supabase.storage.from("sebas-play-posters").getPublicUrl(path);
+    if (target === "movie") setMovieForm((current) => ({ ...current, poster: data.publicUrl }));
+    else setSeriesForm((current) => ({ ...current, poster: data.publicUrl }));
+    notify("ok", "Portada subida correctamente.");
+  }
+
   async function addMovie(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
@@ -254,7 +280,8 @@ export default function App() {
           <Field label="Título" required><input required value={movieForm.title} onChange={(e) => setMovieForm({ ...movieForm, title: e.target.value })} placeholder="Nombre de la película" /></Field>
           <Field label="Sinopsis"><textarea value={movieForm.synopsis} onChange={(e) => setMovieForm({ ...movieForm, synopsis: e.target.value })} placeholder="Descripción breve" rows={3} /></Field>
           <div className="form-row"><Field label="Año"><input type="number" min="1888" max="2100" value={movieForm.year} onChange={(e) => setMovieForm({ ...movieForm, year: e.target.value })} placeholder="2026" /></Field><Field label="Tipo de fuente"><select value={movieForm.source} onChange={(e) => setMovieForm({ ...movieForm, source: e.target.value })}><option value="owned_upload">Contenido propio</option><option value="public_domain">Dominio público</option><option value="licensed_external">Licenciado</option></select></Field></div>
-          <Field label="URL del póster"><input type="url" value={movieForm.poster} onChange={(e) => setMovieForm({ ...movieForm, poster: e.target.value })} placeholder="https://…" /></Field>
+          <Field label="Subir portada (JPG, PNG, WEBP o AVIF · máx. 10 MB)"><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={saving} onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadPoster(file, "movie"); e.target.value = ""; }} /></Field>
+          <Field label="O pega la URL del póster"><input type="url" value={movieForm.poster} onChange={(e) => setMovieForm({ ...movieForm, poster: e.target.value })} placeholder="https://…" /></Field>
           <Field label="URL del video autorizado"><input type="url" value={movieForm.video} onChange={(e) => setMovieForm({ ...movieForm, video: e.target.value })} placeholder="https://…" /></Field>
           <Field label="Nota de derechos / autorización"><input value={movieForm.rights} onChange={(e) => setMovieForm({ ...movieForm, rights: e.target.value })} placeholder="Origen, licencia o autorización" /></Field>
           <div className="modal-actions"><button type="button" className="secondary-btn" onClick={() => setModal(null)}>Cancelar</button><button className="primary-btn" disabled={saving}>{saving ? "Guardando…" : "Guardar borrador"}</button></div>
@@ -263,7 +290,8 @@ export default function App() {
           <Field label="Título" required><input required value={seriesForm.title} onChange={(e) => setSeriesForm({ ...seriesForm, title: e.target.value })} placeholder="Nombre de la serie" /></Field>
           <Field label="Sinopsis"><textarea rows={3} value={seriesForm.synopsis} onChange={(e) => setSeriesForm({ ...seriesForm, synopsis: e.target.value })} placeholder="Descripción breve" /></Field>
           <div className="form-row"><Field label="Año"><input type="number" min="1888" max="2100" value={seriesForm.year} onChange={(e) => setSeriesForm({ ...seriesForm, year: e.target.value })} placeholder="2026" /></Field><Field label="Tipo de fuente"><select value={seriesForm.source} onChange={(e) => setSeriesForm({ ...seriesForm, source: e.target.value })}><option value="owned_upload">Contenido propio</option><option value="public_domain">Dominio público</option><option value="licensed_external">Licenciado</option></select></Field></div>
-          <Field label="URL del póster"><input type="url" value={seriesForm.poster} onChange={(e) => setSeriesForm({ ...seriesForm, poster: e.target.value })} placeholder="https://…" /></Field>
+          <Field label="Subir portada (JPG, PNG, WEBP o AVIF · máx. 10 MB)"><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={saving} onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadPoster(file, "series"); e.target.value = ""; }} /></Field>
+          <Field label="O pega la URL del póster"><input type="url" value={seriesForm.poster} onChange={(e) => setSeriesForm({ ...seriesForm, poster: e.target.value })} placeholder="https://…" /></Field>
           <Field label="Nota de derechos / autorización"><input value={seriesForm.rights} onChange={(e) => setSeriesForm({ ...seriesForm, rights: e.target.value })} placeholder="Origen, licencia o autorización" /></Field>
           <div className="modal-actions"><button type="button" className="secondary-btn" onClick={() => setModal(null)}>Cancelar</button><button className="primary-btn" disabled={saving}>{saving ? "Guardando…" : "Guardar borrador"}</button></div>
         </form>}
