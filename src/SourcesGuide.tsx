@@ -3,20 +3,22 @@ import { BookOpen, Clapperboard, ExternalLink, Film, Globe2, Info, Radio, Shield
 type Source = { name: string; description: string; url: string; tag: string; note: string };
 
 const movieSources: Source[] = [
-  { name: "Drama — cine clásico", description: "Películas mudas y primeros largometrajes que el sitio identifica como dominio público en Estados Unidos.", url: "https://drama.sarl/", tag: "Películas", note: "Comprobar el estado de derechos en México y la versión exacta antes de integrarla." },
-  { name: "SoapBox Stream — clásicos", description: "Catálogo curado de cine clásico con licencia y fuente indicadas por título.", url: "https://stream.soapbox.community/classics", tag: "Películas", note: "Usar el reproductor del titular o una copia cuya licencia esté documentada." },
-  { name: "Internet Archive — guía de video", description: "Explica formatos y reproducción de videos alojados en Internet Archive.", url: "https://archivesupport.zendesk.com/hc/en-us/articles/360017808151-Movies-and-Videos-A-Basic-Guide", tag: "Películas", note: "La presencia de un archivo en Internet Archive no demuestra por sí sola que sea de dominio público." },
+  { name: "Tubi — películas y series", description: "Plataforma gratuita con anuncios y catálogo de estudios; disponible oficialmente en México.", url: "https://tubitv.com/es-mx/welcome", tag: "Películas y series", note: "La reproducción se realiza en Tubi. No copiar ni incrustar sus streams; abrir el servicio oficial." },
+  { name: "Canela.TV — cine en español", description: "Películas, series, telenovelas y contenido original gratuito en español.", url: "https://www.canela.tv/", tag: "Películas", note: "Servicio con anuncios. Su FAQ confirma disponibilidad en la mayoría de países de Latinoamérica." },
+  { name: "Nuestro Cine MX — IMCINE", description: "Cine mexicano, cortometrajes, series y colecciones; cuenta con una sección gratuita.", url: "https://www.nuestrocine.mx/", tag: "Cine mexicano", note: "Cada título puede ser gratuito, de renta o suscripción. Revisar la modalidad antes de recomendarlo." },
+  { name: "Internet Archive — guía de video", description: "Explica formatos y reproducción de videos alojados en Internet Archive.", url: "https://archivesupport.zendesk.com/hc/en-us/articles/360017808151-Movies-and-Videos-A-Basic-Guide", tag: "Dominio público", note: "La presencia de un archivo no demuestra por sí sola que sea de dominio público en México." },
 ];
 
 const seriesSources: Source[] = [
-  { name: "Starlite TV — series clásicas", description: "Lista episodios de series antiguas y explica qué episodios considera de dominio público.", url: "https://starlitetv.com/free/public-domain-tv-shows", tag: "Series", note: "Los derechos pueden variar por episodio, música, país y versión. Revisar cada ficha." },
-  { name: "Archive Watch — televisión clásica", description: "Catálogo de programas históricos con fuentes y notas de derechos.", url: "https://archivewatch.org/", tag: "Series", note: "Tomarlo como punto de partida; no copiar enlaces sin verificar los derechos y el origen." },
-  { name: "PastTimeTV — televisión gratuita", description: "Índice de programas clásicos enlazados a fuentes de Internet Archive.", url: "https://pasttimetv.com/pages/watch-free", tag: "Series", note: "Confirmar la licencia de cada episodio en su página original." },
+  { name: "Tubi — series", description: "Series de televisión gratuitas con anuncios y catálogo que cambia por región.", url: "https://tubitv.com/es-mx/welcome", tag: "Series", note: "Abrir el título en Tubi; no extraer enlaces privados ni reproducir fuera de su plataforma." },
+  { name: "Canela.TV — series y telenovelas", description: "Series, novelas y producciones originales en español, sin costo para el usuario.", url: "https://www.canela.tv/", tag: "Series", note: "Confirmar la disponibilidad regional y abrir el reproductor oficial." },
+  { name: "Nuestro Cine MX — series", description: "Catálogo del IMCINE con películas, cortometrajes y series; incluye obras gratuitas.", url: "https://www.nuestrocine.mx/fqs", tag: "Series", note: "La plataforma distingue contenido gratuito, renta y suscripción. No todo el catálogo es gratuito." },
 ];
 
 const tvSources: Source[] = [
-  { name: "Broadcast Atlas — señales oficiales", description: "Directorio de transmisiones gratuitas que afirma enlazar los streams oficiales de los propios canales.", url: "https://broadcastatlas.com/official", tag: "TV en vivo", note: "Antes de dar de alta una señal, comprobar que el canal permite su reproducción externa y que funciona en México." },
-  { name: "MXPlus — medios públicos de México", description: "Servicio oficial gratuito del Sistema Público de Radiodifusión con señales y contenidos bajo su propia aplicación.", url: "https://play.google.com/store/apps/details?id=com.mxplus", tag: "México", note: "Es una referencia oficial para usuarios; no implica permiso para extraer o retransmitir sus streams dentro de SEBAS PLAY." },
+  { name: "Pluto TV — canales en vivo", description: "Canales temáticos gratuitos y contenido bajo demanda en México.", url: "https://plutotv.com.mx/welcome", tag: "TV en vivo", note: "El usuario ve la señal en Pluto TV; no redistribuir ni extraer sus streams." },
+  { name: "MXPlus — medios públicos de México", description: "Plataforma gratuita del SPR con señales públicas y contenido bajo demanda.", url: "https://mxplus.tv/", tag: "México", note: "Es una plataforma oficial independiente. Su disponibilidad gratuita no concede permiso para retransmitir señales dentro de SEBAS PLAY." },
+  { name: "SPR — plataformas oficiales", description: "Directorio institucional de las plataformas públicas de televisión y radio.", url: "https://spr.gob.mx/plataformas.html", tag: "Fuentes oficiales", note: "Consultar condiciones del SPR antes de integrar cualquier señal directamente." },
 ];
 
 const metadataSources: Source[] = [
