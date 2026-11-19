@@ -1,0 +1,1 @@
+node_modules/\ndist/\nbuild/\n.expo/\n.android/\n.env\n.env.*\n!.env.example\n*.keystore\n*.jks\n.DS_Store\nThumbs.db\n
