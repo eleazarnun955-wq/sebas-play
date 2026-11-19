@@ -5,4 +5,5 @@
     <field id="errorMessage" type="string" />
   </interface>
   <script type="text/brightscript" uri="CatalogTask.brs" />
+  <script type="text/brightscript" uri="pkg:/source/config.brs" />
 </component>
