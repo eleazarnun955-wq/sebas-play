@@ -21,7 +21,7 @@ Plataforma de entretenimiento con catálogo compartido entre Android y Roku TV.
 
 ## Estructura prevista
 
-- `apps/admin-web`: panel web para gestionar el catálogo.
+- `src/`: panel web administrativo React + TypeScript + Vite (primera etapa implementada).
 - `apps/android`: aplicación Android.
 - `apps/roku`: aplicación Roku TV.
 - `packages/catalog`: contratos y utilidades compartidas del catálogo.
@@ -29,7 +29,7 @@ Plataforma de entretenimiento con catálogo compartido entre Android y Roku TV.
 
 ## Estado
 
-Fase inicial: repositorio creado y conexión de Supabase preparada. Próximo trabajo: agregar configuración segura, contratos compartidos y el panel de administración; después conectar los clientes Android y Roku al mismo catálogo.
+Panel administrativo inicial implementado: inicio de sesión, control de rol administrador, resumen, alta de películas/series/canales, búsqueda, publicación/retiro y eliminación. Las políticas RLS de administrador ya se aplicaron a las cinco tablas del catálogo y se verificaron. GitHub Actions ya completó compilaciones exitosas. `render.yaml` prepara el despliegue del panel como sitio estático, pendiente de conectar las variables públicas en Render. Falta asignar `app_metadata.role=admin` a la cuenta propietaria y configurar las variables del hosting. Después se ampliará el panel (temporadas/episodios, carga de medios y edición) y se crearán los clientes Android y Roku.
 
 ## Desarrollo
 
