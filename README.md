@@ -22,7 +22,8 @@ Plataforma de entretenimiento con catálogo compartido entre Android y Roku TV.
 ## Estructura prevista
 
 - `src/`: panel web administrativo React + TypeScript + Vite (primera etapa implementada).
-- `apps/android`: aplicación Android.
+- `apps/android`: aplicación Android (APK independiente).
+- `apps/roku`: canal Roku SceneGraph independiente, con empaquetado automatizado.
 - `apps/roku`: aplicación Roku TV.
 - `packages/catalog`: contratos y utilidades compartidas del catálogo.
 - `supabase/migrations`: cambios versionados de base de datos.
@@ -31,7 +32,7 @@ Plataforma de entretenimiento con catálogo compartido entre Android y Roku TV.
 
 La experiencia pública `/watch` ya incluye una primera versión instalable como PWA para Android y escritorio, con manifiesto, icono y caché limitada al shell estático. No almacena sesiones, datos privados ni transmisiones. En Android se puede instalar desde el menú del navegador cuando el sitio esté desplegado con HTTPS. Esta PWA no es todavía un APK nativo ni una aplicación Roku.
 
-Panel administrativo implementado: inicio de sesión, control de rol administrador, resumen, alta y gestión de películas/series/canales, búsqueda, publicación/retiro y eliminación. Incluye administración de temporadas y episodios, carga de portadas a Supabase Storage y una guía de fuentes gratuitas/licenciadas para películas, series, TV en vivo y metadatos. La guía no incorpora streams automáticamente: cada obra o canal debe pasar una verificación de derechos y disponibilidad antes de publicarse. TMDB aporta metadatos y portadas, no derechos ni enlaces de reproducción. Las políticas RLS y el bucket de portadas están configurados. La compilación y el despliegue de los últimos commits están pendientes de verificación; Render debe publicar solo después de que CI pase. El cliente Android ya tiene configuración Capacitor independiente (`com.eleazarcompany.sebasplay`) y un workflow de GitHub Actions que genera un APK de depuración descargable; su compilación debe validarse en Actions antes de distribuirlo. La app Roku aún está por desarrollar. El plan técnico está documentado en `docs/ANDROID-ROKU-PLAN.md` y el proceso del APK en `docs/ANDROID-APK.md`.
+Panel administrativo implementado: inicio de sesión, control de rol administrador, resumen, alta y gestión de películas/series/canales, búsqueda, publicación/retiro y eliminación. Incluye administración de temporadas y episodios, carga de portadas a Supabase Storage y una guía de fuentes gratuitas/licenciadas para películas, series, TV en vivo y metadatos. La guía no incorpora streams automáticamente: cada obra o canal debe pasar una verificación de derechos y disponibilidad antes de publicarse. TMDB aporta metadatos y portadas, no derechos ni enlaces de reproducción. Las políticas RLS y el bucket de portadas están configurados. La compilación y el despliegue de los últimos commits están pendientes de verificación; Render debe publicar solo después de que CI pase. El cliente Android ya tiene configuración Capacitor independiente (`com.eleazarcompany.sebasplay`) y un workflow de GitHub Actions que genera un APK de depuración descargable; su compilación debe validarse en Actions antes de distribuirlo. El canal Roku tiene una primera base SceneGraph en `apps/roku`: consulta el catálogo público y muestra filas de películas, series y TV en vivo, con reproducción nativa para URLs compatibles. El paquete se genera mediante GitHub Actions; faltan pruebas en emulador/dispositivo Roku, navegación de episodios, sesión de usuario y publicación en Channel Store. El plan técnico está documentado en `docs/ANDROID-ROKU-PLAN.md` y el proceso del APK en `docs/ANDROID-APK.md`.
 
 ## Desarrollo
 
