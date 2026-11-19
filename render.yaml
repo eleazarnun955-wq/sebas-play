@@ -3,6 +3,7 @@ services:
     name: sebas-play-admin
     runtime: static
     branch: main
+    autoDeployTrigger: checksPass
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     routes:
