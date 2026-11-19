@@ -14,26 +14,31 @@ $$;
 revoke all on function public.is_sebas_play_admin() from public;
 grant execute on function public.is_sebas_play_admin() to authenticated;
 
+drop policy if exists "Admins manage movies" on public.movies;
 create policy "Admins manage movies" on public.movies
 for all to authenticated
 using ((select public.is_sebas_play_admin()))
 with check ((select public.is_sebas_play_admin()));
 
+drop policy if exists "Admins manage series" on public.series;
 create policy "Admins manage series" on public.series
 for all to authenticated
 using ((select public.is_sebas_play_admin()))
 with check ((select public.is_sebas_play_admin()));
 
+drop policy if exists "Admins manage seasons" on public.seasons;
 create policy "Admins manage seasons" on public.seasons
 for all to authenticated
 using ((select public.is_sebas_play_admin()))
 with check ((select public.is_sebas_play_admin()));
 
+drop policy if exists "Admins manage episodes" on public.episodes;
 create policy "Admins manage episodes" on public.episodes
 for all to authenticated
 using ((select public.is_sebas_play_admin()))
 with check ((select public.is_sebas_play_admin()));
 
+drop policy if exists "Admins manage live channels" on public.live_channels;
 create policy "Admins manage live channels" on public.live_channels
 for all to authenticated
 using ((select public.is_sebas_play_admin()))
