@@ -17,11 +17,13 @@ La ruta `/watch` se puede instalar desde un navegador compatible como aplicació
 - La sesión se almacena con mecanismos seguros del sistema; no se incluyen secretos administrativos.
 - Construcción de APK mediante GitHub Actions y validación antes de distribuir.
 
-## Roku — siguiente entregable
-- Aplicación Roku SceneGraph independiente, con su propio identificador y canal.
-- Navegación con control remoto, filas de catálogo, fichas y reproducción autorizada.
-- Integración con el mismo contrato de catálogo, respetando formatos y DRM admitidos por Roku.
-- Pruebas en Roku Device Emulator y dispositivo real antes de publicación.
+## Roku — primera base implementada
+- Canal Roku SceneGraph independiente en `apps/roku`, separado del APK Android.
+- Home inicial con filas para películas, series y TV en vivo, cargadas desde las tablas públicas de Supabase.
+- Navegación inicial con control remoto y reproducción con el nodo Video nativo para URLs compatibles.
+- Workflow `SEBAS PLAY Roku package` que genera `SEBAS-PLAY-Roku.zip` como artefacto de GitHub Actions.
+- Configurar la clave pública publishable/anon en `apps/roku/source/config.brs`; nunca usar `service_role`.
+- Pendiente: probar en Roku Device Emulator/dispositivo real, implementar fichas y temporadas/episodios, autenticación, validar codecs/DRM y preparar publicación en Channel Store.
 
 ## No se debe dar por terminado
 La PWA no equivale a un APK nativo ni a una aplicación Roku. Es una primera entrega instalable que permite validar el catálogo y la experiencia mientras se desarrollan los clientes nativos.
