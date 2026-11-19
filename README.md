@@ -29,7 +29,7 @@ Plataforma de entretenimiento con catálogo compartido entre Android y Roku TV.
 
 ## Estado
 
-Panel administrativo inicial implementado: inicio de sesión, control de rol administrador, resumen, alta de películas/series/canales, búsqueda, publicación/retiro y eliminación. Las políticas RLS de administrador ya se aplicaron a las cinco tablas del catálogo y se verificaron. GitHub Actions ya completó compilaciones exitosas. `render.yaml` prepara el despliegue del panel como sitio estático, pendiente de conectar las variables públicas en Render. Falta asignar `app_metadata.role=admin` a la cuenta propietaria y configurar las variables del hosting. Después se ampliará el panel (temporadas/episodios, carga de medios y edición) y se crearán los clientes Android y Roku.
+Panel administrativo implementado: inicio de sesión, control de rol administrador, resumen, alta y gestión de películas/series/canales, búsqueda, publicación/retiro y eliminación. Incluye administración de temporadas y episodios, carga de portadas a Supabase Storage y una guía de fuentes gratuitas/licenciadas para películas, series, TV en vivo y metadatos. La guía no incorpora streams automáticamente: cada obra o canal debe pasar una verificación de derechos y disponibilidad antes de publicarse. TMDB aporta metadatos y portadas, no derechos ni enlaces de reproducción. Las políticas RLS y el bucket de portadas están configurados. La compilación y el despliegue de los últimos commits están pendientes de verificación; Render debe publicar solo después de que CI pase. Los clientes Android y Roku aún están por desarrollar.
 
 ## Desarrollo
 
