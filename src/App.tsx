@@ -270,7 +270,7 @@ export default function App() {
           <div className="info-strip"><ShieldCheck size={19} /><div><b>Publicación protegida</b><p>Todo contenido nuevo se guarda como borrador. Revisa sus derechos y datos antes de publicarlo.</p></div></div>
         </section>}
 
-        {section !== "overview" && section !== "episodes" && <section className="content">
+        {section !== "overview" && section !== "episodes" && section !== "sources" && <section className="content">
           <div className="list-toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar en el catálogo…" /></div><button className="primary-btn" onClick={() => setModal(section === "movies" ? "movie" : section === "series" ? "series" : "channel")}><Plus size={17} /> Agregar {section === "movies" ? "película" : section === "series" ? "serie" : "canal"}</button></div>
           {loading ? <div className="empty-state"><LoaderCircle className="spin" /> Cargando catálogo…</div> :
             section === "movies" ? <ContentTable title="Películas" rows={filteredMovies.map((m) => ({ id: m.id, title: m.title, detail: [m.release_year, sourceLabels[m.source_type] ?? m.source_type].filter(Boolean).join(" · "), published: m.is_published, table: "movies" as const }))} onToggle={togglePublished} onDelete={deleteItem} /> :
