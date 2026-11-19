@@ -1,0 +1,10 @@
+title=SEBAS PLAY
+major_version=1
+minor_version=0
+build_version=00001
+mm_icon_focus=images/icon_focus.png
+mm_icon_side=images/icon_side.png
+splash_screen_fhd=images/splash_fhd.jpg
+splash_screen_hd=images/splash_hd.jpg
+splash_screen_sd=images/splash_sd.jpg
+ui_resolutions=fhd,hd
