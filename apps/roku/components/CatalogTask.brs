@@ -26,7 +26,7 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     request.InitClientCertificates()
     request.SetUrl(baseUrl + "/rest/v1/" + tableName + "?select=" + fields + "&is_published=eq.true&order=created_at.desc&limit=40")
     request.AddHeader("apikey", key)
-    request.AddHeader("Authorization", "Bearer " + key)
+    request.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     request.AddHeader("Accept", "application/json")
     response = request.GetToString()
     if response = invalid or response = "" then return
