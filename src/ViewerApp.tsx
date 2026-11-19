@@ -13,7 +13,7 @@ type WatchProgress={content_type:string;content_id:string;position_seconds:numbe
 export default function ViewerApp(){
  const [movies,setMovies]=useState<Movie[]>([]),[series,setSeries]=useState<Series[]>([]),[channels,setChannels]=useState<Channel[]>([]);
  const [loading,setLoading]=useState(true),[error,setError]=useState(""),[search,setSearch]=useState(""),[selected,setSelected]=useState<Selected|null>(null);
- const [user,setUser]=useState<any>(null),[favorites,setFavorites]=useState<Favorite[]>([]),[seasons,setSeasons]=useState<Season[]>([]),[episodes,setEpisodes]=useState<Episode[]>([]),[seasonId,setSeasonId]=useState(""),[episode,setEpisode]=useState<Episode|null>(null),[busy,setBusy]=useState(false);
+ const [user,setUser]=useState<any>(null),[favorites,setFavorites]=useState<Favorite[]>([]),[seasons,setSeasons]=useState<Season[]>([]),[episodes,setEpisodes]=useState<Episode[]>([]),[seasonId,setSeasonId]=useState(""),[episode,setEpisode]=useState<Episode|null>(null),[busy,setBusy]=useState(false);const [history,setHistory]=useState<WatchProgress[]>([]);const videoRef=useRef<HTMLVideoElement|null>(null);
  useEffect(()=>{let alive=true;async function load(){if(!supabase){setError("SEBAS PLAY todavía no está conectado al catálogo.");setLoading(false);return}
   const [m,s,c,session]=await Promise.all([
    supabase.from("movies").select("id,title,synopsis,poster_url,release_year,duration_minutes,age_rating,genres,video_url").eq("is_published",true).order("created_at",{ascending:false}),
