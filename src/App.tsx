@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
   Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio,
@@ -287,7 +287,7 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Film; label: string; 
 function Quick({ icon: Icon, title, text, onClick }: { icon: typeof Film; title: string; text: string; onClick: () => void }) {
   return <button className="quick-card" onClick={onClick}><div className="quick-icon"><Icon size={21} /></div><b>{title}</b><span>{text}</span><i>Agregar <Plus size={14} /></i></button>;
 }
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: ReactNode }) {
   return <label className="field-label">{label}{required && <em> *</em>}{children}</label>;
 }
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
