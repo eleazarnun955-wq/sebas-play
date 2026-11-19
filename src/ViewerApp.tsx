@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Clapperboard, Film, Radio, Search, Play, Tv2, X, LoaderCircle, AlertCircle, Heart, LogIn, LogOut, ChevronDown } from "lucide-react";
+import { Clapperboard, Film, Radio, Search, Play, Tv2, X, LoaderCircle, AlertCircle, Heart, LogIn, LogOut } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
 type Movie={id:string;title:string;synopsis:string|null;poster_url:string|null;release_year:number|null;duration_minutes:number|null;age_rating:string|null;genres:string[];video_url:string|null};
