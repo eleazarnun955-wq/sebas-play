@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, LoaderCircle, Film, Clapperboard } from "lucide-react";
+import { Plus, Trash2, Film, Clapperboard } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
 type Show = { id: string; title: string };
