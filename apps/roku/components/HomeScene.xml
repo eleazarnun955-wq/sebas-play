@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="HomeScene" extends="Scene">
+  <interface>
+    <field id="selectedVideo" type="node" />
+  </interface>
+  <script type="text/brightscript" uri="HomeScene.brs" />
+  <children>
+    <Poster id="background" uri="pkg:/images/background.jpg" width="1920" height="1080" />
+    <Label id="brand" text="SEBAS PLAY" translation="[100,55]" width="1000" height="90" />
+    <Label id="subtitle" text="Películas • Series • TV en vivo" translation="[105,145]" width="1000" height="50" />
+    <Label id="status" text="Conectando con tu catálogo..." translation="[105,220]" width="1500" height="55" />
+    <RowList id="catalogRows" translation="[90,300]" itemSize="[1740,350]" rowItemSize="[[300,300]]" numRows="3" rowFocusAnimationStyle="fixedFocus" showRowLabel="true" />
+  </children>
+</component>
