@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
   Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio, Globe2,
@@ -48,14 +48,19 @@ export default function App() {
   useEffect(() => {
     if (!supabase) { setAuthLoading(false); return; }
     let active = true;
+    // The auth listener can emit INITIAL_SESSION before getSession resolves.
+    // Do not let a slower getSession response overwrite a newer auth event
+    // (especially SIGNED_OUT) and restore a stale screen.
+    let authEventReceived = false;
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      authEventReceived = true;
       if (active) setSession(nextSession);
     });
     void supabase.auth.getSession()
       .then(({ data, error }) => {
         if (!active) return;
         if (error) notify("error", "No se pudo recuperar la sesión: " + error.message);
-        setSession(data.session);
+        if (!authEventReceived) setSession(data.session);
       })
       .catch((error: unknown) => {
         if (!active) return;
