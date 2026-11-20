@@ -2,9 +2,12 @@ name: SEBAS PLAY CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/sebas-play-pro]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -18,5 +21,66 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Build admin panel
+      - name: Build admin and viewer
         run: npm run build
+      - name: Validate Roku XML and required channel files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          root = Path("apps/roku")
+          required = [
+              root / "manifest",
+              root / "source/main.brs",
+              root / "components/HomeScene.xml",
+              root / "components/CatalogTask.xml",
+              root / "components/PlayerScene.xml",
+              root / "components/HomeScene.brs",
+              root / "components/PlayerScene.brs",
+              root / "components/CatalogTask.brs",
+          ]
+          missing = [str(path) for path in required if not path.is_file()]
+          if missing:
+              raise SystemExit("Missing Roku channel files: " + ", ".join(missing))
+          for path in (root / "components").glob("*.xml"):
+              ET.parse(path)
+              print(f"Valid XML: {path}")
+          manifest = (root / "manifest").read_text()
+          if "title=SEBAS PLAY" not in manifest:
+              raise SystemExit("Roku manifest title is missing or incorrect")
+          print("Roku channel structure validated.")
+          PY
+      - name: Check client bundles for server-only Supabase keys
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import json
+          import re
+
+          roots = [Path("src"), Path("apps/roku")]
+          failures = []
+          for root in roots:
+              for path in root.rglob("*"):
+                  if not path.is_file():
+                      continue
+                  try:
+                      content = path.read_text(errors="ignore")
+                  except OSError:
+                      continue
+                  if re.search(r"sb_secret_[A-Za-z0-9_-]{12,}", content):
+                      failures.append(f"{path}: Supabase secret key marker")
+                  for token in re.findall(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", content):
+                      try:
+                          payload = token.split(".")[1]
+                          payload += "=" * (-len(payload) % 4)
+                          claims = json.loads(base64.urlsafe_b64decode(payload))
+                          if claims.get("role") == "service_role":
+                              failures.append(f"{path}: service-role JWT")
+                      except Exception:
+                          pass
+          if failures:
+              raise SystemExit("Server-only credential detected: " + "; ".join(failures))
+          print("No Supabase secret key or service-role JWT found in client code.")
+          PY

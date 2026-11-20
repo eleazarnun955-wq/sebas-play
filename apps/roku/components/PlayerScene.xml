@@ -7,6 +7,9 @@
   </interface>
   <script type="text/brightscript" uri="PlayerScene.brs" />
   <children>
+    <Rectangle width="1920" height="1080" color="0x080DFFFF" />
     <Video id="video" width="1920" height="1080" />
+    <Rectangle id="statusBackground" translation="[120,900]" width="1680" height="100" color="0x080DCCDD" visible="false" />
+    <Label id="status" translation="[155,920]" width="1610" height="60" color="0xFFFFFFFF" font="font:MediumSystemFont" visible="false" />
   </children>
 </component>

@@ -4,6 +4,10 @@ import { supabase } from "./lib/supabase";
 
 type Show = { id: string; title: string };
 type Season = { id: string; series_id: string; season_number: number; title: string | null };
+function isValidMediaUrl(value: string) {
+  try { const url = new URL(value); return url.protocol === "https:" || url.protocol === "http:"; } catch { return false; }
+}
+
 type Episode = { id: string; season_id: string; episode_number: number; title: string; synopsis: string | null; duration_minutes: number | null; video_url: string | null; is_published: boolean };
 
 export default function EpisodesManager() {
@@ -53,7 +57,9 @@ export default function EpisodesManager() {
     if (!error) { setSeasonTitle(""); await loadSeasons(showId); }
   }
   async function addEpisode(e: React.FormEvent) {
-    e.preventDefault(); if (!supabase || !seasonId) return; setBusy(true);
+    e.preventDefault(); if (!supabase || !seasonId) return;
+    if (episodeUrl.trim() && !isValidMediaUrl(episodeUrl.trim())) { setMessage("La URL del episodio debe ser HTTP o HTTPS."); return; }
+    setBusy(true);
     const { error } = await supabase.from("episodes").insert({ season_id: seasonId, episode_number: Number(episodeNo), title: episodeTitle.trim(), video_url: episodeUrl.trim() || null, duration_minutes: episodeDuration ? Number(episodeDuration) : null, is_published: false });
     setBusy(false); setMessage(error ? error.message : "Episodio guardado como borrador.");
     if (!error) { setEpisodeTitle(""); setEpisodeUrl(""); setEpisodeDuration(""); await loadEpisodes(seasonId); }

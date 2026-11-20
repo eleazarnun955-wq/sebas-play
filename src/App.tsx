@@ -13,6 +13,10 @@ type Movie = { id: string; title: string; release_year: number | null; is_publis
 type Series = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string };
 type Channel = { id: string; name: string; category: string | null; is_published: boolean; country_code: string | null };
 
+function isValidMediaUrl(value: string) {
+  try { const url = new URL(value); return url.protocol === "https:" || url.protocol === "http:"; } catch { return false; }
+}
+
 const sourceLabels: Record<string, string> = {
   owned_upload: "Contenido propio",
   public_domain: "Dominio público",
@@ -127,6 +131,7 @@ export default function App() {
   async function addMovie(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
+    if (movieForm.video.trim() && !isValidMediaUrl(movieForm.video.trim())) { notify("error", "La URL del video debe ser HTTP o HTTPS."); return; }
     setSaving(true);
     const { error } = await supabase.from("movies").insert({
       title: movieForm.title.trim(),
@@ -166,6 +171,7 @@ export default function App() {
   async function addChannel(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
+    if (!isValidMediaUrl(channelForm.stream.trim())) { notify("error", "La transmisión debe usar una URL HTTP o HTTPS válida."); return; }
     setSaving(true);
     const { error } = await supabase.from("live_channels").insert({
       name: channelForm.name.trim(),
