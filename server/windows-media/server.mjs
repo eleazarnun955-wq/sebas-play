@@ -83,8 +83,8 @@ const server = http.createServer(async (req, res) => {
     const length = Number(req.headers["content-length"] || 0);
     if (!Number.isSafeInteger(length) || length <= 0) return sendError(res, 411, "Se requiere Content-Length");
     if (length > MAX_UPLOAD_BYTES) return sendError(res, 413, "El archivo supera el límite configurado");
-    const rawName = (url.searchParams.get("name") || "").replace(/\\\\/g, "/").split("/").pop() || "";
-    const cleanName = rawName.replace(/[^\\p{L}\\p{N}._ -]/gu, "_").replace(/^\\.+/, "").trim();
+    const rawName = (url.searchParams.get("name") || "").split("/").pop() || "";
+    const cleanName = rawName.replace(/[^\p{L}\p{N}._ -]/gu, "_").replace(/^\.+/, "").trim();
     const ext = path.extname(cleanName).toLowerCase();
     if (!cleanName || !ALLOWED.has(ext)) return sendError(res, 415, "Formato no admitido. Usa MP4, M4V, MOV o WebM.");
     const fileName = `${Date.now()}-${cleanName}`;
