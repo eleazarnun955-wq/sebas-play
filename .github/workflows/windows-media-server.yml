@@ -48,3 +48,13 @@ jobs:
           curl -fsS -H 'Range: bytes=0-5' -D "$RUNNER_TEMP/headers.txt" "$STREAM_URL" -o "$RUNNER_TEMP/body.bin"
           grep -q '206 Partial Content' "$RUNNER_TEMP/headers.txt"
           test "$(cat "$RUNNER_TEMP/body.bin")" = "SEBAS"
+      - name: Package Windows 10 server
+        run: |
+          cd server/windows-media
+          zip -r "$GITHUB_WORKSPACE/SEBAS-PLAY-Windows-Server.zip" . -x "server-config.bat" "Peliculas/*" "*.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-Windows-10-Media-Server
+          path: SEBAS-PLAY-Windows-Server.zip
+          if-no-files-found: error
+          retention-days: 30
