@@ -92,13 +92,13 @@ export default function StorageManager() {
 
   function chooseFile(file: File | null) {
     setSelectedFile(file);
-    setCloudTitle(file?.name.replace(/\\.[^.]+$/, "") ?? "");
+    setCloudTitle(file?.name.replace(/\.[^.]+$/, "") ?? "");
     setNotice(null);
   }
 
   async function saveOnPhone() {
     if (!selectedFile) return;
-    if (!selectedFile.type.startsWith("video/") && !/\\.(mp4|m4v|mov|webm)$/i.test(selectedFile.name)) {
+    if (!selectedFile.type.startsWith("video/") && !/\.(mp4|m4v|mov|webm)$/i.test(selectedFile.name)) {
       setNotice({ type: "error", text: "Selecciona un archivo de video compatible." });
       return;
     }
@@ -114,7 +114,7 @@ export default function StorageManager() {
       }
       const movie: LocalMovie = {
         id: crypto.randomUUID(),
-        title: cloudTitle.trim() || selectedFile.name.replace(/\\.[^.]+$/, ""),
+        title: cloudTitle.trim() || selectedFile.name.replace(/\.[^.]+$/, ""),
         size: selectedFile.size,
         createdAt: Date.now(),
         file: selectedFile,
@@ -130,7 +130,7 @@ export default function StorageManager() {
 
   async function uploadToCloud() {
     if (!supabase || !selectedFile) return;
-    if (!selectedFile.name.toLowerCase().endsWith(".mp4") || selectedFile.type !== "video/mp4") {
+    if (!selectedFile.name.toLowerCase().endsWith(".mp4") || selectedFile.type !== "" && selectedFile.type !== "video/mp4") {
       setNotice({ type: "error", text: "Para la nube y Roku utiliza MP4 (H.264/AAC) para mayor compatibilidad." });
       return;
     }
@@ -158,7 +158,7 @@ export default function StorageManager() {
       if (uploadError) throw uploadError;
       const { data: publicData } = supabase.storage.from(CLOUD_BUCKET).getPublicUrl(objectPath);
       const { error: insertError } = await supabase.from("movies").insert({
-        title: cloudTitle.trim() || selectedFile.name.replace(/\\.[^.]+$/, ""),
+        title: cloudTitle.trim() || selectedFile.name.replace(/\.[^.]+$/, ""),
         video_url: publicData.publicUrl,
         source_type: "owned_upload",
         rights_note: rightsNote.trim(),
