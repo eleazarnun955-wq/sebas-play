@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18"><title>Cine americano en español latino | SEBAS PLAY</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#121a2b;--line:#27334a;--gold:#f5c451;--muted:#aab5c8;--text:#f5f7fb}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#263b63 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:22px max(18px,calc((100% - 1120px)/2));border-bottom:1px solid var(--line);background:#090d18d9;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{color:white;text-decoration:none;font-weight:900;letter-spacing:.08em}.brand b{color:var(--gold)}.back{color:var(--gold);text-decoration:none;font-weight:700}
+main{max-width:1120px;margin:auto;padding:26px 18px 60px}.hero{padding:28px;border:1px solid #384761;border-radius:24px;background:linear-gradient(115deg,#18243a,#111827 70%);margin-bottom:20px}.eyebrow{color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.17em}.hero h1{font-size:clamp(29px,6vw,50px);line-height:1.05;margin:8px 0}.hero p{color:var(--muted);max-width:780px;margin:10px 0 0}
+.sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0 24px}.source{background:var(--panel);border:1px solid var(--line);padding:16px;border-radius:16px}.source strong{display:block;font-size:16px}.source p{margin:5px 0 12px;color:var(--muted);font-size:13px}.source a,.movie a{display:inline-flex;color:#111827;background:var(--gold);padding:9px 12px;border-radius:10px;text-decoration:none;font-weight:800;font-size:12px}
+.controls{display:grid;grid-template-columns:1fr auto;gap:10px;margin:20px 0 12px}.controls input,.controls select{width:100%;min-height:46px;border-radius:12px;border:1px solid var(--line);background:#101829;color:white;padding:10px 13px;font:inherit}.filters{display:flex;gap:8px;overflow:auto;padding:2px 0 12px}.filters button{white-space:nowrap;border:1px solid var(--line);background:#111a2b;color:#dce4f2;padding:8px 12px;border-radius:99px;font-weight:700}.filters button.active{background:var(--gold);color:#111827;border-color:var(--gold)}.count{color:var(--muted);font-size:13px;margin:8px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}.movie{background:linear-gradient(145deg,#172238,#101725);border:1px solid var(--line);border-radius:16px;padding:15px;min-height:175px;display:flex;flex-direction:column}.movie h3{font-size:16px;line-height:1.25;margin:8px 0}.meta{color:var(--gold);font-size:12px;font-weight:800}.genre{color:var(--muted);font-size:13px;margin:0 0 13px}.movie a{margin-top:auto;align-self:flex-start}.movie a:hover,.source a:hover{filter:brightness(1.12)}.note{background:#111a2b;border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--muted);font-size:13px;margin-top:22px}.empty{padding:24px;text-align:center;color:var(--muted);grid-column:1/-1}
+@media(max-width:560px){header{padding:16px}.hero{padding:21px}.controls{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.movie{padding:12px;min-height:185px}.movie h3{font-size:14px}}
+</style></head>
+<body>
+<header><div class="top"><a class="brand" href="/watch">SEBAS <b>PLAY</b></a><a class="back" href="/watch">← Volver al inicio</a></div></header>
+<main>
+<section class="hero"><div class="eyebrow">HOLLYWOOD · AUDIO EN ESPAÑOL</div><h1>Películas americanas en español latino 🇺🇸</h1><p>Explora películas producidas en Estados Unidos con ficha, año y género. La colección prioriza títulos que aparecen identificados como “Doblado” o “Español” en el catálogo de Tubi México. La disponibilidad puede cambiar.</p></section>
+<div class="sources">
+<article class="source"><strong>Tubi México · Películas americanas</strong><p>Catálogo oficial con títulos identificados como “Doblado” o “Español”. Gratis con anuncios.</p><a href="https://tubitv.com/es-mx/category/pelculas_americanas" target="_blank" rel="noopener">Abrir catálogo americano</a></article>
+<article class="source"><strong>Tubi México · Películas en español</strong><p>Explora más títulos con audio en español; revisa la ficha antes de reproducir.</p><a href="https://tubitv.com/es-mx/category/pelculas_en_espaol" target="_blank" rel="noopener">Ver películas en español</a></article>
+<article class="source"><strong>SEBAS PLAY</strong><p>Buscador rápido para localizar el título y revisar si ofrece doblaje latino en servicios oficiales.</p><a href="https://tubitv.com/es-mx/" target="_blank" rel="noopener">Ir a Tubi México</a></article>
+</div>
+<div class="controls"><input id="search" type="search" placeholder="Buscar película, año o género…"><select id="era"><option value="">Todas las épocas</option><option value="Clásicas">Clásicas</option><option value="1980–2009">1980–2009</option><option value="2010–2024">2010–2024</option></select></div>
+<div class="filters" id="filters"><button class="active" data-genre="">Todas</button><button data-genre="Acción">Acción</button><button data-genre="Terror">Terror</button><button data-genre="Suspenso">Suspenso</button><button data-genre="Drama">Drama</button><button data-genre="Comedia">Comedia</button><button data-genre="Aventura">Aventura</button><button data-genre="Romance">Romance</button><button data-genre="Ciencia ficción">Ciencia ficción</button><button data-genre="Western">Western</button></div>
+<div class="count" id="count" aria-live="polite"></div><section class="grid" id="grid"></section>
+<div class="note"><b>Nota sobre el idioma:</b> “Doblado” o “Español” indica que Tubi muestra el título dentro de su catálogo en español. Antes de reproducir, confirma en la ficha que el audio sea español latino y no solo subtítulos. Este índice no aloja películas ni garantiza que cada título siga disponible; los derechos y catálogos cambian por país y fecha. Los botones abren búsquedas en Tubi, no copias de terceros.</div>
+</main>
+<script>
+const films=[
+["Homefront",2013,"Acción · Crimen · Suspenso","2010–2024","Español"],
+["Apocalypto",2006,"Acción · Aventura","1980–2009","Doblado"],
+["La caída de DC",2023,"Acción · Crimen · Ciencia ficción","2010–2024","Doblado"],
+["El tren del terror",2022,"Terror · Suspenso","2010–2024","Doblado"],
+["Survivor",2015,"Acción · Crimen · Suspenso","2010–2024","Español"],
+["El gringo",2013,"Acción · Suspenso · Drama","2010–2024","Doblado"],
+["Man on a Ledge",2012,"Suspenso · Acción","2010–2024","Español"],
+["Shottas",2002,"Crimen · Drama · Acción","1980–2009","Doblado"],
+["Wake of Death",2004,"Acción · Drama","1980–2009","Doblado"],
+["Arañas asesinas",2007,"Terror · Ciencia ficción","1980–2009","Doblado"],
+["El gran robo",2016,"Acción · Suspenso · Crimen","2010–2024","Doblado"],
+["Mi loca familia",2010,"Comedia · Crimen","2010–2024","Doblado"],
+["Nacido para correr: vía rápida",2014,"Acción · Deporte","2010–2024","Doblado"],
+["Prisioneros del universo perdido",1983,"Acción · Aventura · Ciencia ficción","1980–2009","Doblado"],
+["El hombre lobo de Washington",1973,"Terror · Comedia","Clásicas","Doblado"],
+["Amantes de ultratumba",1965,"Terror","Clásicas","Doblado"],
+["El rostro impenetrable",1961,"Western · Drama","Clásicas","Doblado"],
+["Las nieves del Kilimanjaro",1952,"Drama · Aventura · Romance","Clásicas","Doblado"],
+["El gran McLintock",1963,"Western · Comedia","Clásicas","Doblado"],
+["Camino a Bali",1952,"Comedia · Romance · Aventura","Clásicas","Doblado"],
+["Los peligros de Paulina",1947,"Comedia · Drama","Clásicas","Doblado"],
+["Serenata nostálgica",1941,"Drama · Romance","Clásicas","Doblado"],
+["Bodas reales",1951,"Musical · Comedia · Romance","Clásicas","Doblado"],
+["El desvío",1945,"Drama · Crimen","Clásicas","Doblado"],
+["Pánico en el Transiberiano",1972,"Terror · Suspenso","Clásicas","Doblado"],
+["Misión láser",1989,"Acción · Aventura","1980–2009","Doblado"],
+["El asesino del taladro",1979,"Terror","Clásicas","Doblado"],
+["Refugio macabro",1972,"Terror","Clásicas","Doblado"],
+["Noche silenciosa, noche sangrienta",1972,"Terror","Clásicas","Doblado"],
+["La noche de los muertos vivientes",1968,"Terror","Clásicas","Doblado"],
+["El hotel del terror",1960,"Terror · Misterio","Clásicas","Doblado"],
+["El autoestopista",1953,"Drama · Suspenso","Clásicas","Doblado"],
+["La espada mágica",1962,"Aventura · Fantasía","Clásicas","Doblado"],
+["El padre es abuelo",1951,"Comedia · Romance","Clásicas","Doblado"],
+["Brazo asesino",1973,"Terror","Clásicas","Doblado"],
+["El último hombre sobre la Tierra",1964,"Ciencia ficción · Terror","Clásicas","Español"],
+["El bufón",2023,"Terror","2010–2024","Español"],
+["Juegos de caza",2023,"Acción · Drama · Suspenso","2010–2024","Español"],
+["El robo final",2024,"Acción · Crimen · Suspenso","2010–2024","Español"],
+["Toro Tiburón 2",2024,"Acción · Ciencia ficción · Suspenso","2010–2024","Español"],
+["La base",1999,"Acción","1980–2009","Español"],
+["La decisión de un padre",2000,"Drama","1980–2009","Español"],
+["Chica perdida: una historia de Hollywood",2020,"Drama · Suspenso","2010–2024","Doblado"],
+["El gringo",2013,"Acción · Suspenso","2010–2024","Doblado"],
+["El esposo perdido",2020,"Drama · Romance","2010–2024","Español"],
+["La maldición de la ouija",2018,"Terror","2010–2024","Español"]
+];
+const grid=document.getElementById("grid"),search=document.getElementById("search"),era=document.getElementById("era"),count=document.getElementById("count");let genre="";
+function render(){const q=search.value.trim().toLocaleLowerCase("es");const rows=films.filter(f=>(!q||(f[0]+" "+f[1]+" "+f[2]).toLocaleLowerCase("es").includes(q))&&(!era.value||f[3]===era.value)&&(!genre||f[2].split(" · ").includes(genre)));count.textContent=rows.length+" títulos en la colección";grid.innerHTML=rows.map(f=>'<article class="movie"><span class="meta">'+f[1]+' · '+f[4]+'</span><h3>'+f[0]+'</h3><div class="genre">'+f[2]+'</div><a target="_blank" rel="noopener" href="https://www.google.com/search?q='+encodeURIComponent('site:tubitv.com/es-mx '+f[0]+' español doblado')+'">Buscar audio latino</a></article>').join("")||'<div class="empty">No encontramos títulos con esos filtros. Prueba otra búsqueda.</div>'}
+search.addEventListener("input",render);era.addEventListener("change",render);document.getElementById("filters").addEventListener("click",e=>{const b=e.target.closest("button[data-genre]");if(!b)return;genre=b.dataset.genre;document.querySelectorAll("#filters button").forEach(x=>x.classList.toggle("active",x===b));render()});render();
+</script></body></html>

@@ -21,6 +21,12 @@ export default function FreePlatforms() {
         <small>Buscador por título, año, época y género; consulta disponibilidad en plataformas oficiales.</small>
         <a href="/cine-mexicano.html">Explorar colección <ExternalLink size={14}/></a>
       </article>
+      <article className="viewer-platform-card">
+        <div className="viewer-platform-icon"><Film/></div><span className="viewer-kicker">COLECCIÓN ESPECIAL · HOLLYWOOD 🇺🇸</span><h3>PELÍCULAS AMERICANAS EN ESPAÑOL LATINO</h3>
+        <p>Explora películas estadounidenses con audio en español, filtros por género y época y acceso para comprobar el doblaje latino.</p>
+        <small>Catálogo basado en títulos identificados como doblados o en español en Tubi México; disponibilidad variable.</small>
+        <a href="/cine-americano-latino.html">Explorar películas <ExternalLink size={14}/></a>
+      </article>
       <article className="viewer-platform-card adult-platform-card"><div className="viewer-platform-icon"><Lock/></div><span className="viewer-kicker">ACCESO PRIVADO · 18+</span><h3>ADULTOS 18+</h3><p>Zona personal protegida con tu propia contraseña.</p><small>Se bloquea al salir, al ocultar la aplicación o tras un periodo de inactividad.</small><a href="/adultos.html">Abrir zona privada <ExternalLink size={14}/></a></article>
       {platforms.map((p) => <article className="viewer-platform-card" key={p.name}>
         <div className="viewer-platform-icon">{p.kind === "TV en vivo" ? <Radio/> : p.kind === "Películas" ? <Film/> : <Clapperboard/>}</div>
