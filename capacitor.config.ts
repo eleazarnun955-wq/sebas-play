@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.eleazarcompany.sebasplay.pro21.independent20261120",
-  appName: "SEBAS PLAY PRO 2.1",
+  appId: "com.eleazarcompany.sebasplay.pro22.adult20261120",
+  appName: "SEBAS PLAY PRO 2.2 ADULTOS",
   webDir: "dist",
   bundledWebRuntime: false,
   android: {
