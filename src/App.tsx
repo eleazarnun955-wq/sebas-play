@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
-  Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio, Globe2,
+  Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio, Globe2, HardDrive,
   Search, ShieldCheck, Tv2, X, LoaderCircle, CheckCircle2, AlertCircle,
 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import EpisodesManager from "./EpisodesManager";
 import SourcesGuide from "./SourcesGuide";
+import StorageManager from "./StorageManager";
 
-type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources";
+type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources" | "storage";
 type Movie = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string; poster_url: string | null };
 type Series = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string };
 type Channel = { id: string; name: string; category: string | null; is_published: boolean; country_code: string | null };
@@ -310,6 +311,7 @@ export default function App() {
     { id: "channels" as const, label: "TV en vivo", icon: Radio, count: stats.channels },
     { id: "episodes" as const, label: "Temporadas y episodios", icon: Clapperboard },
     { id: "sources" as const, label: "Fuentes gratuitas", icon: Globe2 },
+    { id: "storage" as const, label: "Almacenamiento", icon: HardDrive },
   ];
 
   const filteredMovies = movies.filter((m) => m.title.toLowerCase().includes(search.toLowerCase()));
@@ -330,6 +332,7 @@ export default function App() {
 
         {section === "episodes" && <EpisodesManager />}
         {section === "sources" && <SourcesGuide />}
+        {section === "storage" && <section className="content"><StorageManager /></section>}
         {section === "overview" && <section className="content">
           <div className="welcome-banner"><div><div className="eyebrow">TU PLATAFORMA, TU CONTENIDO</div><h1>Bienvenido a <span>SEBAS PLAY</span></h1><p>Administra el contenido que se mostrará en tus aplicaciones.</p></div><div className="banner-icon"><Tv2 size={58} /></div></div>
           <div className="stat-grid">
@@ -347,7 +350,7 @@ export default function App() {
           <div className="info-strip"><ShieldCheck size={19} /><div><b>Publicación protegida</b><p>Todo contenido nuevo se guarda como borrador. Revisa sus derechos y datos antes de publicarlo.</p></div></div>
         </section>}
 
-        {section !== "overview" && section !== "episodes" && section !== "sources" && <section className="content">
+        {section !== "overview" && section !== "episodes" && section !== "sources" && section !== "storage" && <section className="content">
           <div className="list-toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar en el catálogo…" /></div><button className="primary-btn" onClick={() => setModal(section === "movies" ? "movie" : section === "series" ? "series" : "channel")}><Plus size={17} /> Agregar {section === "movies" ? "película" : section === "series" ? "serie" : "canal"}</button></div>
           {loading ? <div className="empty-state"><LoaderCircle className="spin" /> Cargando catálogo…</div> :
             section === "movies" ? <ContentTable title="Películas" rows={filteredMovies.map((m) => ({ id: m.id, title: m.title, detail: [m.release_year, sourceLabels[m.source_type] ?? m.source_type].filter(Boolean).join(" · "), published: m.is_published, table: "movies" as const }))} onToggle={togglePublished} onDelete={deleteItem} /> :
