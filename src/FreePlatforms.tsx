@@ -8,6 +8,9 @@ const platforms: Platform[] = [
   { name: "Pluto TV", detail: "Canales temáticos en vivo y contenido bajo demanda.", url: "https://plutotv.com.mx/welcome", kind: "TV en vivo", note: "Señales y catálogo se ven en la plataforma oficial." },
   { name: "MXPlus", detail: "Canales y producciones de los medios públicos de México.", url: "https://mxplus.tv/", kind: "TV en vivo", note: "Servicio público gratuito del SPR; incluye programación en vivo y bajo demanda." },
   { name: "Nuestro Cine MX", detail: "Cine mexicano, cortometrajes, series y muestras.", url: "https://www.nuestrocine.mx/", kind: "Películas y series", note: "Tiene catálogo gratuito y también títulos de renta o suscripción; revisa la modalidad de cada obra." },
+  { name: "ViX Gratis", detail: "Películas, series, novelas, noticias y señales en vivo seleccionadas.", url: "https://vix.com/es-es/ondemand", kind: "Películas y series", note: "Hay una modalidad gratuita con anuncios; algunos títulos y eventos requieren Premium." },
+  { name: "Plex", detail: "Películas y series gratuitas bajo demanda.", url: "https://watch.plex.tv/es/on-demand", kind: "Películas y series", note: "Catálogo gratuito con anuncios; la disponibilidad de títulos puede variar por región." },
+  { name: "Filmoteca UNAM", detail: "Cine mexicano restaurado, documentales y clásicos.", url: "https://cineenlinea.filmoteca.unam.mx/", kind: "Películas", note: "Acervo gratuito en línea, sin registro; contenido presentado por la Filmoteca UNAM." },
 ];
 
 export default function FreePlatforms() {
