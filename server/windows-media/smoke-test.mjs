@@ -44,7 +44,7 @@ try {
   const stream = await fetch(catalog.items[0].stream_url, { headers: { range: "bytes=0-5" } });
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
-  assert.equal(await stream.text(), "SEBAS");
+  assert.equal(await stream.text(), "SEBAS-");
   console.log("PASS: health, admin authorization, signed playback URL and HTTP Range.");
 } finally {
   child.kill("SIGTERM");
