@@ -30,7 +30,8 @@ try {
     await wait(250);
   }
   assert.ok(health?.ok, "health endpoint did not become ready: " + logs);
-  assert.equal((await health.json()).ok, true);\n  assert.equal(health.headers.get("access-control-allow-origin"), "*");
+  assert.equal((await health.json()).ok, true);
+  assert.equal(health.headers.get("access-control-allow-origin"), "*");
 
   const denied = await fetch("http://127.0.0.1:18787/api/catalog");
   assert.equal(denied.status, 401, "catalog must require admin token");
