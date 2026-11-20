@@ -22,3 +22,45 @@
 
 .viewer-platform-intro{color:#9eacbd;font-size:12px;line-height:1.6;margin:-5px 0 15px}.viewer-platform-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:13px}.viewer-platform-card{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0;padding:17px;border:1px solid #29384b;border-radius:14px;background:linear-gradient(145deg,#151f2d,#101722)}.viewer-platform-icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#a8f05a18;color:#a8f05a}.viewer-platform-card .viewer-kicker{font-size:8px}.viewer-platform-card h3{font:700 16px 'Space Grotesk';margin:0}.viewer-platform-card p{font-size:11px;color:#c2ccda;line-height:1.5;margin:0}.viewer-platform-card small{font-size:9px;color:#8796aa;line-height:1.5;flex:1}.viewer-platform-card a{display:inline-flex;align-items:center;gap:7px;margin-top:5px;color:#a8f05a;text-decoration:none;font-size:10px;font-weight:700}.viewer-platform-card a:hover{text-decoration:underline}
 .viewer-auth-error{padding:10px 12px;border:1px solid #9a554d;background:#552b2b55;border-radius:9px;color:#ffc1b9!important;font-size:11px!important}
+
+
+/* SEBAS PLAY PRO — cinematic Netflix-inspired catalog refresh */
+.viewer-shell{background:#080808;color:#f7f7f7}
+.viewer-top{background:rgba(8,8,8,.94);border-bottom-color:#252525}
+.viewer-brand b,.viewer-kicker,.viewer-section-head h2 svg,.viewer-counts svg{color:#e50914}
+.viewer-logo{background:#e50914;color:#fff;border-radius:7px}
+.viewer-admin{color:#fff}
+.viewer-search{background:#171717;border-color:#353535;border-radius:7px}
+.viewer-hero-netflix{min-height:clamp(340px,48vw,520px);border:0;border-radius:4px;background-color:#171717;background-size:cover;background-position:center 28%;padding:clamp(28px,5vw,64px);align-items:flex-end;box-shadow:inset 0 -70px 90px #080808}
+.viewer-hero-copy{position:relative;z-index:1;max-width:620px;padding-bottom:10px}
+.viewer-hero-netflix .viewer-kicker{color:#ff343d;letter-spacing:2.5px}
+.viewer-hero-netflix h1{font-size:clamp(30px,5vw,56px);line-height:1.03;max-width:650px;text-shadow:0 3px 20px #000;letter-spacing:-1.6px}
+.viewer-hero-netflix h1 em{color:#fff}
+.viewer-hero-netflix p{max-width:560px;color:#eee;font-size:clamp(12px,1.4vw,15px);text-shadow:0 2px 8px #000;line-height:1.65}
+.viewer-hero-netflix .viewer-hero-art{display:none}
+.viewer-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 4px}
+.viewer-feature-play,.viewer-feature-more{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:5px;padding:12px 19px;font-weight:800;font-size:13px;cursor:pointer}
+.viewer-feature-play{background:#fff;color:#111}.viewer-feature-play:hover{background:#ddd}
+.viewer-feature-more{background:#555b;color:#fff;backdrop-filter:blur(8px)}.viewer-feature-more:hover{background:#777b}
+.viewer-counts{margin-top:18px}.viewer-counts span{color:#ddd}
+.viewer-section{margin-top:30px}
+.viewer-section-head{margin-bottom:13px}
+.viewer-section-head h2{font-size:clamp(16px,2vw,21px);color:#f5f5f5}
+.viewer-section-head>span{background:#1b1b1b;border-color:#333;color:#bbb}
+.viewer-grid{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding:3px 2px 16px;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#555 transparent}
+.viewer-grid::-webkit-scrollbar{height:5px}.viewer-grid::-webkit-scrollbar-thumb{background:#555;border-radius:8px}
+.viewer-card-wrap{flex:0 0 clamp(132px,17vw,190px);scroll-snap-align:start}
+.viewer-card{width:100%;flex:0 0 clamp(132px,17vw,190px);scroll-snap-align:start}
+.viewer-poster{border-radius:5px;border-color:#292929;background:#181818}
+.viewer-card:hover .viewer-poster{border-color:#e50914;transform:scale(1.035);box-shadow:0 12px 28px #000b}
+.viewer-card-title{color:#f5f5f5;font-size:12px}
+.viewer-card small{color:#aaa}
+.viewer-empty{background:#151515;border-color:#363636;color:#aaa}
+.viewer-history button,.viewer-favs button{background:#171717;border-color:#333;color:#eee}
+.viewer-history i em{background:#e50914}
+.viewer-heart{background:#111e;color:#fff}.viewer-heart.active{color:#ff4b55;border-color:#ff4b55}
+.viewer-detail{background:#151515;border-color:#383838}.viewer-detail-copy>small{color:#ff343d}
+.viewer-play{background:#e50914;color:#fff}.viewer-play:hover{background:#b80710}
+.viewer-section .viewer-platform-card{background:#151515;border-color:#333}
+.viewer-footer{border-color:#292929;color:#888}
+@media(max-width:650px){.viewer-hero-netflix{min-height:360px;padding:22px 18px;background-position:58% center}.viewer-hero-netflix h1{font-size:30px}.viewer-hero-netflix p{font-size:11px}.viewer-card-wrap,.viewer-card{flex-basis:142px}.viewer-grid{gap:10px}.viewer-feature-play,.viewer-feature-more{font-size:11px;padding:11px 14px}}
