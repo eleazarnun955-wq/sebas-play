@@ -1,4 +1,4 @@
-name: SEBAS PLAY PRO 2.1 CORREGIDA Android APK
+name: SEBAS PLAY PRO 2.1 CORREGIDA V2 Android APK
 
 on:
   workflow_dispatch:
@@ -49,16 +49,34 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK for separate installation
+      - name: Verify generated Android package ID
+        run: |
+          EXPECTED_APPLICATION_ID="com.eleazarcompany.sebasplay.pro21fix2"
+          ACTUAL_APPLICATION_ID=$(grep -oE 'applicationId[[:space:]]+"[^"]+"' android/app/build.gradle | head -1 | sed -E 's/.*"([^"]+)"/\1/')
+          echo "Expected package: $EXPECTED_APPLICATION_ID"
+          echo "Generated package: $ACTUAL_APPLICATION_ID"
+          test "$ACTUAL_APPLICATION_ID" = "$EXPECTED_APPLICATION_ID"
+
+      - name: Build APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload SEBAS PLAY NUEVA APK
+      - name: Verify final APK package ID
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -1)
+          test -n "$AAPT"
+          ACTUAL_PACKAGE=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p")
+          EXPECTED_PACKAGE="com.eleazarcompany.sebasplay.pro21fix2"
+          echo "Final APK package: $ACTUAL_PACKAGE"
+          test "$ACTUAL_PACKAGE" = "$EXPECTED_PACKAGE"
+
+      - name: Upload independent SEBAS PLAY APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-2-1-CORREGIDA-Android
+          name: SEBAS-PLAY-PRO-2-1-CORREGIDA-V2-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
