@@ -23,7 +23,7 @@ Servidor ligero sin dependencias npm. Transmite archivos locales con soporte HTT
 
 El panel administrador puede consultar `GET /api/catalog` enviando `Authorization: Bearer TU_ACCESS_TOKEN`. La respuesta incluye `stream_url` firmadas. Copia la URL de la película correspondiente en el campo de video del catálogo de SEBAS PLAY y publícala solo después de comprobar que tienes derechos de distribución. La aplicación Android y el canal Roku leen el mismo catálogo Supabase; no se deben subir los videos a Supabase Storage.
 
-Las URLs firmadas duran 7 días por defecto. Si cambias el archivo o la ruta, vuelve a consultar el catálogo para generar otra URL. Ajusta `SEBAS_URL_TTL_SECONDS` si necesitas otro plazo.
+Las URLs firmadas duran 30 días por defecto. Si cambias el archivo o la ruta, vuelve a consultar el catálogo para generar otra URL. Ajusta `SEBAS_URL_TTL_SECONDS` si necesitas otro plazo.
 
 ## Acceso desde Roku y fuera de casa
 
