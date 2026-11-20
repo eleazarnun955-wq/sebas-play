@@ -4,7 +4,11 @@ import { supabase } from "./lib/supabase";
 
 type Show = { id: string; title: string };
 type Season = { id: string; series_id: string; season_number: number; title: string | null };
-function isValidMediaUrl(value: string) {\n  try { const url = new URL(value); return url.protocol === "https:" || url.protocol === "http:"; } catch { return false; }\n}\n\ntype Episode = { id: string; season_id: string; episode_number: number; title: string; synopsis: string | null; duration_minutes: number | null; video_url: string | null; is_published: boolean };
+function isValidMediaUrl(value: string) {
+  try { const url = new URL(value); return url.protocol === "https:" || url.protocol === "http:"; } catch { return false; }
+}
+
+type Episode = { id: string; season_id: string; episode_number: number; title: string; synopsis: string | null; duration_minutes: number | null; video_url: string | null; is_published: boolean };
 
 export default function EpisodesManager() {
   const [shows, setShows] = useState<Show[]>([]);
