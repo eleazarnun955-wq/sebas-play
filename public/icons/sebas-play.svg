@@ -1,4 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#a8f05a"/>
-  <path d="M198 126c-18-11-41 2-41 23v214c0 21 23 34 41 23l174-107c17-11 17-35 0-46L198 126z" fill="#10170a"/>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#252525"/><stop offset="1" stop-color="#050505"/></linearGradient><linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff424b"/><stop offset="1" stop-color="#b00610"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="18"/></filter></defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/><circle cx="256" cy="218" r="148" fill="#e50914" opacity=".2" filter="url(#glow)"/><path d="M256 68c-104 0-188 84-188 188s84 188 188 188 188-84 188-188S360 68 256 68zm0 30c87 0 158 71 158 158s-71 158-158 158S98 343 98 256 169 98 256 98z" fill="url(#red)"/><path d="M218 157c-12-7-27 2-27 16v166c0 14 15 23 27 16l137-83c12-7 12-25 0-32z" fill="#fff"/><path d="M115 400h282" stroke="#e50914" stroke-width="12" stroke-linecap="round"/><text x="256" y="454" fill="#fff" font-family="Arial,sans-serif" font-size="35" font-weight="800" text-anchor="middle" letter-spacing="3">SEBAS PLAY</text>
 </svg>
