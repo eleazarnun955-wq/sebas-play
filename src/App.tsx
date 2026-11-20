@@ -13,7 +13,7 @@ type Movie = { id: string; title: string; release_year: number | null; is_publis
 type Series = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string };
 type Channel = { id: string; name: string; category: string | null; is_published: boolean; country_code: string | null };
 
-const sourceLabels: Record<string, string> = {
+function isValidMediaUrl(value: string) {\n  try { const url = new URL(value); return url.protocol === "https:" || url.protocol === "http:"; } catch { return false; }\n}\n\nconst sourceLabels: Record<string, string> = {
   owned_upload: "Contenido propio",
   public_domain: "Dominio público",
   licensed_external: "Licenciado",
