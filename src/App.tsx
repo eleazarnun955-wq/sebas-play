@@ -140,8 +140,19 @@ export default function App() {
 
   async function signOut() {
     if (!supabase) return;
-    await supabase.auth.signOut();
+    // Clear the local UI immediately so a slow auth-server response cannot
+    // leave the user trapped on the admin screen.
     setSession(null);
+    setPassword("");
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error) {
+        notify("error", "La sesión se cerró en este dispositivo, pero hubo un problema al sincronizar: " + error.message);
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Error de conexión.";
+      notify("error", "La sesión local se cerró. No se pudo sincronizar con el servidor: " + message);
+    }
   }
 
   async function uploadPoster(file: File, target: "movie" | "series") {
