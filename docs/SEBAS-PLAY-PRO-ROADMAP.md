@@ -19,7 +19,7 @@ Evolucionar el repositorio existente sin sustituir las funciones que ya sirven. 
 - CI para compilar TypeScript/React y validar la estructura XML de Roku.
 - Comprobación para impedir que credenciales service-role entren en los clientes.
 - Migraciones SQL versionadas y revisión de RLS para catálogo, perfiles, favoritos y progreso.
-- Revisión de límites, índices, políticas de almacenamiento y errores de sesión.
+- Revisión de límites, índices, políticas de almacenamiento y errores de sesión.\n- El bucket `sebas-play-posters` existe y es público para lectura; la escritura necesita políticas de Storage limitadas al rol admin. El SQL propuesto está en `supabase/sql/storage-policies.sql` y queda pendiente de revisión/aplicación controlada.
 - Pruebas de regresión y compilación desde un checkout limpio.
 
 ### 2. Experiencia de catálogo
