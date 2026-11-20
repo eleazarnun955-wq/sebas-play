@@ -22,32 +22,7 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check server/windows-media/server.mjs
       - name: Smoke test health, protected catalog and HTTP Range streaming
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/sebas-media"
-          printf 'SEBAS-PLAY-TEST' > "$RUNNER_TEMP/sebas-media/sample.mp4"
-          export SEBAS_MEDIA_ROOT="$RUNNER_TEMP/sebas-media"
-          export SEBAS_PORT=18787
-          export SEBAS_ACCESS_TOKEN="test-access-token-that-is-long-enough-123456"
-          export SEBAS_SIGNING_SECRET="test-signing-secret-that-is-long-enough-for-hmac-123456789"
-          export SEBAS_PUBLIC_BASE_URL="http://127.0.0.1:18787"
-          node server/windows-media/server.mjs > "$RUNNER_TEMP/sebas-server.log" 2>&1 &
-          SERVER_PID=$!
-          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
-          for attempt in $(seq 1 20); do
-            if curl -fsS http://127.0.0.1:18787/health >/dev/null; then break; fi
-            sleep 1
-          done
-          curl -fsS http://127.0.0.1:18787/health | grep -q '"ok":true'
-          if curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18787/api/catalog | grep -q '^200$'; then
-            echo "Catalog endpoint unexpectedly accepted an unauthenticated request"; exit 1
-          fi
-          CATALOG=$(curl -fsS -H "Authorization: Bearer $SEBAS_ACCESS_TOKEN" http://127.0.0.1:18787/api/catalog)
-          STREAM_URL=$(node -e 'const d=JSON.parse(process.argv[1]); if(d.count!==1) process.exit(2); process.stdout.write(d.items[0].stream_url)' "$CATALOG")
-          curl -fsS -H 'Range: bytes=0-5' -D "$RUNNER_TEMP/headers.txt" "$STREAM_URL" -o "$RUNNER_TEMP/body.bin"
-          grep -q '206 Partial Content' "$RUNNER_TEMP/headers.txt"
-          test "$(cat "$RUNNER_TEMP/body.bin")" = "SEBAS"
+        run: node server/windows-media/smoke-test.mjs
       - name: Package Windows 10 server
         run: |
           cd server/windows-media
