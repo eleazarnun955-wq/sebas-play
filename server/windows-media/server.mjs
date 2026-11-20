@@ -11,7 +11,7 @@ const PORT = Number(process.env.SEBAS_PORT || 8787);
 const ACCESS_TOKEN = process.env.SEBAS_ACCESS_TOKEN || "";
 const SIGNING_SECRET = process.env.SEBAS_SIGNING_SECRET || "";
 const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
-const URL_TTL_SECONDS = Math.max(3600, Number(process.env.SEBAS_URL_TTL_SECONDS || 604800));
+const URL_TTL_SECONDS = Math.max(3600, Number(process.env.SEBAS_URL_TTL_SECONDS || 2592000));
 const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm"]);
 const MIME = { ".mp4":"video/mp4", ".m4v":"video/x-m4v", ".mov":"video/quicktime", ".webm":"video/webm" };
 
@@ -26,7 +26,7 @@ if (!SIGNING_SECRET || SIGNING_SECRET.length < 32) {
 fs.mkdirSync(ROOT, { recursive: true });
 
 function json(res, status, value) {
-  res.writeHead(status, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" });
+  res.writeHead(status, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff", "access-control-allow-origin":"*", "access-control-allow-headers":"Authorization,Content-Type,Range", "access-control-expose-headers":"Content-Length,Content-Range,Accept-Ranges" });
   res.end(JSON.stringify(value));
 }
 function safeEqual(a, b) {
