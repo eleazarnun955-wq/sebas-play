@@ -3,10 +3,11 @@ name: SEBAS PLAY PRO 2.1 Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, sebas-play-netflix-icon-pro21]
     paths:
       - "src/**"
       - "public/**"
+      - "scripts/**"
       - "package.json"
       - "capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
@@ -35,8 +36,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Supabase publishable key is designed for client-side use.
-      # Never add a service_role key to this workflow or the Android app.
       - name: Build web app
         run: npm run build
         env:
@@ -49,6 +48,9 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Generate SEBAS PLAY Android launcher icons
+        run: node scripts/generate-android-icons.mjs
+
       - name: Build APK for separate installation
         run: |
           cd android
@@ -58,7 +60,7 @@ jobs:
       - name: Upload SEBAS PLAY NUEVA APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-2-1-Android
+          name: SEBAS-PLAY-PRO-2-1-Netflix-Icon-Android
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14

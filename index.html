@@ -3,19 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#080b12" />
+    <meta name="theme-color" content="#080808" />
     <meta name="description" content="SEBAS PLAY: películas, series y televisión en un solo lugar." />
-    <meta name="application-name" content="SEBAS PLAY" />
+    <meta name="application-name" content="SEBAS PLAY PRO 2.1" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/sebas-play.svg" />
     <link rel="apple-touch-icon" href="/icons/sebas-play.svg" />
-    <title>SEBAS PLAY</title>
+    <title>SEBAS PLAY PRO 2.1</title>
   </head>
   <body>
+    <div id="sebas-splash" aria-label="SEBAS PLAY"><img src="/icons/sebas-play.svg" alt="" /><strong>SEBAS <span>PLAY</span></strong><small>ENTRETENIMIENTO SIN LÍMITES</small><i></i></div>
     <div id="root"></div>
+    <script>
+      window.addEventListener("load", function () {
+        window.setTimeout(function () {
+          var splash = document.getElementById("sebas-splash");
+          if (splash) { splash.classList.add("sebas-splash-hidden"); window.setTimeout(function(){ splash.remove(); }, 500); }
+        }, 650);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
