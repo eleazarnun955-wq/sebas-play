@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
   Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio, Globe2,
@@ -167,17 +167,28 @@ export default function App() {
     if (!supabase) return;
     // Clear the local UI immediately so a slow auth-server response cannot
     // leave the user trapped on the admin screen.
+    // Reset every admin view immediately; do not make navigation wait for Auth.
     setSession(null);
     setPassword("");
-    try {
-      const { error } = await supabase.auth.signOut({ scope: "local" });
-      if (error) {
-        notify("error", "La sesión se cerró en este dispositivo, pero hubo un problema al sincronizar: " + error.message);
-      }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Error de conexión.";
-      notify("error", "La sesión local se cerró. No se pudo sincronizar con el servidor: " + message);
-    }
+    setAuthSubmitting(false);
+    setAuthLoading(false);
+    setMovies([]);
+    setSeries([]);
+    setChannels([]);
+    setLoading(false);
+    setSaving(false);
+    setSearch("");
+    setModal(null);
+    setSection("overview");
+    // Local sign-out is initiated without blocking the UI on network completion.
+    void supabase.auth.signOut({ scope: "local" })
+      .then(({ error }) => {
+        if (error) notify("error", "La sesión local se cerró, pero hubo un problema al limpiar el acceso: " + error.message);
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Error de conexión.";
+        notify("error", "La sesión local se cerró. No se pudo completar la limpieza: " + message);
+      });
   }
 
   async function uploadPoster(file: File, target: "movie" | "series") {
