@@ -2,9 +2,12 @@ name: SEBAS PLAY CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/sebas-play-pro]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -16,7 +19,42 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies
         run: npm install
-      - name: Build admin panel
+      - name: Build admin and viewer
         run: npm run build
+      - name: Validate Roku XML and required channel files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          root = Path("apps/roku")
+          required = [
+              root / "manifest",
+              root / "source/main.brs",
+              root / "components/HomeScene.xml",
+              root / "components/CatalogTask.xml",
+              root / "components/PlayerScene.xml",
+              root / "components/HomeScene.brs",
+              root / "components/PlayerScene.brs",
+              root / "components/CatalogTask.brs",
+          ]
+          missing = [str(path) for path in required if not path.is_file()]
+          if missing:
+              raise SystemExit("Missing Roku channel files: " + ", ".join(missing))
+          for path in (root / "components").glob("*.xml"):
+              ET.parse(path)
+              print(f"Valid XML: {path}")
+          manifest = (root / "manifest").read_text()
+          if "title=SEBAS PLAY" not in manifest:
+              raise SystemExit("Roku manifest title is missing or incorrect")
+          print("Roku channel structure validated.")
+          PY
+      - name: Check client code for service-role credentials
+        run: |
+          if grep -R -n -E 'service_role|SUPABASE_SERVICE_ROLE_KEY' src apps/roku; then
+            echo "A server-only Supabase credential was found in client code."
+            exit 1
+          fi

@@ -3,11 +3,14 @@ name: SEBAS PLAY Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/sebas-play-pro]
     paths:
       - "src/**"
       - "public/**"
       - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vite.config.ts"
       - "capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
 
