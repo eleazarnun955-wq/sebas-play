@@ -23,10 +23,10 @@ await fs.writeFile(path.join(drawable,"ic_launcher_foreground.xml"), `<?xml vers
   <path android:fillColor="#FFFFFFFF" android:pathData="M43,29 Q39,27 39,33 L39,75 Q39,81 45,78 L76,58 Q81,54 76,50 Z"/>
 </vector>`);
 await fs.writeFile(path.join(values,"ic_launcher_colors.xml"), `<?xml version="1.0" encoding="utf-8"?>
-<resources><color name="ic_launcher_background">#080808</color></resources>`);
+<resources><color name="sebas_icon_background">#080808</color></resources>`);
 await fs.writeFile(path.join(anydpi,"ic_launcher.xml"), `<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-  <background android:drawable="@color/ic_launcher_background"/>
+  <background android:drawable="@color/sebas_icon_background"/>
   <foreground android:drawable="@drawable/ic_launcher_foreground"/>
 </adaptive-icon>`);
 console.log("SEBAS PLAY launcher icons generated for all Android densities.");
