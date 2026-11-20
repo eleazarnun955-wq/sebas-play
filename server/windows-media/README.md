@@ -4,6 +4,8 @@ Servidor ligero sin dependencias npm. Transmite archivos locales con soporte HTT
 
 ## Requisitos
 
+El servidor fue validado con una prueba automatizada de salud, autenticación de catálogo, firma de URL y lectura parcial HTTP Range.
+
 - Windows 10 actualizado.
 - Node.js LTS instalado.
 - Archivos de video propios, de dominio público o con autorización de distribución.
