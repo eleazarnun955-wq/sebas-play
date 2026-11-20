@@ -17,3 +17,8 @@ El workflow `.github/workflows/roku-package.yml` crea un ZIP del canal para inst
 - La reproducción usa el reproductor SceneGraph nativo con formato automático; el formato, códec, contenedor, DRM y disponibilidad deben ser compatibles con Roku.
 - El catálogo de series se muestra, pero la navegación de temporadas/episodios y el inicio de sesión se completarán en la siguiente iteración.
 - El contenido sin URL reproducible no se puede iniciar desde Roku.
+
+
+## Reproducción directa PRO 3.0
+
+El canal usa el reproductor nativo de Roku para URLs directas HTTPS compatibles. Las fichas sin video autorizado muestran un aviso; no se deben usar enlaces de búsqueda ni páginas de catálogo como URL de reproducción. Para películas, episodios y canales se requieren URLs de streaming propias o licenciadas y compatibles con los códecs/DRM de Roku. El ZIP es un paquete para modo desarrollador; no es un APK ni una publicación certificada en Channel Store.
