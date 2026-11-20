@@ -3,7 +3,7 @@ name: SEBAS PLAY PRO 2.1 Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21]
+    branches: [main, sebas-play-netflix-icon-pro21, fix/pro21-package-independent-v2]
     paths:
       - "src/**"
       - "public/**"
