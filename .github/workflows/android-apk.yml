@@ -35,8 +35,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Supabase publishable key is designed for client-side use.
+      # Never add a service_role key to this workflow or the Android app.
       - name: Build web app
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ououwdzxywmjpppzqxqy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_y3FtFQtvnYVcmy2VTJaYDQ_QhZlj4tx
 
       - name: Generate Android project
         run: npx cap add android
