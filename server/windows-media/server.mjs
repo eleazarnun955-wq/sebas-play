@@ -1,0 +1,127 @@
+import http from "node:http";
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(process.env.SEBAS_MEDIA_ROOT || path.join(HERE, "Peliculas"));
+const HOST = process.env.SEBAS_HOST || "0.0.0.0";
+const PORT = Number(process.env.SEBAS_PORT || 8787);
+const ACCESS_TOKEN = process.env.SEBAS_ACCESS_TOKEN || "";
+const SIGNING_SECRET = process.env.SEBAS_SIGNING_SECRET || "";
+const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
+const URL_TTL_SECONDS = Math.max(3600, Number(process.env.SEBAS_URL_TTL_SECONDS || 604800));
+const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm"]);
+const MIME = { ".mp4":"video/mp4", ".m4v":"video/x-m4v", ".mov":"video/quicktime", ".webm":"video/webm" };
+
+if (!ACCESS_TOKEN || ACCESS_TOKEN.length < 24) {
+  console.error("Configura SEBAS_ACCESS_TOKEN con al menos 24 caracteres en server-config.bat.");
+  process.exit(1);
+}
+if (!SIGNING_SECRET || SIGNING_SECRET.length < 32) {
+  console.error("Configura SEBAS_SIGNING_SECRET con al menos 32 caracteres en server-config.bat.");
+  process.exit(1);
+}
+fs.mkdirSync(ROOT, { recursive: true });
+
+function json(res, status, value) {
+  res.writeHead(status, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" });
+  res.end(JSON.stringify(value));
+}
+function safeEqual(a, b) {
+  const aa = Buffer.from(String(a || ""));
+  const bb = Buffer.from(String(b || ""));
+  return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
+}
+function authorized(req, url) {
+  const header = req.headers.authorization || "";
+  const bearer = header.startsWith("Bearer ") ? header.slice(7) : "";
+  return safeEqual(bearer, ACCESS_TOKEN) || safeEqual(url.searchParams.get("access_token"), ACCESS_TOKEN);
+}
+function signature(rel, exp) {
+  return crypto.createHmac("sha256", SIGNING_SECRET).update(`${rel}\n${exp}`).digest("hex");
+}
+function signedUrl(rel) {
+  const exp = Math.floor(Date.now()/1000) + URL_TTL_SECONDS;
+  const encoded = rel.split(path.sep).map(encodeURIComponent).join("/");
+  return `${PUBLIC_BASE}/media/${encoded}?exp=${exp}&sig=${signature(rel, exp)}`;
+}
+function safePath(rel) {
+  if (!rel || rel.includes("\\0")) return null;
+  const full = path.resolve(ROOT, rel);
+  if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
+  return full;
+}
+async function walk(dir, prefix = "") {
+  const out = [];
+  for (const ent of await fs.promises.readdir(dir, { withFileTypes:true })) {
+    const abs = path.join(dir, ent.name);
+    const rel = path.join(prefix, ent.name);
+    if (ent.isSymbolicLink()) continue;
+    if (ent.isDirectory()) out.push(...await walk(abs, rel));
+    else if (ent.isFile() && ALLOWED.has(path.extname(ent.name).toLowerCase())) {
+      const st = await fs.promises.stat(abs);
+      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:path.basename(ent.name, path.extname(ent.name)), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], stream_url:signedUrl(rel) });
+    }
+  }
+  return out;
+}
+function sendError(res, status, message) { json(res, status, { error:message }); }
+
+const server = http.createServer(async (req, res) => {
+  const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, { "access-control-allow-origin":"*", "access-control-allow-methods":"GET,HEAD,OPTIONS", "access-control-allow-headers":"Authorization,Content-Type,Range", "access-control-expose-headers":"Content-Length,Content-Range,Accept-Ranges" });
+    return res.end();
+  }
+  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT });
+  if (url.pathname === "/api/catalog" && req.method === "GET") {
+    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    try {
+      const items = await walk(ROOT);
+      return json(res, 200, { items, count:items.length, generated_at:new Date().toISOString(), note:"Solo archivos locales MP4/M4V/MOV/WebM. Publica únicamente contenido con derechos." });
+    } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
+  }
+  if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/media/")) {
+    let rel;
+    try { rel = url.pathname.slice("/media/".length).split("/").map(decodeURIComponent).join(path.sep); }
+    catch { return sendError(res, 400, "Ruta inválida"); }
+    const exp = Number(url.searchParams.get("exp") || 0);
+    const sig = url.searchParams.get("sig") || "";
+    if (!Number.isSafeInteger(exp) || exp < Math.floor(Date.now()/1000)) return sendError(res, 401, "Enlace vencido");
+    if (!safeEqual(sig, signature(rel, exp))) return sendError(res, 403, "Firma inválida");
+    const full = safePath(rel);
+    if (!full) return sendError(res, 400, "Ruta fuera de la biblioteca");
+    try {
+      const realRoot = await fs.promises.realpath(ROOT);
+      const realFile = await fs.promises.realpath(full);
+      if (!realFile.startsWith(realRoot + path.sep)) return sendError(res, 403, "Ruta no permitida");
+      const st = await fs.promises.stat(realFile);
+      if (!st.isFile() || !ALLOWED.has(path.extname(realFile).toLowerCase())) return sendError(res, 404, "Archivo no encontrado");
+      const type = MIME[path.extname(realFile).toLowerCase()];
+      const range = req.headers.range;
+      let start = 0, end = st.size - 1, status = 200;
+      if (range) {
+        const m = /^bytes=(\d*)-(\d*)$/.exec(range);
+        if (!m) { res.writeHead(416, { "content-range":`bytes */${st.size}` }); return res.end(); }
+        if (m[1] === "" && m[2] !== "") { const suffix = Number(m[2]); start = Math.max(0, st.size - suffix); }
+        else { start = Number(m[1]); if (m[2]) end = Math.min(end, Number(m[2])); }
+        if (start > end || start >= st.size) { res.writeHead(416, { "content-range":`bytes */${st.size}` }); return res.end(); }
+        status = 206;
+      }
+      const headers = { "content-type":type, "content-length":end-start+1, "accept-ranges":"bytes", "cache-control":"private, max-age=3600", "x-content-type-options":"nosniff", "access-control-allow-origin":"*" };
+      if (status === 206) headers["content-range"] = `bytes ${start}-${end}/${st.size}`;
+      res.writeHead(status, headers);
+      if (req.method === "HEAD") return res.end();
+      const stream = fs.createReadStream(realFile, { start, end });
+      stream.on("error", () => { if (!res.headersSent) sendError(res, 500, "Error leyendo el archivo"); else res.destroy(); });
+      stream.pipe(res);
+    } catch { return sendError(res, 404, "Archivo no encontrado"); }
+    return;
+  }
+  return sendError(res, 404, "Ruta no encontrada");
+});
+server.listen(PORT, HOST, () => console.log(`SEBAS PLAY Media Server activo en http://${HOST}:${PORT}\nBiblioteca: ${ROOT}\nArchivos compatibles: MP4, M4V, MOV, WebM`));
+process.on("SIGINT", () => server.close(() => process.exit(0)));
+process.on("SIGTERM", () => server.close(() => process.exit(0)));
