@@ -58,3 +58,10 @@ La rama `sebas-play-hybrid-storage-android-roku` añade un panel de almacenamien
 - Guía de instalación y límites en `docs/HYBRID-STORAGE.md`.
 
 **Límite del plan gratuito:** esta integración de Supabase admite hasta 50 MiB por archivo y queda sujeta a las cuotas de almacenamiento y transferencia del proyecto. No sirve para subir películas completas de varios cientos de MB/GB. El almacenamiento local permanece en el espacio privado de la aplicación y no es una carpeta pública de Android. Para Roku se requiere un MP4 HTTPS con códecs compatibles y derechos de distribución.
+
+
+## Servidor multimedia Windows 10
+
+La carpeta `server/windows-media` incluye un servidor local de streaming para que la laptop sea el almacenamiento principal de videos. Lee archivos MP4/M4V/MOV/WebM desde `Peliculas`, genera URLs firmadas y soporta HTTP Range para búsqueda/reanudación. Android y Roku continúan leyendo el mismo catálogo Supabase; cada ficha publicada debe guardar en `video_url` la URL firmada generada por la laptop. No se suben los archivos de película a Supabase Storage.
+
+Consulta `docs/WINDOWS-MEDIA-SERVER.md` para instalarlo. Para acceso desde fuera de casa se requiere un hostname HTTPS estable (por ejemplo, Cloudflare Tunnel) configurado en la laptop. La clave de administración y el secreto de firma permanecen exclusivamente en `server-config.bat`, nunca en Android, Roku ni Supabase.

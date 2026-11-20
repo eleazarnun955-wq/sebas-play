@@ -2,14 +2,15 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNo
 import type { Session } from "@supabase/supabase-js";
 import {
   Activity, Clapperboard, Film, LayoutDashboard, LogOut, Plus, Radio, Globe2, HardDrive,
-  Search, ShieldCheck, Tv2, X, LoaderCircle, CheckCircle2, AlertCircle,
+  Search, ShieldCheck, Tv2, X, LoaderCircle, CheckCircle2, AlertCircle, Server,
 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import EpisodesManager from "./EpisodesManager";
 import SourcesGuide from "./SourcesGuide";
 import StorageManager from "./StorageManager";
+import WindowsMediaManager from "./WindowsMediaManager";
 
-type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources" | "storage";
+type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources" | "storage" | "windows";
 type Movie = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string; poster_url: string | null };
 type Series = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string };
 type Channel = { id: string; name: string; category: string | null; is_published: boolean; country_code: string | null };
@@ -312,6 +313,7 @@ export default function App() {
     { id: "episodes" as const, label: "Temporadas y episodios", icon: Clapperboard },
     { id: "sources" as const, label: "Fuentes gratuitas", icon: Globe2 },
     { id: "storage" as const, label: "Almacenamiento", icon: HardDrive },
+    { id: "windows" as const, label: "Servidor Windows", icon: Server },
   ];
 
   const filteredMovies = movies.filter((m) => m.title.toLowerCase().includes(search.toLowerCase()));
@@ -333,6 +335,7 @@ export default function App() {
         {section === "episodes" && <EpisodesManager />}
         {section === "sources" && <SourcesGuide />}
         {section === "storage" && <section className="content"><StorageManager /></section>}
+        {section === "windows" && <section className="content"><WindowsMediaManager /></section>}
         {section === "overview" && <section className="content">
           <div className="welcome-banner"><div><div className="eyebrow">TU PLATAFORMA, TU CONTENIDO</div><h1>Bienvenido a <span>SEBAS PLAY</span></h1><p>Administra el contenido que se mostrará en tus aplicaciones.</p></div><div className="banner-icon"><Tv2 size={58} /></div></div>
           <div className="stat-grid">

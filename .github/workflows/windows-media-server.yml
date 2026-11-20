@@ -1,0 +1,35 @@
+name: SEBAS PLAY Windows media server checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/windows-media-server-android-roku]
+    paths:
+      - "server/windows-media/**"
+      - ".github/workflows/windows-media-server.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        run: node --check server/windows-media/server.mjs
+      - name: Smoke test health, protected catalog and HTTP Range streaming
+        run: node server/windows-media/smoke-test.mjs
+      - name: Package Windows 10 server
+        run: |
+          cd server/windows-media
+          zip -r "$GITHUB_WORKSPACE/SEBAS-PLAY-Windows-Server.zip" . -x "server-config.bat" "Peliculas/*" "*.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-Windows-10-Media-Server
+          path: SEBAS-PLAY-Windows-Server.zip
+          if-no-files-found: error
+          retention-days: 30
