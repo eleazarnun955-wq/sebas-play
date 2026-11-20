@@ -56,7 +56,7 @@ export default function WindowsMediaManager() {
       return;
     }
     if (file.size > 20 * 1024 * 1024 * 1024) {
-      setMessage({ kind: "error", text: "El límite configurado para subir un archivo es 20 GB." });
+      setMessage({ kind: "error", text: "El límite configurado para subir un archivo es 20 GiB." });
       return;
     }
     setUploading(true); setMessage(null);
