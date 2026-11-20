@@ -27,9 +27,7 @@ Las URLs firmadas duran 30 días por defecto. Si cambias el archivo o la ruta, v
 
 ## Acceso desde Roku y fuera de casa
 
-Para probar dentro de casa, abre la URL del servidor usando la IP local de la laptop (por ejemplo `http://192.168.1.50:8787`) y configura `SEBAS_PUBLIC_BASE_URL` con esa URL. Reserva una IP local para la laptop en el router.
-
-Para ver desde internet, usa un túnel HTTPS (recomendado: Cloudflare Tunnel con hostname propio) y configura `SEBAS_PUBLIC_BASE_URL` con el hostname HTTPS final. El túnel debe apuntar a `http://localhost:8787`. No publiques `/api/catalog` sin el token; protege el acceso de administración. Una URL de túnel temporal puede cambiar y dejar inválidas las URLs guardadas.
+Puedes comprobar el servicio desde la laptop con `http://localhost:8787/health`. Sin embargo, el panel web y Android usan HTTPS y bloquean direcciones HTTP mixtas; Roku también necesita una URL HTTPS pública para el acceso remoto. Para integrar el catálogo y reproducir, configura un hostname HTTPS estable mediante Cloudflare Tunnel (recomendado) apuntando a `http://localhost:8787`, y coloca ese hostname en `SEBAS_PUBLIC_BASE_URL` y en el campo de conexión del panel. No publiques `/api/catalog` sin el token ni abras el puerto 8787 directamente a internet. Una URL de túnel temporal puede cambiar y dejar inválidas las URLs guardadas.
 
 ## Compatibilidad y límites
 
