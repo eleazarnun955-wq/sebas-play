@@ -15,11 +15,9 @@ El servidor fue validado con una prueba automatizada de salud, autenticación de
 
 1. Copia la carpeta `server/windows-media` a la laptop.
 2. Instala Node.js LTS desde https://nodejs.org/.
-3. Copia `server-config.example.bat` y renombra la copia a `server-config.bat`.
-4. Genera dos valores aleatorios largos y reemplaza `SEBAS_ACCESS_TOKEN` y `SEBAS_SIGNING_SECRET`. No compartas el archivo de configuración.
-5. Coloca videos MP4/M4V/MOV/WebM en `Peliculas` (puedes crear subcarpetas).
-6. Ejecuta `start-server.bat`.
-7. Comprueba `http://localhost:8787/health` desde la laptop.
+3. Ejecuta `setup-server.ps1` con PowerShell (si Windows bloquea el script, abre PowerShell en esa carpeta y ejecuta `powershell -ExecutionPolicy Bypass -File .\\setup-server.ps1`). El asistente genera claves seguras, `server-config.bat`, la carpeta `Peliculas` y el archivo privado `SEBAS-PLAY-ACCESS-TOKEN.txt`.
+4. Ejecuta `start-server.bat`.
+5. Comprueba `http://localhost:8787/health` desde la laptop.
 
 ## Subir desde Android o el panel web\n\nEn el panel administrador, conecta la laptop y usa el selector “Subir película desde este dispositivo”. El archivo viaja directamente a la carpeta Peliculas de Windows; el servidor limita cada archivo a 20 GiB por defecto. Al terminar, se crea o actualiza una ficha de película como borrador en el catálogo compartido.\n\n## Catálogo y publicación
 
