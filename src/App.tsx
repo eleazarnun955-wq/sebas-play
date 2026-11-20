@@ -131,6 +131,7 @@ export default function App() {
   async function addMovie(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
+    if (movieForm.video.trim() && !isValidMediaUrl(movieForm.video.trim())) { notify("error", "La URL del video debe ser HTTP o HTTPS."); return; }
     setSaving(true);
     const { error } = await supabase.from("movies").insert({
       title: movieForm.title.trim(),
@@ -170,6 +171,7 @@ export default function App() {
   async function addChannel(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
+    if (!isValidMediaUrl(channelForm.stream.trim())) { notify("error", "La transmisión debe usar una URL HTTP o HTTPS válida."); return; }
     setSaving(true);
     const { error } = await supabase.from("live_channels").insert({
       name: channelForm.name.trim(),
