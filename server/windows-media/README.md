@@ -21,7 +21,7 @@ El servidor fue validado con una prueba automatizada de salud, autenticación de
 6. Ejecuta `start-server.bat`.
 7. Comprueba `http://localhost:8787/health` desde la laptop.
 
-## Catálogo y publicación
+## Subir desde Android o el panel web\n\nEn el panel administrador, conecta la laptop y usa el selector “Subir película desde este dispositivo”. El archivo viaja directamente a la carpeta Peliculas de Windows; el servidor limita cada archivo a 20 GiB por defecto. Al terminar, se crea o actualiza una ficha de película como borrador en el catálogo compartido.\n\n## Catálogo y publicación
 
 El panel administrador puede consultar `GET /api/catalog` enviando `Authorization: Bearer TU_ACCESS_TOKEN`. La respuesta incluye `stream_url` firmadas. Copia la URL de la película correspondiente en el campo de video del catálogo de SEBAS PLAY y publícala solo después de comprobar que tienes derechos de distribución. La aplicación Android y el canal Roku leen el mismo catálogo Supabase; no se deben subir los videos a Supabase Storage.
 
