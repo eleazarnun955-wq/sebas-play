@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { pipeline } from "node:stream/promises";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.SEBAS_MEDIA_ROOT || path.join(HERE, "Peliculas"));
@@ -12,6 +13,7 @@ const ACCESS_TOKEN = process.env.SEBAS_ACCESS_TOKEN || "";
 const SIGNING_SECRET = process.env.SEBAS_SIGNING_SECRET || "";
 const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const URL_TTL_SECONDS = Math.max(3600, Number(process.env.SEBAS_URL_TTL_SECONDS || 2592000));
+const MAX_UPLOAD_BYTES = Math.max(1, Number(process.env.SEBAS_MAX_UPLOAD_BYTES || 21474836480));
 const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm"]);
 const MIME = { ".mp4":"video/mp4", ".m4v":"video/x-m4v", ".mov":"video/quicktime", ".webm":"video/webm" };
 
@@ -72,10 +74,29 @@ function sendError(res, status, message) { json(res, status, { error:message });
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   if (req.method === "OPTIONS") {
-    res.writeHead(204, { "access-control-allow-origin":"*", "access-control-allow-methods":"GET,HEAD,OPTIONS", "access-control-allow-headers":"Authorization,Content-Type,Range", "access-control-expose-headers":"Content-Length,Content-Range,Accept-Ranges" });
+    res.writeHead(204, { "access-control-allow-origin":"*", "access-control-allow-methods":"GET,HEAD,POST,OPTIONS", "access-control-allow-headers":"Authorization,Content-Type,Range", "access-control-expose-headers":"Content-Length,Content-Range,Accept-Ranges" });
     return res.end();
   }
   if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT });
+  if (url.pathname === "/api/upload" && req.method === "POST") {
+    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    const length = Number(req.headers["content-length"] || 0);
+    if (!Number.isSafeInteger(length) || length <= 0) return sendError(res, 411, "Se requiere Content-Length");
+    if (length > MAX_UPLOAD_BYTES) return sendError(res, 413, "El archivo supera el límite configurado");
+    const rawName = (url.searchParams.get("name") || "").replace(/\\\\/g, "/").split("/").pop() || "";
+    const cleanName = rawName.replace(/[^\\p{L}\\p{N}._ -]/gu, "_").replace(/^\\.+/, "").trim();
+    const ext = path.extname(cleanName).toLowerCase();
+    if (!cleanName || !ALLOWED.has(ext)) return sendError(res, 415, "Formato no admitido. Usa MP4, M4V, MOV o WebM.");
+    const fileName = `${Date.now()}-${cleanName}`;
+    const destination = safePath(fileName);
+    try {
+      await pipeline(req, fs.createWriteStream(destination, { flags: "wx" }));
+      return json(res, 201, { ok:true, file:fileName, size_bytes:length, mime_type:MIME[ext] });
+    } catch (error) {
+      await fs.promises.unlink(destination).catch(() => {});
+      return sendError(res, 400, error instanceof Error ? error.message : "No se pudo guardar el archivo");
+    }
+  }
   if (url.pathname === "/api/catalog" && req.method === "GET") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     try {
