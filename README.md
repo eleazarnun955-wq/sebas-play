@@ -45,3 +45,16 @@ Las variables públicas de Supabase se configuran por entorno. La clave `service
 - Android reproduce películas y episodios con su reproductor HTML5 integrado; las señales en vivo directas también se envían al reproductor integrado cuando son URLs HTTPS compatibles (HLS/MP4).
 - Roku usa su reproductor nativo SceneGraph/Video; no instala APK. Se entrega un ZIP de canal para modo desarrollador y se requiere validación en Roku físico/emulador.
 - Una ficha sin URL directa autorizada no puede reproducirse mágicamente: Tubi, Canela y otras plataformas con DRM no permiten convertir sus páginas de catálogo en streams propios. El panel debe registrar URLs licenciadas/propias para cada película, episodio o canal.
+
+
+## Biblioteca híbrida Android + Roku
+
+La rama `sebas-play-hybrid-storage-android-roku` añade un panel de almacenamiento para administrar videos desde el teléfono:
+
+- Copia local en IndexedDB del espacio privado de SEBAS PLAY, con reproducción offline en el mismo dispositivo.
+- Carga de MP4 a Supabase Storage y alta automática como borrador en el catálogo compartido.
+- La ficha solo aparece en Android/Roku después de revisar y publicar el contenido.
+- Configuración del bucket y políticas en `supabase/sql/hybrid-video-storage.sql`.
+- Guía de instalación y límites en `docs/HYBRID-STORAGE.md`.
+
+**Límite del plan gratuito:** esta integración de Supabase admite hasta 50 MiB por archivo y queda sujeta a las cuotas de almacenamiento y transferencia del proyecto. No sirve para subir películas completas de varios cientos de MB/GB. El almacenamiento local permanece en el espacio privado de la aplicación y no es una carpeta pública de Android. Para Roku se requiere un MP4 HTTPS con códecs compatibles y derechos de distribución.
