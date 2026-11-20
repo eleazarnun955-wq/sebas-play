@@ -10,3 +10,5 @@ rem URL publica HTTPS de Cloudflare Tunnel o dominio. Para prueba local deja loc
 set "SEBAS_PUBLIC_BASE_URL=http://localhost:8787"
 rem Los enlaces firmados duran 30 dias.
 set "SEBAS_URL_TTL_SECONDS=2592000"
+rem Límite máximo por archivo: 20 GiB.
+set "SEBAS_MAX_UPLOAD_BYTES=21474836480"
