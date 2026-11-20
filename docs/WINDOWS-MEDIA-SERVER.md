@@ -15,7 +15,7 @@ El servidor ligero está en `server/windows-media`. No usa base de datos ni paqu
 
 ## Carga desde el teléfono\n\nDesde el panel administrador, conecta la laptop y selecciona un video del teléfono o computadora. El navegador lo envía directamente al endpoint autenticado de la laptop; el servidor lo guarda en Peliculas, escanea el catálogo y registra una película en Supabase como borrador. El límite predeterminado es 20 GiB por archivo y se puede cambiar con SEBAS_MAX_UPLOAD_BYTES.\n\n## Puesta en marcha
 
-Sigue `server/windows-media/README.md`. La laptop debe permanecer encendida y sin suspensión. Para que Android y Roku reproduzcan desde cualquier red, configura un hostname HTTPS estable mediante Cloudflare Tunnel y coloca ese hostname en `SEBAS_PUBLIC_BASE_URL`. La configuración de red y el túnel se deben completar en la propia laptop y router; el repositorio no puede hacer esos cambios físicos de forma remota.
+Sigue `server/windows-media/README.md`. La laptop debe permanecer encendida y sin suspensión. El endpoint `/health` puede probarse localmente por HTTP desde la laptop, pero el panel web y Android se sirven por HTTPS y bloquean contenido HTTP mixto; Roku también necesita una URL HTTPS pública para acceso remoto. Para integrar el catálogo y reproducir, configura un hostname HTTPS estable mediante Cloudflare Tunnel apuntando a `http://localhost:8787`, y usa ese hostname en `SEBAS_PUBLIC_BASE_URL` y en el panel. La configuración del túnel debe completarse en la propia laptop; no expongas el puerto 8787 directamente a internet.
 
 ## Integración con Android y Roku
 
