@@ -15,17 +15,45 @@ export default function ViewerApp(){
  const [movies,setMovies]=useState<Movie[]>([]),[series,setSeries]=useState<Series[]>([]),[channels,setChannels]=useState<Channel[]>([]);
  const [loading,setLoading]=useState(true),[error,setError]=useState(""),[search,setSearch]=useState(""),[selected,setSelected]=useState<Selected|null>(null);
  const [user,setUser]=useState<any>(null),[authOpen,setAuthOpen]=useState(false),[authMode,setAuthMode]=useState<"login"|"signup">("login"),[authEmail,setAuthEmail]=useState(""),[authPassword,setAuthPassword]=useState(""),[authBusy,setAuthBusy]=useState(false),[favorites,setFavorites]=useState<Favorite[]>([]),[seasons,setSeasons]=useState<Season[]>([]),[episodes,setEpisodes]=useState<Episode[]>([]),[seasonId,setSeasonId]=useState(""),[episode,setEpisode]=useState<Episode|null>(null),[busy,setBusy]=useState(false);const [history,setHistory]=useState<WatchProgress[]>([]);const videoRef=useRef<HTMLVideoElement|null>(null);
- useEffect(()=>{let alive=true;async function load(){if(!supabase){setError("SEBAS PLAY todavía no está conectado al catálogo.");setLoading(false);return}
-  const [m,s,c,session]=await Promise.all([
-   supabase.from("movies").select("id,title,synopsis,poster_url,release_year,duration_minutes,age_rating,genres,video_url").eq("is_published",true).order("created_at",{ascending:false}),
-   supabase.from("series").select("id,title,synopsis,poster_url,release_year,age_rating,genres").eq("is_published",true).order("created_at",{ascending:false}),
-   supabase.from("live_channels").select("id,name,logo_url,category,country_code,stream_url").eq("is_published",true).order("created_at",{ascending:false}),
-   supabase.auth.getSession()
-  ]);
-  if(!alive)return;const e=m.error||s.error||c.error;if(e)setError(e.message);setMovies((m.data||[]) as Movie[]);setSeries((s.data||[]) as Series[]);setChannels((c.data||[]) as Channel[]);const u=session.data.session?.user||null;setUser(u);
-  if(u){const f=await supabase.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(alive&&!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(alive&&!h.error)setHistory((h.data||[]) as WatchProgress[])}
-  setLoading(false);
- }void load();const sub=supabase?.auth.onAuthStateChange(async(_event,session)=>{if(!alive)return;const u=session?.user||null;setUser(u);if(u){const f=await supabase!.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase!.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(!h.error)setHistory((h.data||[]) as WatchProgress[])}else{setFavorites([]);setHistory([])}});return()=>{alive=false;sub?.data.subscription.unsubscribe()}},[]);
+ useEffect(()=>{
+  let alive=true;
+  async function loadUserData(userId:string){
+   if(!supabase)return;
+   const [f,h]=await Promise.all([
+    supabase.from("favorites").select("content_type,content_id").eq("user_id",userId),
+    supabase.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",userId).order("updated_at",{ascending:false}).limit(12)
+   ]);
+   if(!alive)return;
+   if(!f.error)setFavorites((f.data||[]) as Favorite[]);
+   if(!h.error)setHistory((h.data||[]) as WatchProgress[]);
+  }
+  async function load(){
+   if(!supabase){setError("SEBAS PLAY todavía no está conectado al catálogo.");setLoading(false);return}
+   const [m,s,c,session]=await Promise.all([
+    supabase.from("movies").select("id,title,synopsis,poster_url,release_year,duration_minutes,age_rating,genres,video_url").eq("is_published",true).order("created_at",{ascending:false}),
+    supabase.from("series").select("id,title,synopsis,poster_url,release_year,age_rating,genres").eq("is_published",true).order("created_at",{ascending:false}),
+    supabase.from("live_channels").select("id,name,logo_url,category,country_code,stream_url").eq("is_published",true).order("created_at",{ascending:false}),
+    supabase.auth.getSession()
+   ]);
+   if(!alive)return;
+   const e=m.error||s.error||c.error;if(e)setError(e.message);
+   setMovies((m.data||[]) as Movie[]);setSeries((s.data||[]) as Series[]);setChannels((c.data||[]) as Channel[]);
+   const u=session.data.session?.user||null;setUser(u);
+   if(u)await loadUserData(u.id);
+   if(alive)setLoading(false);
+  }
+  void load().catch((err:unknown)=>{if(alive){setError(err instanceof Error?err.message:"No se pudo cargar SEBAS PLAY.");setLoading(false)}});
+  // Never await Supabase queries inside onAuthStateChange: the auth lock is
+  // held while the callback runs and querying the same client there can deadlock.
+  const sub=supabase?.auth.onAuthStateChange((_event,session)=>{
+   if(!alive)return;
+   const u=session?.user||null;setUser(u);
+   if(u){
+    window.setTimeout(()=>{if(alive)void loadUserData(u.id)},0);
+   }else{setFavorites([]);setHistory([])}
+  });
+  return()=>{alive=false;sub?.data.subscription.unsubscribe()}
+ },[]);
  useEffect(()=>{let alive=true;async function loadEpisodes(){if(!supabase||selected?.kind!=="series"){setSeasons([]);setEpisodes([]);setSeasonId("");return}
   const {data,error}=await supabase.from("seasons").select("id,season_number,title").eq("series_id",selected.item.id).order("season_number");
   if(!alive)return;if(error){setError(error.message);return}const list=(data||[]) as Season[];setSeasons(list);setSeasonId(current=>list.some(s=>s.id===current)?current:(list[0]?.id||""));
