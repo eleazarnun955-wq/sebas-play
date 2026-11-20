@@ -40,7 +40,7 @@ try {
   });
   assert.equal(upload.status, 201, "authenticated uploads must be accepted");
   const uploaded = await upload.json();
-  assert.match(uploaded.file, /uploaded\\.mp4$/);
+  assert.match(uploaded.file, /uploaded\.mp4$/);
   const denied = await fetch("http://127.0.0.1:18787/api/catalog");
   assert.equal(denied.status, 401, "catalog must require admin token");
 
@@ -49,8 +49,10 @@ try {
   });
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
-  assert.equal(catalog.count, 1);
-  const stream = await fetch(catalog.items[0].stream_url, { headers: { range: "bytes=0-5" } });
+  assert.equal(catalog.count, 2);
+  const sampleItem = catalog.items.find(item => item.title === "sample");
+  assert.ok(sampleItem, "original test video should remain in the library");
+  const stream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=0-5" } });
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
   assert.equal(await stream.text(), "SEBAS-");
