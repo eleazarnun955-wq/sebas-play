@@ -1,10 +1,10 @@
-name: SEBAS PLAY PRO 2.2 ADULTOS Android APK
+name: SEBAS PLAY PRO 3.0 STREAMING Android APK
 # PRO 2.2 uses a distinct Android applicationId to install alongside PRO 2.1.
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku]
     paths:
       - "src/**"
       - "public/**"
@@ -61,7 +61,7 @@ jobs:
       - name: Upload SEBAS PLAY NUEVA APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-2-2-ADULTOS-INDEPENDIENTE-Android
+          name: SEBAS-PLAY-PRO-3-0-STREAMING-Android
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
