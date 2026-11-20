@@ -37,3 +37,11 @@ Panel administrativo implementado: inicio de sesión, control de rol administrad
 ## Desarrollo
 
 Las variables públicas de Supabase se configuran por entorno. La clave `service_role` y cualquier secreto deben permanecer exclusivamente en el servidor. No subir archivos `.env` al repositorio.
+
+
+## SEBAS PLAY PRO 3.0 Streaming (en desarrollo)
+
+- Android tendrá un applicationId nuevo: `com.eleazarcompany.sebasplay.pro30streaming20261120`, para instalarse junto a PRO 2.1, PRO 2.2 ADULTOS y PRO 2.2 AMERICANAS.
+- Android reproduce películas y episodios con su reproductor HTML5 integrado; las señales en vivo directas también se envían al reproductor integrado cuando son URLs HTTPS compatibles (HLS/MP4).
+- Roku usa su reproductor nativo SceneGraph/Video; no instala APK. Se entrega un ZIP de canal para modo desarrollador y se requiere validación en Roku físico/emulador.
+- Una ficha sin URL directa autorizada no puede reproducirse mágicamente: Tubi, Canela y otras plataformas con DRM no permiten convertir sus páginas de catálogo en streams propios. El panel debe registrar URLs licenciadas/propias para cada película, episodio o canal.
