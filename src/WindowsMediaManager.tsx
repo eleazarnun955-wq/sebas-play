@@ -28,6 +28,7 @@ export default function WindowsMediaManager() {
   const [importing, setImporting] = useState("");
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [connected, setConnected] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   async function connect() {
     const base = serverUrl.trim().replace(/\/+$/, "");
@@ -47,6 +48,38 @@ export default function WindowsMediaManager() {
       setConnected(false);
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo conectar con la laptop." });
     } finally { setLoading(false); }
+  }
+
+  async function uploadFile(file: File) {
+    if (!connected || !serverUrl.trim() || !token.trim()) {
+      setMessage({ kind: "error", text: "Conecta primero la laptop para poder subir videos." });
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024 * 1024) {
+      setMessage({ kind: "error", text: "El límite configurado para subir un archivo es 20 GB." });
+      return;
+    }
+    setUploading(true); setMessage(null);
+    try {
+      const base = serverUrl.trim().replace(/\/+$/, "");
+      const response = await fetch(`${base}/api/upload?name=${encodeURIComponent(file.name)}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token.trim()}`, "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
+      const catalogResponse = await fetch(`${base}/api/catalog`, { headers: { Authorization: `Bearer ${token.trim()}` } });
+      const catalog = await catalogResponse.json();
+      if (!catalogResponse.ok) throw new Error(catalog.error || "No se pudo actualizar el catálogo del servidor.");
+      const nextItems = (catalog.items || []) as MediaItem[];
+      setItems(nextItems);
+      const uploaded = nextItems.find(item => item.file === result.file);
+      if (uploaded) await importMovie(uploaded);
+      else setMessage({ kind: "ok", text: `${file.name} se guardó en la laptop. Actualiza la biblioteca para agregarlo al catálogo.` });
+    } catch (error) {
+      setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo subir el video a la laptop." });
+    } finally { setUploading(false); }
   }
 
   async function importMovie(item: MediaItem) {
@@ -87,6 +120,11 @@ export default function WindowsMediaManager() {
         <button className="primary-btn" onClick={() => void connect()} disabled={loading}>
           {loading ? <RefreshCw size={16} className="spin" /> : <Server size={16} />} {loading ? "Conectando…" : connected ? "Actualizar biblioteca" : "Conectar con laptop"}
         </button>
+        <div className="wm-upload-card">
+          <label>Subir película desde este dispositivo</label>
+          <input type="file" accept=".mp4,.m4v,.mov,.webm,video/mp4,video/x-m4v,video/quicktime,video/webm" disabled={!connected || uploading} onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void uploadFile(file); event.currentTarget.value = ""; }} />
+          <small>{uploading ? "Subiendo video a la laptop…" : "El archivo se guarda directamente en la carpeta Peliculas de Windows y se agrega como borrador al catálogo."}</small>
+        </div>
       </div>
       {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
       <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop</p></div><button className="secondary-btn" onClick={() => void connect()} disabled={loading || !connected}><RefreshCw size={15} /> Actualizar</button></div>
