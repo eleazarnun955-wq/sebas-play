@@ -1,9 +1,9 @@
-name: SEBAS PLAY PRO 2.1 Android APK
+name: SEBAS PLAY PRO 2.2 ADULTOS Android APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent]
     paths:
       - "src/**"
       - "public/**"
@@ -60,7 +60,7 @@ jobs:
       - name: Upload SEBAS PLAY NUEVA APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-2-1-Netflix-Icon-Android
+          name: SEBAS-PLAY-PRO-2-2-ADULTOS-INDEPENDIENTE-Android
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14

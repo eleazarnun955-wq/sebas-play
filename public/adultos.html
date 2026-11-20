@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b12"><title>SEBAS PLAY · ADULTOS 18+</title>
+<style>
+:root{color-scheme:dark;font-family:Arial,sans-serif;background:#080b12;color:#f5f6fa}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#242c25,#080b12 60%)}main{width:min(520px,92vw);margin:7vh auto;padding:28px;background:#111925;border:1px solid #354155;border-radius:20px;box-shadow:0 20px 80px #0009}h1{font-size:25px;margin:8px 0;color:#a8f05a}p{color:#aab5c3;line-height:1.55;font-size:14px}.tag{font-size:10px;letter-spacing:2px;color:#a8f05a;font-weight:bold}label{display:block;color:#c5cedb;font-size:12px;margin:14px 0 7px}input{width:100%;padding:13px;border-radius:9px;border:1px solid #354155;background:#080e17;color:white;font-size:16px}button,.site{display:flex;width:100%;align-items:center;justify-content:center;margin-top:13px;padding:13px;border:0;border-radius:9px;background:#a8f05a;color:#10170a;font-weight:bold;text-decoration:none;font-size:13px;cursor:pointer}.secondary{background:#1b2736;color:#e4eaf2;border:1px solid #354155}.danger{color:#ffb5b5}.hidden{display:none!important}.notice{font-size:12px;color:#ffbd8d;min-height:18px}.site{justify-content:space-between;background:#192638;color:#f5f6fa;border:1px solid #34465d}.site small{color:#9eacbf;font-weight:normal}.foot{font-size:11px;color:#758397;margin-top:20px}.row{display:flex;gap:9px}.row button{flex:1}hr{border:0;border-top:1px solid #2a3545;margin:22px 0}
+</style>
+</head>
+<body><main>
+<div class="tag">SEBAS PLAY · ZONA PERSONAL</div>
+<h1>ADULTOS 18+</h1>
+<section id="age">
+<p>Esta sección está reservada para personas adultas. Confirma que tienes 18 años o más y que cumples la edad legal aplicable en tu ubicación.</p>
+<label><input id="adultCheck" type="checkbox" style="width:auto;vertical-align:middle"> Confirmo que soy mayor de edad.</label>
+<button id="continueAge">Continuar</button><div class="notice" id="ageMsg"></div>
+</section>
+<section id="setup" class="hidden">
+<p>Crea una contraseña privada para proteger esta sección en este dispositivo. No uses una contraseña que compartas con otras personas.</p>
+<label>Nueva contraseña</label><input id="newPass" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres">
+<label>Confirmar contraseña</label><input id="confirmPass" type="password" autocomplete="new-password" minlength="8" placeholder="Repite la contraseña">
+<button id="savePass">Crear contraseña</button><div class="notice" id="setupMsg"></div>
+</section>
+<section id="login" class="hidden">
+<p>Introduce tu contraseña para desbloquear tu zona privada.</p>
+<label>Contraseña</label><input id="pass" type="password" autocomplete="current-password" placeholder="Tu contraseña">
+<button id="unlock">Desbloquear</button><div class="notice" id="loginMsg"></div>
+</section>
+<section id="vault" class="hidden">
+<p>Acceso concedido. Los enlaces se abren en el sitio oficial correspondiente; cada servicio aplica sus propias reglas, verificación de edad y disponibilidad regional.</p>
+<a class="site" href="https://xhamster.com/" target="_blank" rel="noopener noreferrer">xHamster <small>Abrir sitio externo ↗</small></a>
+<a class="site" href="https://www.manyvids.com/" target="_blank" rel="noopener noreferrer">ManyVids <small>Plataforma de creadores ↗</small></a>
+<a class="site" href="https://onlyfans.com/" target="_blank" rel="noopener noreferrer">OnlyFans <small>Plataforma de suscripción ↗</small></a>
+<hr><div class="row"><button class="secondary" id="change">Cambiar contraseña</button><button class="secondary" id="lock">Bloquear ahora</button></div>
+<section id="changeBox" class="hidden"><label>Contraseña actual</label><input id="oldPass" type="password" autocomplete="current-password"><label>Nueva contraseña</label><input id="replacement" type="password" autocomplete="new-password"><button id="saveChange">Guardar nueva contraseña</button><div class="notice" id="changeMsg"></div></section>
+<div class="foot">Por privacidad, no guardamos tu contraseña en texto legible. Bloqueo automático tras 2 minutos de inactividad y al salir de esta pantalla.</div>
+</section>
+<div class="foot">Los enlaces externos no están alojados ni controlados por SEBAS PLAY. Accede solo a material legal, consensuado y de personas adultas. Si el sitio no está disponible en tu región, respeta sus restricciones.</div>
+</main>
+<script>
+const $=id=>document.getElementById(id), KEY="sebas_play_adult_v1";
+let unlocked=false,lastActivity=Date.now(),fails=0,blockedUntil=0;
+const show=id=>{["age","setup","login","vault"].forEach(x=>$(x).classList.toggle("hidden",x!==id))};
+function bytes(n){const a=new Uint8Array(n);crypto.getRandomValues(a);return a}
+function b64(a){return btoa(String.fromCharCode(...a))}
+function un64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}
+async function derive(password,salt){const material=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);return new Uint8Array(await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:310000,hash:"SHA-256"},material,256))}
+async function saveHash(password){const salt=bytes(16),hash=await derive(password,salt);localStorage.setItem(KEY,JSON.stringify({salt:b64(salt),hash:b64(hash),iterations:310000}));}
+async function matches(password){const d=JSON.parse(localStorage.getItem(KEY)||"null");if(!d)return false;const hash=await derive(password,un64(d.salt));const a=un64(d.hash);return a.length===hash.length&&a.every((v,i)=>v===hash[i])}
+function enter(){unlocked=true;lastActivity=Date.now();fails=0;show("vault")}
+function lock(){unlocked=false;$("pass").value="";$("oldPass").value="";$("replacement").value="";$("changeBox").classList.add("hidden");show("login")}
+$("continueAge").onclick=()=>{if(!$("adultCheck").checked){$("ageMsg").textContent="Confirma tu mayoría de edad para continuar.";return}show(localStorage.getItem(KEY)?"login":"setup")};
+$("savePass").onclick=async()=>{const p=$("newPass").value;if(p.length<8){$("setupMsg").textContent="Usa al menos 8 caracteres.";return}if(p!==$("confirmPass").value){$("setupMsg").textContent="Las contraseñas no coinciden.";return}await saveHash(p);$("newPass").value="";$("confirmPass").value="";enter()};
+$("unlock").onclick=async()=>{if(Date.now()<blockedUntil){$("loginMsg").textContent="Demasiados intentos. Espera un momento.";return}const ok=await matches($("pass").value);$("pass").value="";if(ok){enter()}else{fails++;if(fails>=5){blockedUntil=Date.now()+30000;fails=0}$("loginMsg").textContent="Contraseña incorrecta."}};
+$("lock").onclick=lock;
+$("change").onclick=()=>{$("changeBox").classList.toggle("hidden")};
+$("saveChange").onclick=async()=>{if(!await matches($("oldPass").value)){$("changeMsg").textContent="La contraseña actual no coincide.";return}const p=$("replacement").value;if(p.length<8){$("changeMsg").textContent="La nueva contraseña debe tener al menos 8 caracteres.";return}await saveHash(p);$("oldPass").value="";$("replacement").value="";$("changeMsg").textContent="Contraseña actualizada."};
+["pointerdown","keydown","touchstart"].forEach(e=>document.addEventListener(e,()=>{if(unlocked)lastActivity=Date.now()},{passive:true}));
+setInterval(()=>{if(unlocked&&Date.now()-lastActivity>120000)lock()},5000);
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&unlocked)lock()});
+window.addEventListener("pagehide",()=>{if(unlocked)lock()});
+show("age");
+</script></body></html>
