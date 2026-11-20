@@ -22,6 +22,7 @@ const sourceLabels: Record<string, string> = {
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authSubmitting, setAuthSubmitting] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [section, setSection] = useState<Section>("overview");
@@ -46,14 +47,28 @@ export default function App() {
 
   useEffect(() => {
     if (!supabase) { setAuthLoading(false); return; }
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setAuthLoading(false);
-    });
+    let active = true;
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
+      if (active) setSession(nextSession);
     });
-    return () => listener.subscription.unsubscribe();
+    void supabase.auth.getSession()
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) notify("error", "No se pudo recuperar la sesión: " + error.message);
+        setSession(data.session);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : "Error de conexión con el servicio de acceso.";
+        notify("error", message);
+      })
+      .finally(() => {
+        if (active) setAuthLoading(false);
+      });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   const loadCatalog = useCallback(async () => {
@@ -85,11 +100,42 @@ export default function App() {
 
   async function signIn(event: FormEvent) {
     event.preventDefault();
-    if (!supabase) return;
-    setAuthLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setAuthLoading(false);
-    if (error) notify("error", error.message);
+    if (authSubmitting) return;
+    if (!supabase) {
+      notify("error", "El servicio de acceso no está configurado. Contacta al administrador.");
+      return;
+    }
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      notify("error", "Escribe tu correo electrónico y contraseña.");
+      return;
+    }
+    setAuthSubmitting(true);
+    setNotice(null);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+      if (error) {
+        notify("error", error.message === "Invalid login credentials"
+          ? "Correo o contraseña incorrectos. Verifica tus datos."
+          : "No se pudo iniciar sesión: " + error.message);
+        return;
+      }
+      if (!data.session) {
+        notify("error", "El acceso no devolvió una sesión. Inténtalo nuevamente.");
+        return;
+      }
+      setSession(data.session);
+      setPassword("");
+      notify("ok", "Sesión iniciada correctamente.");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "No se pudo conectar con el servicio de acceso.";
+      notify("error", "Error de conexión: " + message);
+    } finally {
+      setAuthSubmitting(false);
+    }
   }
 
   async function signOut() {
@@ -211,7 +257,7 @@ export default function App() {
         <form onSubmit={signIn} className="stack-form">
           <label>Correo electrónico<input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@tudominio.com" /></label>
           <label>Contraseña<input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Tu contraseña" /></label>
-          <button className="primary-btn full" disabled={authLoading}>Entrar al panel <span>→</span></button>
+          <button type="submit" className="primary-btn full" disabled={authSubmitting || authLoading}>{authSubmitting ? "Verificando acceso…" : "Entrar al panel"} <span>{authSubmitting ? "…" : "→"}</span></button>
         </form>
         <div className="secure-note"><ShieldCheck size={15} /> Acceso protegido por Supabase Auth</div>
       </section>
