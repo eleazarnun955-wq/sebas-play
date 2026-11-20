@@ -1,4 +1,5 @@
 name: SEBAS PLAY PRO 2.2 ADULTOS Android APK
+# PRO 2.2 uses a distinct Android applicationId to install alongside PRO 2.1.
 
 on:
   workflow_dispatch:
