@@ -127,9 +127,29 @@ export default function App() {
         notify("error", "El acceso no devolvió una sesión. Inténtalo nuevamente.");
         return;
       }
-      setSession(data.session);
+      // Refresh the JWT after login so recently granted app_metadata roles
+      // are included, then confirm the account with Supabase Auth.
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        notify("error", "Iniciaste sesión, pero no se pudo actualizar el permiso: " + refreshError.message);
+        return;
+      }
+      const verifiedSession = refreshed.session ?? data.session;
+      const { data: verified, error: verifyError } = await supabase.auth.getUser();
+      if (verifyError) {
+        notify("error", "No se pudo verificar tu cuenta: " + verifyError.message);
+        return;
+      }
+      const confirmedSession = verified.user
+        ? { ...verifiedSession, user: verified.user }
+        : verifiedSession;
+      setSession(confirmedSession);
       setPassword("");
-      notify("ok", "Sesión iniciada correctamente.");
+      if (confirmedSession.user.app_metadata?.role === "admin") {
+        notify("ok", "Acceso de administrador verificado correctamente.");
+      } else {
+        notify("error", "Tu cuenta inició sesión, pero Supabase todavía no entrega el rol de administrador. Cierra sesión e inténtalo nuevamente.");
+      }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "No se pudo conectar con el servicio de acceso.";
       notify("error", "Error de conexión: " + message);
