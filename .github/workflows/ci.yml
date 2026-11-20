@@ -51,9 +51,36 @@ jobs:
               raise SystemExit("Roku manifest title is missing or incorrect")
           print("Roku channel structure validated.")
           PY
-      - name: Check client code for service-role credentials
+      - name: Check client bundles for server-only Supabase keys
         run: |
-          if grep -R -n -E 'service_role|SUPABASE_SERVICE_ROLE_KEY' src apps/roku; then
-            echo "A server-only Supabase credential was found in client code."
-            exit 1
-          fi
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import json
+          import re
+
+          roots = [Path("src"), Path("apps/roku")]
+          failures = []
+          for root in roots:
+              for path in root.rglob("*"):
+                  if not path.is_file():
+                      continue
+                  try:
+                      content = path.read_text(errors="ignore")
+                  except OSError:
+                      continue
+                  if re.search(r"sb_secret_[A-Za-z0-9_-]{12,}", content):
+                      failures.append(f"{path}: Supabase secret key marker")
+                  for token in re.findall(r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+", content):
+                      try:
+                          payload = token.split(".")[1]
+                          payload += "=" * (-len(payload) % 4)
+                          claims = json.loads(base64.urlsafe_b64decode(payload))
+                          if claims.get("role") == "service_role":
+                              failures.append(f"{path}: service-role JWT")
+                      except Exception:
+                          pass
+          if failures:
+              raise SystemExit("Server-only credential detected: " + "; ".join(failures))
+          print("No Supabase secret key or service-role JWT found in client code.")
+          PY
