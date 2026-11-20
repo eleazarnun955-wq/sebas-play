@@ -33,6 +33,14 @@ try {
   assert.equal((await health.json()).ok, true);
   assert.equal(health.headers.get("access-control-allow-origin"), "*");
 
+  const upload = await fetch("http://127.0.0.1:18787/api/upload?name=uploaded.mp4", {
+    method: "POST",
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "content-type": "video/mp4" },
+    body: Buffer.from("NEW-VIDEO"),
+  });
+  assert.equal(upload.status, 201, "authenticated uploads must be accepted");
+  const uploaded = await upload.json();
+  assert.match(uploaded.file, /uploaded\\.mp4$/);
   const denied = await fetch("http://127.0.0.1:18787/api/catalog");
   assert.equal(denied.status, 401, "catalog must require admin token");
 
