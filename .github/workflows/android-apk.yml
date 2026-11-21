@@ -58,6 +58,14 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      - name: Verify independent Android package ID
+        run: |
+          cd android
+          ACTUAL=$(./gradlew -q :app:properties | grep '^applicationId:' | awk '{print $2}' | tail -n 1)
+          EXPECTED="com.eleazarcompany.sebasplay.pro30laptoproku.v3standalone20261120"
+          echo "APK applicationId: $ACTUAL"
+          test "$ACTUAL" = "$EXPECTED"
+
       - name: Upload SEBAS PLAY NUEVA APK
         uses: actions/upload-artifact@v4
         with:
