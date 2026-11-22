@@ -1,5 +1,5 @@
 name: SEBAS PLAY PRO 3.0 STREAMING Android APK
-# PRO 2.2 uses a distinct Android applicationId to install alongside PRO 2.1.
+# PRO 3.0 has its own applicationId so it installs independently from earlier releases.
 
 on:
   workflow_dispatch:
@@ -58,7 +58,17 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload SEBAS PLAY NUEVA APK
+      - name: Verify independent Android package ID
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
+          ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
+          EXPECTED="com.eleazarcompany.sebasplay.pro30streaming20261120"
+          echo "APK package ID: $ACTUAL"
+          test -n "$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED"
+
+      - name: Upload SEBAS PLAY PRO 3.0 APK
         uses: actions/upload-artifact@v4
         with:
           name: SEBAS-PLAY-PRO-3-0-STREAMING-Android
