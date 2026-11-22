@@ -1,4 +1,5 @@
-name: SEBAS PLAY Roku package
+name: SEBAS PLAY PRO 3.0 Roku package
+# Produces an installable channel ZIP from the dedicated PRO 3.0 branch.
 
 on:
   workflow_dispatch:
