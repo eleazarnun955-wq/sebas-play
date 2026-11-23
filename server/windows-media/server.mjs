@@ -18,11 +18,11 @@ const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm"]);
 const MIME = { ".mp4":"video/mp4", ".m4v":"video/x-m4v", ".mov":"video/quicktime", ".webm":"video/webm" };
 
 if (!ACCESS_TOKEN || ACCESS_TOKEN.length < 24) {
-  console.error("Configura SEBAS_ACCESS_TOKEN con al menos 24 caracteres en server-config.bat.");
+  console.error("Falta la clave de acceso. Ejecuta setup-server.ps1 para preparar el servidor.");
   process.exit(1);
 }
 if (!SIGNING_SECRET || SIGNING_SECRET.length < 32) {
-  console.error("Configura SEBAS_SIGNING_SECRET con al menos 32 caracteres en server-config.bat.");
+  console.error("Falta la clave de firma. Ejecuta setup-server.ps1 para preparar el servidor.");
   process.exit(1);
 }
 fs.mkdirSync(ROOT, { recursive: true });
@@ -77,7 +77,13 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, { "access-control-allow-origin":"*", "access-control-allow-methods":"GET,HEAD,POST,OPTIONS", "access-control-allow-headers":"Authorization,Content-Type,Range", "access-control-expose-headers":"Content-Length,Content-Range,Accept-Ranges" });
     return res.end();
   }
-  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT });
+  if (url.pathname === "/" && req.method === "GET") {
+    const base = `${url.protocol}//${url.host}`;
+    const html = `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>SEBAS PLAY · Servidor</title><style>*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf3ff;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:22px}.card{width:min(100%,560px);background:#1b2940;border:1px solid #33445f;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0005}h1{margin:0 0 8px;font-size:28px}p{color:#b9c8dc;line-height:1.55}.ok{color:#68e0a0;font-weight:700}.link{display:block;margin:12px 0;padding:14px;border-radius:12px;background:#263954;color:#fff;text-decoration:none;overflow-wrap:anywhere}.small{font-size:13px;color:#9eb0c8}</style><main class="card"><div class="ok">● SERVIDOR ACTIVO</div><h1>SEBAS PLAY</h1><p>El servidor multimedia de tu laptop está encendido y disponible en esta red.</p><a class="link" href="${base}/health">Comprobar estado del servidor</a><a class="link" href="${base}/api/catalog">Catálogo protegido (requiere token)</a><p>Biblioteca local: <b>Peliculas</b><br>Formatos: MP4, M4V, MOV y WebM</p><p class="small">Esta página confirma que la laptop responde. Para administrar la biblioteca, usa el panel de SEBAS PLAY y sus credenciales privadas. No compartas tu token.</p></main></html>`;
+    res.writeHead(200, { "content-type":"text/html; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" });
+    return res.end(html);
+  }
+  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT });
   if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
@@ -143,6 +149,6 @@ const server = http.createServer(async (req, res) => {
   }
   return sendError(res, 404, "Ruta no encontrada");
 });
-server.listen(PORT, HOST, () => console.log(`SEBAS PLAY Media Server activo en http://${HOST}:${PORT}\nBiblioteca: ${ROOT}\nArchivos compatibles: MP4, M4V, MOV, WebM`));
+server.listen(PORT, HOST, () => console.log(`SEBAS PLAY Media Server activo en http://${HOST}:${PORT}\nPrueba local: http://localhost:${PORT}/health\nBiblioteca: ${ROOT}\nArchivos compatibles: MP4, M4V, MOV, WebM`));
 process.on("SIGINT", () => server.close(() => process.exit(0)));
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
