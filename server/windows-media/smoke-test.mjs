@@ -33,6 +33,10 @@ try {
   assert.equal((await health.json()).ok, true);
   assert.equal(health.headers.get("access-control-allow-origin"), "*");
 
+  const landing = await fetch("http://127.0.0.1:18787/");
+  assert.equal(landing.status, 200, "server home page must load");
+  assert.match(await landing.text(), /SEBAS PLAY/);
+
   const upload = await fetch("http://127.0.0.1:18787/api/upload?name=uploaded.mp4", {
     method: "POST",
     headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "content-type": "video/mp4" },
@@ -56,7 +60,7 @@ try {
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
   assert.equal(await stream.text(), "SEBAS-");
-  console.log("PASS: health, admin authorization, signed playback URL and HTTP Range.");
+  console.log("PASS: home page, health, admin authorization, signed playback URL and HTTP Range.");
 } finally {
   child.kill("SIGTERM");
   await wait(150);
