@@ -62,7 +62,7 @@ try {
   assert.equal(await stream.text(), "SEBAS-");
   // LAN requests must create URLs pointing to the laptop, never localhost.
   const lanResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
-    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, host: "192.168.1.15:18787" }
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "x-forwarded-host": "192.168.1.15:18787", "x-forwarded-proto": "http" }
   });
   assert.equal(lanResponse.status, 200);
   const lanCatalog = await lanResponse.json();
