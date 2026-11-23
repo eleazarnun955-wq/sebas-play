@@ -53,7 +53,7 @@ echo Comprobacion: http://127.0.0.1:%SEBAS_PORT%/health
 echo Biblioteca: %SEBAS_MEDIA_ROOT%
 echo.
 
-start "SEBAS PLAY Media Server" cmd /k ""%ProgramFiles%\nodejs\node.exe" "%~dp0server.mjs""
+start "SEBAS PLAY Media Server" cmd /k node "%~dp0server.mjs"
 rem Fall back to PATH if Node.js is installed in a custom location.
 timeout /t 2 /nobreak >nul
 powershell -NoProfile -Command "$ready=$false; 1..15 | ForEach-Object { if(-not $ready) { try { $r=Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:%SEBAS_PORT%/health' -TimeoutSec 2; if($r.StatusCode -eq 200){$ready=$true} } catch { Start-Sleep -Seconds 1 } } }; if($ready){exit 0}else{exit 1}"
