@@ -1,26 +1,27 @@
 # Almacenamiento de películas en laptop Windows 10
 
-SEBAS PLAY PRO 3.0 conserva el catálogo central en Supabase y usa la laptop como origen de video. La laptop no reemplaza Supabase: guarda los archivos grandes y los transmite bajo demanda; Supabase conserva títulos, portadas, categorías, URL de reproducción, favoritos e historial.
+SEBAS PLAY PRO 3.0 conserva el catálogo central en Supabase y usa la laptop como origen de video. La laptop guarda los archivos grandes y los transmite bajo demanda; Supabase conserva títulos, portadas, categorías, URL de reproducción, favoritos e historial.
 
-## Entrega incluida
+## Servidor Windows
 
-El servidor ligero está en `server/windows-media`. No usa base de datos ni paquetes npm: Node.js LTS y Windows 10 son suficientes. Tiene:
+El servidor está en `server/windows-media`. No usa paquetes npm ni base de datos. El primer inicio con `start-server.bat` genera claves privadas, crea `Peliculas`, prepara el archivo de token y trata de autorizar el puerto 8787 en el Firewall de Windows para redes privadas. Los inicios siguientes conservan el token existente y verifican la regla, sin regenerar credenciales.
 
-- Biblioteca local en la carpeta `Peliculas`.
-- Escaneo recursivo de MP4, M4V, MOV y WebM.
-- Catálogo de administración protegido por token.
-- URLs de reproducción firmadas con vencimiento.
-- Streaming por rangos HTTP para seek y reanudación.
-- Bloqueo de traversal y enlaces simbólicos fuera de la biblioteca.
+## Red local
 
-## Carga desde el teléfono\n\nDesde el panel administrador, conecta la laptop y selecciona un video del teléfono o computadora. El navegador lo envía directamente al endpoint autenticado de la laptop; el servidor lo guarda en Peliculas, escanea el catálogo y registra una película en Supabase como borrador. El límite predeterminado es 20 GiB por archivo y se puede cambiar con SEBAS_MAX_UPLOAD_BYTES.\n\n## Puesta en marcha
+La laptop y el teléfono/Roku deben estar en la misma red Wi-Fi. El servidor muestra la dirección LAN de la laptop; esa dirección se usa en el panel administrador (por ejemplo, `http://192.168.1.15:8787`). No uses `localhost` desde el teléfono o Roku.
 
-Sigue `server/windows-media/README.md`. La laptop debe permanecer encendida y sin suspensión. El endpoint `/health` puede probarse localmente por HTTP desde la laptop, pero el panel web y Android se sirven por HTTPS y bloquean contenido HTTP mixto; Roku también necesita una URL HTTPS pública para acceso remoto. Para integrar el catálogo y reproducir, configura un hostname HTTPS estable mediante Cloudflare Tunnel apuntando a `http://localhost:8787`, y usa ese hostname en `SEBAS_PUBLIC_BASE_URL` y en el panel. La configuración del túnel debe completarse en la propia laptop; no expongas el puerto 8787 directamente a internet.
+Al consultar el catálogo, el servidor construye cada URL de video usando el host de la solicitud. Por eso las URLs locales apuntan a la laptop que contiene los archivos, no al dispositivo que reproduce.
 
-## Integración con Android y Roku
+## Integración Android y Roku
 
-Ambos clientes consumen el mismo catálogo de Supabase. En el registro de cada película/episodio, `video_url` debe contener la URL firmada generada por el servidor Windows. Roku requiere URL HTTPS pública para funcionar fuera de la red local y formatos/códecs soportados. Para una prueba en casa se puede usar la IP local de la laptop; para uso fuera de casa se necesita el túnel HTTPS estable.
+Android y Roku consultan los registros publicados en Supabase. El panel administrador consulta el catálogo local de la laptop, permite cargar videos y guarda cada ficha como borrador en Supabase. Revisa los derechos y los datos de la ficha antes de publicarla. Las URLs firmadas duran 30 días por defecto; al vencer, vuelve a importar/renovar el enlace desde el panel.
+
+Roku usa el reproductor nativo y requiere que el contenedor, códec y URL sean compatibles. Se recomienda MP4 H.264/AAC. El servidor no transcodifica.
+
+## Acceso remoto
+
+Fuera de casa se requiere un hostname HTTPS estable y un proxy/túnel configurado. El paquete no puede crear una cuenta ni aceptar los términos de un proveedor externo por el usuario. Configura Cloudflare Tunnel u otro proveedor para publicar `http://localhost:8787` bajo HTTPS y define `SEBAS_PUBLIC_BASE_URL=https://tu-hostname` en el archivo local `server-config.bat`. No abras el puerto 8787 directamente en el router.
 
 ## Seguridad
 
-Nunca pongas el token de administración ni el secreto HMAC en Android, Roku, Supabase ni GitHub. Solo se configuran en `server-config.bat`, que está excluido de Git. Las URLs firmadas son credenciales temporales: no las publiques en redes sociales. Aloja solo contenido que tengas derecho a distribuir.
+El token de administración y el secreto HMAC permanecen en la laptop. Nunca los incluyas en Android, Roku, Supabase ni GitHub. El token se copia una vez desde `SEBAS-PLAY-ACCESS-TOKEN.txt` al panel administrador. Aloja únicamente contenido propio o con licencia para distribuirlo.
