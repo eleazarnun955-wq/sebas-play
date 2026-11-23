@@ -60,7 +60,29 @@ try {
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
   assert.equal(await stream.text(), "SEBAS-");
-  console.log("PASS: home page, health, admin authorization, signed playback URL and HTTP Range.");
+  // LAN requests must create URLs pointing to the laptop, never localhost.
+  const lanResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, host: "192.168.1.15:18787" }
+  });
+  assert.equal(lanResponse.status, 200);
+  const lanCatalog = await lanResponse.json();
+  assert.ok(lanCatalog.items[0].stream_url.startsWith("http://192.168.1.15:18787/media/"));
+  assert.ok(!lanCatalog.items[0].stream_url.includes("localhost"));
+
+  // A reverse proxy can supply the stable public HTTPS hostname.
+  const remoteResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
+    headers: {
+      authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN,
+      host: "127.0.0.1:18787",
+      "x-forwarded-host": "media.example.test",
+      "x-forwarded-proto": "https"
+    }
+  });
+  assert.equal(remoteResponse.status, 200);
+  const remoteCatalog = await remoteResponse.json();
+  assert.ok(remoteCatalog.items[0].stream_url.startsWith("https://media.example.test/media/"));
+
+  console.log("PASS: home page, health, protected catalog, LAN/HTTPS URLs, signed playback and HTTP Range.");
 } finally {
   child.kill("SIGTERM");
   await wait(150);
