@@ -11,7 +11,7 @@ const HOST = process.env.SEBAS_HOST || "0.0.0.0";
 const PORT = Number(process.env.SEBAS_PORT || 8787);
 const ACCESS_TOKEN = process.env.SEBAS_ACCESS_TOKEN || "";
 const SIGNING_SECRET = process.env.SEBAS_SIGNING_SECRET || "";
-const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
+const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || "").replace(/\/$/, "");
 const URL_TTL_SECONDS = Math.max(3600, Number(process.env.SEBAS_URL_TTL_SECONDS || 2592000));
 const MAX_UPLOAD_BYTES = Math.max(1, Number(process.env.SEBAS_MAX_UPLOAD_BYTES || 21474836480));
 const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm"]);
@@ -44,27 +44,38 @@ function authorized(req, url) {
 function signature(rel, exp) {
   return crypto.createHmac("sha256", SIGNING_SECRET).update(`${rel}\n${exp}`).digest("hex");
 }
-function signedUrl(rel) {
+function requestBaseUrl(req) {
+  // A configured public HTTPS URL wins. Ignore the old localhost default because
+  // localhost on a phone/Roku points to that device, not to the Windows laptop.
+  if (PUBLIC_BASE && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PUBLIC_BASE)) return PUBLIC_BASE;
+  const forwardedHost = String(req.headers["x-forwarded-host"] || "").split(",")[0].trim();
+  const host = forwardedHost || String(req.headers.host || "");
+  if (!host || /[\r\n\s]/.test(host)) throw new Error("No se pudo determinar el host de acceso al servidor");
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  const proto = forwardedProto === "https" || Boolean(req.socket.encrypted) ? "https" : "http";
+  return `${proto}://${host}`;
+}
+function signedUrl(rel, req) {
   const exp = Math.floor(Date.now()/1000) + URL_TTL_SECONDS;
   const encoded = rel.split(path.sep).map(encodeURIComponent).join("/");
-  return `${PUBLIC_BASE}/media/${encoded}?exp=${exp}&sig=${signature(rel, exp)}`;
+  return `${requestBaseUrl(req)}/media/${encoded}?exp=${exp}&sig=${signature(rel, exp)}`;
 }
 function safePath(rel) {
-  if (!rel || rel.includes("\\0")) return null;
+  if (!rel || rel.includes("\0")) return null;
   const full = path.resolve(ROOT, rel);
   if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
   return full;
 }
-async function walk(dir, prefix = "") {
+async function walk(dir, prefix = "", req) {
   const out = [];
   for (const ent of await fs.promises.readdir(dir, { withFileTypes:true })) {
     const abs = path.join(dir, ent.name);
     const rel = path.join(prefix, ent.name);
     if (ent.isSymbolicLink()) continue;
-    if (ent.isDirectory()) out.push(...await walk(abs, rel));
+    if (ent.isDirectory()) out.push(...await walk(abs, rel, req));
     else if (ent.isFile() && ALLOWED.has(path.extname(ent.name).toLowerCase())) {
       const st = await fs.promises.stat(abs);
-      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:path.basename(ent.name, path.extname(ent.name)), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], stream_url:signedUrl(rel) });
+      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:path.basename(ent.name, path.extname(ent.name)), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], stream_url:signedUrl(rel, req) });
     }
   }
   return out;
@@ -78,12 +89,12 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
   if (url.pathname === "/" && req.method === "GET") {
-    const base = `${url.protocol}//${url.host}`;
-    const html = `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>SEBAS PLAY · Servidor</title><style>*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf3ff;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:22px}.card{width:min(100%,560px);background:#1b2940;border:1px solid #33445f;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0005}h1{margin:0 0 8px;font-size:28px}p{color:#b9c8dc;line-height:1.55}.ok{color:#68e0a0;font-weight:700}.link{display:block;margin:12px 0;padding:14px;border-radius:12px;background:#263954;color:#fff;text-decoration:none;overflow-wrap:anywhere}.small{font-size:13px;color:#9eb0c8}</style><main class="card"><div class="ok">● SERVIDOR ACTIVO</div><h1>SEBAS PLAY</h1><p>El servidor multimedia de tu laptop está encendido y disponible en esta red.</p><a class="link" href="${base}/health">Comprobar estado del servidor</a><a class="link" href="${base}/api/catalog">Catálogo protegido (requiere token)</a><p>Biblioteca local: <b>Peliculas</b><br>Formatos: MP4, M4V, MOV y WebM</p><p class="small">Esta página confirma que la laptop responde. Para administrar la biblioteca, usa el panel de SEBAS PLAY y sus credenciales privadas. No compartas tu token.</p></main></html>`;
+    const base = requestBaseUrl(req);
+    const html = `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>SEBAS PLAY · Servidor</title><style>*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf3ff;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:22px}.card{width:min(100%,560px);background:#1b2940;border:1px solid #33445f;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0005}h1{margin:0 0 8px;font-size:28px}p{color:#b9c8dc;line-height:1.55}.ok{color:#68e0a0;font-weight:700}.link{display:block;margin:12px 0;padding:14px;border-radius:12px;background:#263954;color:#fff;text-decoration:none;overflow-wrap:anywhere}.small{font-size:13px;color:#9eb0c8}</style><main class="card"><div class="ok">● SERVIDOR ACTIVO</div><h1>SEBAS PLAY</h1><p>El servidor multimedia de tu laptop está encendido y disponible en esta red.</p><a class="link" href="${base}/health">Comprobar estado del servidor</a><p>El catálogo y las películas están protegidos. Conecta desde el panel administrador de SEBAS PLAY usando el token privado de esta laptop.</p><p>Biblioteca local: <b>Peliculas</b><br>Formatos: MP4, M4V, MOV y WebM</p><p class="small">Esta página confirma que la laptop responde. Para administrar la biblioteca, usa el panel de SEBAS PLAY y sus credenciales privadas. No compartas tu token.</p></main></html>`;
     res.writeHead(200, { "content-type":"text/html; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" });
     return res.end(html);
   }
-  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT });
+  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
   if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
@@ -106,7 +117,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/api/catalog" && req.method === "GET") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     try {
-      const items = await walk(ROOT);
+      const items = await walk(ROOT, "", req);
       return json(res, 200, { items, count:items.length, generated_at:new Date().toISOString(), note:"Solo archivos locales MP4/M4V/MOV/WebM. Publica únicamente contenido con derechos." });
     } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
   }

@@ -114,9 +114,10 @@ export default function WindowsMediaManager() {
       <div className="wm-security"><ShieldCheck size={18} /><span>El token solo se usa desde este panel de administrador. Los videos se transmiten desde la laptop; no se copian a Supabase Storage.</span></div>
       <div className="wm-connect-card">
         <label>Dirección HTTPS pública o dirección local del servidor</label>
-        <input value={serverUrl} onChange={e => setServerUrl(e.target.value)} placeholder="https://media.tudominio.com" autoComplete="url" />
+        <input value={serverUrl} onChange={e => setServerUrl(e.target.value)} placeholder="http://192.168.1.15:8787" autoComplete="url" />
+        <small>En casa, escribe la dirección LAN que muestra la laptop y conecta ambos dispositivos al mismo Wi-Fi. Para fuera de casa se requiere una dirección HTTPS estable.</small>
         <label>Token de administración de la laptop</label>
-        <input type="password" value={token} onChange={e => setToken(e.target.value)} placeholder="Token configurado en server-config.bat" autoComplete="off" />
+        <input type="password" value={token} onChange={e => setToken(e.target.value)} placeholder="Token de SEBAS-PLAY-ACCESS-TOKEN.txt" autoComplete="off" />
         <button className="primary-btn" onClick={() => void connect()} disabled={loading}>
           {loading ? <RefreshCw size={16} className="spin" /> : <Server size={16} />} {loading ? "Conectando…" : connected ? "Actualizar biblioteca" : "Conectar con laptop"}
         </button>
