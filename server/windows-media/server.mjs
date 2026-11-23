@@ -89,12 +89,12 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
   if (url.pathname === "/" && req.method === "GET") {
-    const base = `${url.protocol}//${url.host}`;
+    const base = requestBaseUrl(req);
     const html = `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>SEBAS PLAY · Servidor</title><style>*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf3ff;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:22px}.card{width:min(100%,560px);background:#1b2940;border:1px solid #33445f;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0005}h1{margin:0 0 8px;font-size:28px}p{color:#b9c8dc;line-height:1.55}.ok{color:#68e0a0;font-weight:700}.link{display:block;margin:12px 0;padding:14px;border-radius:12px;background:#263954;color:#fff;text-decoration:none;overflow-wrap:anywhere}.small{font-size:13px;color:#9eb0c8}</style><main class="card"><div class="ok">● SERVIDOR ACTIVO</div><h1>SEBAS PLAY</h1><p>El servidor multimedia de tu laptop está encendido y disponible en esta red.</p><a class="link" href="${base}/health">Comprobar estado del servidor</a><p>El catálogo y las películas están protegidos. Conecta desde el panel administrador de SEBAS PLAY usando el token privado de esta laptop.</p><p>Biblioteca local: <b>Peliculas</b><br>Formatos: MP4, M4V, MOV y WebM</p><p class="small">Esta página confirma que la laptop responde. Para administrar la biblioteca, usa el panel de SEBAS PLAY y sus credenciales privadas. No compartas tu token.</p></main></html>`;
     res.writeHead(200, { "content-type":"text/html; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" });
     return res.end(html);
   }
-  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${url.protocol}//${url.host}/` });
+  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
   if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
