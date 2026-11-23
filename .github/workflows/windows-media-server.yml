@@ -7,6 +7,11 @@ on:
     paths:
       - "server/windows-media/**"
       - ".github/workflows/windows-media-server.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "server/windows-media/**"
+      - ".github/workflows/windows-media-server.yml"
 
 permissions:
   contents: read
