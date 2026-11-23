@@ -2,14 +2,12 @@
 setlocal
 cd /d "%~dp0"
 
-if not exist "%~dp0server-config.bat" (
-  echo Preparando SEBAS PLAY por primera vez...
-  powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup-server.ps1" -NonInteractive
-  if errorlevel 1 (
-    echo No se pudo preparar el servidor. Revisa el mensaje anterior.
-    pause
-    exit /b 1
-  )
+echo Preparando y verificando SEBAS PLAY...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup-server.ps1" -NonInteractive
+if errorlevel 1 (
+  echo No se pudo preparar el servidor. Revisa el mensaje anterior.
+  pause
+  exit /b 1
 )
 
 if not exist "%~dp0server-config.bat" (
@@ -37,6 +35,8 @@ rem If the server is already running, do not start a duplicate process.
 powershell -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:%SEBAS_PORT%/health' -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }"
 if not errorlevel 1 (
   echo SEBAS PLAY ya esta encendido.
+  for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.IPAddress -notlike '127.*' -and $_.AddressState -eq 'Preferred' } | Select-Object -First 1 -ExpandProperty IPAddress)"`) do set "LAN_IP=%%I"
+  if defined LAN_IP echo Enlace para tu celular: http://%LAN_IP%:%SEBAS_PORT%/
   start "" "http://127.0.0.1:%SEBAS_PORT%/"
   exit /b 0
 )
