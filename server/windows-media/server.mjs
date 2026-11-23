@@ -11,7 +11,7 @@ const HOST = process.env.SEBAS_HOST || "0.0.0.0";
 const PORT = Number(process.env.SEBAS_PORT || 8787);
 const ACCESS_TOKEN = process.env.SEBAS_ACCESS_TOKEN || "";
 const SIGNING_SECRET = process.env.SEBAS_SIGNING_SECRET || "";
-const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
+const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || "").replace(/\/$/, "");
 const URL_TTL_SECONDS = Math.max(3600, Number(process.env.SEBAS_URL_TTL_SECONDS || 2592000));
 const MAX_UPLOAD_BYTES = Math.max(1, Number(process.env.SEBAS_MAX_UPLOAD_BYTES || 21474836480));
 const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm"]);
@@ -47,10 +47,10 @@ function signature(rel, exp) {
 function requestBaseUrl(req) {
   // A configured public HTTPS URL wins. Ignore the old localhost default because
   // localhost on a phone/Roku points to that device, not to the Windows laptop.
-  if (PUBLIC_BASE && !/^https?:\\/\\/(localhost|127\\.0\\.0\\.1)(:\\d+)?$/i.test(PUBLIC_BASE)) return PUBLIC_BASE;
+  if (PUBLIC_BASE && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(PUBLIC_BASE)) return PUBLIC_BASE;
   const forwardedHost = String(req.headers["x-forwarded-host"] || "").split(",")[0].trim();
   const host = forwardedHost || String(req.headers.host || "");
-  if (!host || /[\\r\\n\\s]/.test(host)) throw new Error("No se pudo determinar el host de acceso al servidor");
+  if (!host || /[\r\n\s]/.test(host)) throw new Error("No se pudo determinar el host de acceso al servidor");
   const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
   const proto = forwardedProto === "https" || Boolean(req.socket.encrypted) ? "https" : "http";
   return `${proto}://${host}`;
@@ -61,7 +61,7 @@ function signedUrl(rel, req) {
   return `${requestBaseUrl(req)}/media/${encoded}?exp=${exp}&sig=${signature(rel, exp)}`;
 }
 function safePath(rel) {
-  if (!rel || rel.includes("\\0") || rel.includes("..")) return null;
+  if (!rel || rel.includes("\0")) return null;
   const full = path.resolve(ROOT, rel);
   if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
   return full;
