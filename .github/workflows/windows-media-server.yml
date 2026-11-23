@@ -28,13 +28,13 @@ jobs:
         run: node --check server/windows-media/server.mjs
       - name: Smoke test landing page, health, protected catalog and HTTP Range streaming
         run: node server/windows-media/smoke-test.mjs
-      - name: Package Windows 10 server
-        run: |
-          cd server/windows-media
-          zip -r "$GITHUB_WORKSPACE/SEBAS-PLAY-Windows-10-Server-FIXED.zip" . -x "server-config.bat" "Peliculas/*" "*.log"
       - uses: actions/upload-artifact@v4
         with:
           name: SEBAS-PLAY-Windows-10-Server-FIXED
-          path: SEBAS-PLAY-Windows-10-Server-FIXED.zip
+          path: |
+            server/windows-media/
+            !server/windows-media/server-config.bat
+            !server/windows-media/Peliculas/**
+            !server/windows-media/*.log
           if-no-files-found: error
           retention-days: 30
