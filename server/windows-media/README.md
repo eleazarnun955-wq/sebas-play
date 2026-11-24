@@ -1,51 +1,40 @@
 # SEBAS PLAY — servidor multimedia para Windows 10
 
-Servidor local para guardar y transmitir videos desde la laptop a SEBAS PLAY Android y Roku. No instala paquetes npm ni crea una base de datos.
+Instalador de un clic para Windows 10 de 32 o 64 bits. No requiere instalar Node.js manualmente ni reinstalar Windows.
 
-## Requisitos
+## Instalación sencilla
 
-- Windows 10.
-- Node.js instalado y disponible en PATH.
-- Laptop y celular/Roku conectados a la misma red Wi-Fi para la primera prueba.
-- Videos propios, de dominio público o con autorización expresa para su distribución.
+1. Descarga y extrae el paquete completo.
+2. Haz doble clic en INSTALAR-SEBAS-PLAY.bat.
+3. El asistente descarga el motor Node.js oficial de 32 bits y verifica su SHA-256.
+4. Cuando aparezca la ventana de carpetas, elige la carpeta principal donde guardas tus películas y series. También se revisan sus subcarpetas.
+5. Acepta la regla del Firewall para redes privadas si Windows la solicita.
 
-## Instalación de un clic
+El servidor se inicia, abre la página de estado y queda configurado para arrancar cuando inicies sesión en Windows.
 
-1. Extrae la carpeta del servidor en la laptop.
-2. Ejecuta **start-server.bat** con doble clic. No ejecutes setup-server.ps1 manualmente.
-3. En el primer inicio, el asistente crea las claves privadas, el archivo `server-config.bat`, el token y la carpeta `Peliculas`. Windows puede pedir autorización UAC una vez para permitir conexiones entrantes en redes privadas.
-4. Copia tus videos a la carpeta `Peliculas`.
-5. El servidor abre automáticamente su página de estado y muestra el enlace local que debes usar desde la misma red.
+## Conexión en casa
 
-El archivo privado `SEBAS-PLAY-ACCESS-TOKEN.txt` contiene el token que se introduce una sola vez en el panel administrador de SEBAS PLAY. No compartas el token ni `server-config.bat`.
+La laptop y los dispositivos deben estar conectados a la misma red Wi-Fi. El servidor muestra la dirección local de la laptop, por ejemplo http://192.168.1.15:8787. No uses localhost desde el teléfono o Roku.
 
-## Conexión desde Android y Roku
+El archivo SEBAS-PLAY-ACCESS-TOKEN.txt contiene el token privado que se introduce en el panel administrador de SEBAS PLAY. No lo compartas.
 
-- Dentro de casa: usa en el panel administrador la dirección LAN que muestra la ventana del servidor, por ejemplo `http://192.168.1.15:8787`. No uses `localhost` en el teléfono.
-- El catálogo genera las URLs de reproducción con el host de la solicitud. Así, si el panel consulta la laptop por su IP LAN, los enlaces de video también apuntan a esa laptop, no al teléfono.
-- Las aplicaciones Android y Roku consultan los registros publicados en Supabase. Los videos permanecen en la laptop; no se suben a Supabase Storage.
-- Los títulos importados desde el panel se guardan como borradores. Revisa derechos, portada y ficha antes de publicarlos.
+## Android y Roku
 
-## Acceso remoto
+Android y Roku siguen usando sus aplicaciones independientes y el catálogo compartido de Supabase. En el panel administrador se importa el catálogo local, se revisan las fichas y se publican las películas/episodios autorizados. No se suben los videos a Supabase Storage.
 
-Para ver videos fuera de casa se necesita un hostname HTTPS estable (por ejemplo, un dominio con Cloudflare Tunnel). El servidor no puede crear automáticamente una cuenta, dominio ni credenciales de un proveedor externo. Configura el túnel para apuntar a `http://localhost:8787` y establece `SEBAS_PUBLIC_BASE_URL=https://tu-hostname` en `server-config.bat`. Reinicia el servidor después del cambio.
+Roku usa su reproductor nativo; se recomienda MP4 H.264/AAC. No hay transcodificación. Formatos admitidos por el servidor: MP4, M4V, MOV y WebM.
 
-No abras directamente el puerto 8787 en el router ni lo expongas a internet sin un proxy HTTPS y controles de acceso. El acceso remoto requiere configurar el proveedor de túnel y probarlo desde una red móvil.
+## Acceso desde fuera de casa
 
-## Administración y seguridad
+La primera instalación configura la red local. Para reproducir desde fuera de casa se necesita un hostname HTTPS estable y un túnel/proxy (por ejemplo, Cloudflare Tunnel). Ese servicio externo requiere una cuenta y autorización del usuario; no se activa sin esas credenciales. No abras el puerto 8787 directamente a Internet.
 
-- `GET /`: página de estado.
-- `GET /health`: comprobación de disponibilidad.
-- `GET /api/catalog`: catálogo protegido por Bearer token.
-- `POST /api/upload?name=archivo.mp4`: carga protegida por token.
-- Las URLs de reproducción están firmadas y vencen después de 30 días por defecto.
-- El token y el secreto HMAC se guardan localmente, nunca en Android, Roku, Supabase ni GitHub.
-- Formatos admitidos: MP4, M4V, MOV y WebM. Recomendado: MP4 H.264 + AAC.
-- No hay transcodificación. Los códecs no compatibles deben convertirse antes de agregarlos.
-- La laptop debe permanecer encendida y sin suspensión durante la reproducción.
+## Seguridad y mantenimiento
 
-## Diagnóstico rápido
+- Las claves privadas permanecen en server-config.bat y SEBAS-PLAY-ACCESS-TOKEN.txt, dentro de la laptop.
+- No publiques esos archivos ni los copies a Android, Roku, Supabase o GitHub.
+- La laptop debe permanecer encendida y sin suspensión mientras transmite.
+- El instalador no modifica ni reemplaza las aplicaciones Android/Roku.
+- Para iniciar manualmente, usa start-server.bat.
+- Para detener el servidor, cierra la ventana minimizada SEBAS PLAY Media Server o reinicia Windows.
 
-- Si el celular no conecta, confirma que esté en el mismo Wi-Fi, usa la IP LAN mostrada por el servidor y permite Node.js/puerto 8787 en Firewall de Windows para redes privadas.
-- Si el servidor no inicia, revisa la ventana **SEBAS PLAY Media Server** y confirma que Node.js esté instalado.
-- Si la página abre pero el catálogo da 401, vuelve a copiar el token desde `SEBAS-PLAY-ACCESS-TOKEN.txt`.
+Aloja únicamente contenido propio, de dominio público o con autorización/licencia para distribuirlo.
