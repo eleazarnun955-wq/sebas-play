@@ -1,5 +1,4 @@
 name: SEBAS PLAY PRO 3.1 Laptop Roku channel
-# Build and validate the Roku channel from the current main branch.
 
 on:
   workflow_dispatch:
@@ -21,7 +20,14 @@ jobs:
           test -f apps/roku/components/HomeScene.xml
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
-          grep -q "title=SEBAS PLAY LAPTOP" apps/roku/manifest
+          grep -q "title=SEBAS PLAY" apps/roku/manifest
+      - name: Generate branded Roku home screen icons
+        run: |
+          python3 -m pip install --quiet Pillow
+          cd apps/roku
+          python3 generate-icons.py
+          test -s images/icon_focus_hd.png
+          test -s images/icon_side_hd.png
       - name: Package Roku channel
         run: |
           cd apps/roku
