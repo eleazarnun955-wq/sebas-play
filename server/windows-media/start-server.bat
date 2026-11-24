@@ -12,9 +12,10 @@ if not defined SEBAS_PORT set "SEBAS_PORT=8787"
 
 set "NODE_EXE=%~dp0runtime\node.exe"
 if not exist "%NODE_EXE%" (
+  set "NODE_EXE="
   for /f "delims=" %%N in ('where node 2^>nul') do if not defined NODE_EXE set "NODE_EXE=%%N"
 )
-if not exist "%NODE_EXE%" (
+if not defined NODE_EXE (
   echo No se encuentra el motor Node.js. Ejecuta INSTALAR-SEBAS-PLAY.bat.
   if /i not "%SILENT%"=="--silent" pause
   exit /b 1
