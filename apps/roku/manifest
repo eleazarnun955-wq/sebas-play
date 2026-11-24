@@ -1,5 +1,7 @@
 title=SEBAS PLAY
-major_version=1
-minor_version=0
-build_version=00001
+major_version=3
+minor_version=1
+build_version=00024
 ui_resolutions=fhd,hd
+mm_icon_focus_hd=images/icon_focus_hd.png
+mm_icon_side_hd=images/icon_side_hd.png

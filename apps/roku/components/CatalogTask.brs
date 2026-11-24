@@ -5,10 +5,18 @@ end sub
 sub loadCatalog()
     root = CreateObject("roSGNode", "ContentNode")
     root.title = "SEBAS PLAY"
+    laptopUrl = safeString(m.top.laptopUrl)
+    laptopToken = safeString(m.top.laptopToken)
+    if laptopUrl <> "" and laptopToken <> ""
+        loadLaptopCatalog(root, laptopUrl, laptopToken)
+        m.top.catalog = root
+        return
+    end if
+
     url = SebasPlaySupabaseUrl()
     key = SebasPlayPublishableKey()
     if key = "" or key = "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
-        m.top.errorMessage = "Falta configurar la clave pública de Supabase en apps/roku/source/config.brs."
+        m.top.errorMessage = "Configura Supabase o conecta tu laptop desde el botón superior."
         m.top.catalog = root
         return
     end if
@@ -16,8 +24,38 @@ sub loadCatalog()
     loadCollection(root, url, key, "movies", "Películas", "id,title,synopsis,poster_url,release_year,age_rating,video_url", "title")
     loadCollection(root, url, key, "series", "Series", "id,title,synopsis,poster_url,release_year,age_rating", "title")
     loadCollection(root, url, key, "live_channels", "TV en vivo", "id,name,logo_url,category,country_code,stream_url", "name")
-
     m.top.catalog = root
+end sub
+
+sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
+    request = CreateObject("roUrlTransfer")
+    request.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    request.InitClientCertificates()
+    request.SetUrl(baseUrl + "/api/catalog")
+    request.AddHeader("Authorization", "Bearer " + token)
+    request.AddHeader("Accept", "application/json")
+    response = request.GetToString()
+    if response = invalid or response = ""
+        m.top.errorMessage = "No responde la laptop. Revisa Wi-Fi o el enlace remoto."
+        return
+    end if
+    parsed = ParseJson(response)
+    if type(parsed) <> "roAssociativeArray" or parsed.items = invalid
+        m.top.errorMessage = "No se pudo leer el catálogo de la laptop."
+        return
+    end if
+    section = CreateObject("roSGNode", "ContentNode")
+    section.Title = "Películas de mi laptop"
+    for each entry in parsed.items
+        item = section.CreateChild("ContentNode")
+        item.Title = safeString(entry.title)
+        item.Description = safeString(entry.file)
+        item.Url = safeString(entry.stream_url)
+        item.StreamFormat = "auto"
+        item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
+    end for
+    if section.GetChildCount() > 0 then root.AppendChild(section)
+    m.top.errorMessage = "Biblioteca de laptop: " + parsed.items.Count().ToStr() + " videos."
 end sub
 
 sub loadCollection(root as object, baseUrl as string, key as string, tableName as string, sectionTitle as string, fields as string, sortField as string)

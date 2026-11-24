@@ -1,10 +1,9 @@
-name: SEBAS PLAY PRO 3.0 Roku package
-# Build and validate the Roku channel from the current main branch.
+name: SEBAS PLAY PRO 3.1 Laptop Roku channel
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku]
+    branches: [main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123]
     paths:
       - "apps/roku/**"
       - ".github/workflows/roku-package.yml"
@@ -22,12 +21,19 @@ jobs:
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
           grep -q "title=SEBAS PLAY" apps/roku/manifest
+      - name: Generate branded Roku home screen icons
+        run: |
+          python3 -m pip install --quiet Pillow
+          cd apps/roku
+          python3 generate-icons.py
+          test -s images/icon_focus_hd.png
+          test -s images/icon_side_hd.png
       - name: Package Roku channel
         run: |
           cd apps/roku
           zip -r ../../SEBAS-PLAY-Roku.zip . -x "*.DS_Store"
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-0-Roku-channel
+          name: SEBAS-PLAY-PRO-3-1-LAPTOP-Roku-channel
           path: SEBAS-PLAY-Roku.zip
           retention-days: 14
