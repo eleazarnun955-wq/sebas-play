@@ -7,7 +7,7 @@ const card:React.CSSProperties={background:"#17243a",border:"1px solid #2b3d58",
 const field:React.CSSProperties={width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:10,border:"1px solid #42536d",background:"#0d1728",color:"#fff",fontSize:15,marginTop:7};
 const action:React.CSSProperties={border:0,borderRadius:10,padding:"12px 15px",background:"#20a4a0",color:"#fff",fontWeight:700,fontSize:14,display:"inline-flex",alignItems:"center",gap:8};
 
-export default function LaptopConnection(){
+export default function LaptopConnection({onClose}:{onClose:()=>void}){
  const [url,setUrl]=useState(()=>localStorage.getItem("sebas_laptop_url")||"");
  const [token,setToken]=useState(()=>localStorage.getItem("sebas_laptop_token")||"");
  const [items,setItems]=useState<LaptopItem[]>([]);
@@ -38,7 +38,7 @@ export default function LaptopConnection(){
   <div style={{maxWidth:760,margin:"0 auto"}}>
    <header style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:18}}>
     <div style={{display:"flex",alignItems:"center",gap:12}}><span style={{...card,padding:12,color:"#65d8d1"}}><HardDrive size={24}/></span><div><small style={{color:"#65d8d1",letterSpacing:1}}>BIBLIOTECA PERSONAL</small><h2 style={{margin:"3px 0",fontSize:22}}>Conectar laptop</h2></div></div>
-    <button onClick={()=>window.dispatchEvent(new CustomEvent("sebas-close-laptop"))} aria-label="Cerrar" style={{...action,background:"#26354b",padding:10}}><X size={20}/></button>
+    <button onClick={onClose} aria-label="Cerrar" style={{...action,background:"#26354b",padding:10}}><X size={20}/></button>
    </header>
    <div style={card}>
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,color:connected?"#6ee7a8":"#a9b7ca"}}>{connected?<Wifi size={18}/>:<WifiOff size={18}/>}<b>{connected?"Laptop conectada":"Conecta tu servidor SEBAS PLAY"}</b></div>
