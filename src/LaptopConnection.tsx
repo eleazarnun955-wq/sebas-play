@@ -17,8 +17,8 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
  const [playing,setPlaying]=useState<LaptopItem|null>(null);
 
  async function connect(){
-  const base=url.trim().replace(/\\/+$/,"");
-  if(!/^https?:\\/\\//i.test(base)||!token.trim()){setError("Escribe la dirección de tu laptop y el token privado que está guardado en ella.");return}
+  const base=url.trim().replace(/\/+$/,"");
+  if(!/^https?:\/\//i.test(base)||!token.trim()){setError("Escribe la dirección de tu laptop y el token privado que está guardado en ella.");return}
   setBusy(true);setError("");
   try{
    const response=await fetch(base+"/api/catalog",{headers:{Authorization:"Bearer "+token.trim()}});
