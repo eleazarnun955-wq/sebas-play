@@ -4,7 +4,7 @@ name: SEBAS PLAY PRO 3.0 STREAMING Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123]
     paths:
       - "src/**"
       - "public/**"
