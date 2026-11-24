@@ -51,7 +51,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         item.Title = safeString(entry.title)
         item.Description = safeString(entry.file)
         item.Url = safeString(entry.stream_url)
-        item.StreamFormat = "mp4"
+        item.StreamFormat = "auto"
         item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
