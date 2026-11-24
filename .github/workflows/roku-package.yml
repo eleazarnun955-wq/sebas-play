@@ -1,4 +1,4 @@
-name: SEBAS PLAY PRO 3.0 Roku package
+name: SEBAS PLAY PRO 3.1 Laptop Roku channel
 # Build and validate the Roku channel from the current main branch.
 
 on:
@@ -21,13 +21,13 @@ jobs:
           test -f apps/roku/components/HomeScene.xml
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
-          grep -q "title=SEBAS PLAY" apps/roku/manifest
+          grep -q "title=SEBAS PLAY LAPTOP" apps/roku/manifest
       - name: Package Roku channel
         run: |
           cd apps/roku
           zip -r ../../SEBAS-PLAY-Roku.zip . -x "*.DS_Store"
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-0-Roku-channel
+          name: SEBAS-PLAY-PRO-3-1-LAPTOP-Roku-channel
           path: SEBAS-PLAY-Roku.zip
           retention-days: 14
