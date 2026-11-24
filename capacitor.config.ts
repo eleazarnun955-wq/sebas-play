@@ -6,7 +6,9 @@ const config: CapacitorConfig = {
   webDir: "dist",
   bundledWebRuntime: false,
   android: {
-    allowMixedContent: false
+    // Permite reproducir los enlaces HTTP locales firmados por el servidor Windows de SEBAS PLAY.
+    // Para acceso remoto se recomienda configurar HTTPS en el túnel público.
+    allowMixedContent: true
   }
 };
 
