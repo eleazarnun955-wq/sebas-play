@@ -14,7 +14,7 @@ if errorlevel 1 (
 )
 echo.
 echo Configurando inicio automatico de Windows...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$root='%~dp0'.TrimEnd('\'); $startup=[Environment]::GetFolderPath('Startup'); $w=New-Object -ComObject WScript.Shell; $s=$w.CreateShortcut((Join-Path $startup 'SEBAS PLAY Servidor.lnk')); $s.TargetPath=$env:ComSpec; $s.Arguments='/c ""'+(Join-Path $root 'start-server.bat')+'"" --silent'; $s.WorkingDirectory=$root; $s.WindowStyle=7; $s.Save()"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$root='%~dp0'.TrimEnd('\'); $startup=[Environment]::GetFolderPath('Startup'); $w=New-Object -ComObject WScript.Shell; $s=$w.CreateShortcut((Join-Path $startup 'SEBAS PLAY Servidor.lnk')); $s.TargetPath=$env:ComSpec; $s.Arguments='/c ""'+(Join-Path $root 'start-server.bat')+'" --silent"'; $s.WorkingDirectory=$root; $s.WindowStyle=7; $s.Save()"
 echo.
 echo Iniciando servidor...
 call "%~dp0start-server.bat"
