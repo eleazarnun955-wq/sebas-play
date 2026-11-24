@@ -4,7 +4,7 @@ name: SEBAS PLAY PRO 3.0 MEJORADA Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/unique-package-install-20261124c]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/unique-package-install-20261124c, feature/sebas-play-pro30-netflix-upgrades]
     paths:
       - "src/**"
       - "public/**"
