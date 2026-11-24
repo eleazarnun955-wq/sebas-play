@@ -17,9 +17,9 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
  const [playing,setPlaying]=useState<LaptopItem|null>(null);
 
  async function connect(){
-  let base=url.trim().replace(/\\/+$/,"");
-  if(!/^https?:\\/\\//i.test(base)||!token.trim()){setError("Escribe una dirección http:// o https:// y el token privado de tu laptop.");return}
-  base=base.replace(/\\/(api\\/catalog|health)$/i,"");
+  let base=url.trim().replace(/\/+$/,"");
+  if(!/^https?:\/\//i.test(base)||!token.trim()){setError("Escribe una dirección http:// o https:// y el token privado de tu laptop.");return}
+  base=base.replace(/\/(api\/catalog|health)$/i,"");
   setBusy(true);setError("");
   const controller=new AbortController();
   const timeout=window.setTimeout(()=>controller.abort(),15000);
