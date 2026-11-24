@@ -36,7 +36,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-for /f "usebackq delims=" %%I in (\`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue ^| Where-Object { $_.IPAddress -notlike '127.*' -and $_.AddressState -eq 'Preferred' } ^| Select-Object -First 1 -ExpandProperty IPAddress)"\`) do set "LAN_IP=%%I"
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue ^| Where-Object { $_.IPAddress -notlike '127.*' -and $_.AddressState -eq 'Preferred' } ^| Select-Object -First 1 -ExpandProperty IPAddress)"`) do set "LAN_IP=%%I"
 if /i not "%SILENT%"=="--silent" (
   echo SEBAS PLAY está activo.
   if defined LAN_IP echo Enlace para Android y Roku: http://%LAN_IP%:%SEBAS_PORT%/
