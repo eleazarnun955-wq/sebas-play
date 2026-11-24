@@ -4,7 +4,7 @@ name: SEBAS PLAY PRO 3.0 CORREGIDO Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback]
     paths:
       - "src/**"
       - "public/**"
@@ -48,6 +48,9 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync android
+
+      - name: Allow signed HTTP media from Windows laptop
+        run: node scripts/enable-android-local-http.mjs
 
       - name: Generate SEBAS PLAY Android launcher icons
         run: node scripts/generate-android-icons.mjs
