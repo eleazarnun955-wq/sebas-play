@@ -1,9 +1,9 @@
-name: SEBAS PLAY PRO 3.1 Laptop Roku channel
+name: SEBAS PLAY PRO 3.2 MI LAPTOP Roku channel
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123]
+    branches: [fix/sebas-play-pro32-mi-laptop-independent-20261124, main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123]
     paths:
       - "apps/roku/**"
       - ".github/workflows/roku-package.yml"
@@ -34,6 +34,6 @@ jobs:
           zip -r ../../SEBAS-PLAY-Roku.zip . -x "*.DS_Store"
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-1-LAPTOP-Roku-channel
+          name: SEBAS-PLAY-PRO-3-2-MI-LAPTOP-Roku-channel
           path: SEBAS-PLAY-Roku.zip
           retention-days: 14
