@@ -17,19 +17,34 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
  const [playing,setPlaying]=useState<LaptopItem|null>(null);
 
  async function connect(){
-  const base=url.trim().replace(/\/+$/,"");
-  if(!/^https?:\/\//i.test(base)||!token.trim()){setError("Escribe la dirección de tu laptop y el token privado que está guardado en ella.");return}
+  let base=url.trim().replace(/\\/+$/,"");
+  if(!/^https?:\\/\\//i.test(base)||!token.trim()){setError("Escribe una dirección http:// o https:// y el token privado de tu laptop.");return}
+  base=base.replace(/\\/(api\\/catalog|health)$/i,"");
   setBusy(true);setError("");
+  const controller=new AbortController();
+  const timeout=window.setTimeout(()=>controller.abort(),15000);
   try{
-   const response=await fetch(base+"/api/catalog",{headers:{Authorization:"Bearer "+token.trim()}});
-   const data=await response.json();
-   if(!response.ok)throw new Error(data.error||"No se pudo conectar. Revisa la dirección y el token.");
+   const health=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});
+   if(!health.ok)throw new Error("La dirección respondió con HTTP "+health.status+". Comprueba que sea la dirección base del servidor SEBAS PLAY.");
+   const healthData=await health.json();
+   if(!healthData.ok)throw new Error("El servidor respondió, pero no se identificó como SEBAS PLAY.");
+   const response=await fetch(base+"/api/catalog",{method:"GET",headers:{Accept:"application/json",Authorization:"Bearer "+token.trim()},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});
+   const raw=await response.text();
+   let data:any={};try{data=raw?JSON.parse(raw):{}}catch{throw new Error("El servidor no devolvió una respuesta JSON válida.")}
+   if(response.status===401)throw new Error("TOKEN INCORRECTO: usa el contenido exacto de SEBAS-PLAY-ACCESS-TOKEN.txt de esa laptop.");
+   if(response.status===404)throw new Error("RUTA NO ENCONTRADA: escribe la dirección base del servidor, sin /health ni /api/catalog.");
+   if(!response.ok)throw new Error(data.error||("Error HTTP "+response.status));
    const list=(data.items||[]) as LaptopItem[];
    setItems(list);setConnected(true);
    localStorage.setItem("sebas_laptop_url",base);
    localStorage.setItem("sebas_laptop_token",token.trim());
-  }catch(e){setConnected(false);setError(e instanceof Error?e.message:"No se pudo conectar con la laptop.")}
-  finally{setBusy(false)}
+   setUrl(base);setError("");
+  }catch(e){
+   setConnected(false);
+   if(e instanceof Error&&e.name==="AbortError")setError("La laptop no respondió en 15 segundos. Revisa el túnel HTTPS o la conexión Wi-Fi.");
+   else if(e instanceof TypeError)setError("Android no pudo abrir la dirección. Usa la IP local y el mismo Wi-Fi, o una URL HTTPS de Cloudflare. Esta APK habilitará HTTP local.");
+   else setError(e instanceof Error?e.message:"No se pudo conectar con la laptop.");
+  }finally{window.clearTimeout(timeout);setBusy(false)}
  }
  function disconnect(){setConnected(false);setItems([]);setPlaying(null);setToken("");localStorage.removeItem("sebas_laptop_token");setError("")}
  function bytes(n:number){if(!Number.isFinite(n))return "";const u=["B","KB","MB","GB"];let v=n,i=0;while(v>=1024&&i<u.length-1){v/=1024;i++}return v.toFixed(i?1:0)+" "+u[i]}
