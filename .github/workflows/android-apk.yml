@@ -49,7 +49,10 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Enable Android HTTP access to laptop on local Wi-Fi\n        run: node scripts/enable-android-lan-http.mjs\n\n      - name: Generate SEBAS PLAY Android launcher icons
+      - name: Enable Android HTTP access to laptop on local Wi-Fi
+        run: node scripts/enable-android-lan-http.mjs
+
+      - name: Generate SEBAS PLAY Android launcher icons
         run: node scripts/generate-android-icons.mjs
 
       - name: Build APK for separate installation
