@@ -1,10 +1,10 @@
-name: SEBAS PLAY PRO 3.0 INDEPENDIENTE Android APK
+name: SEBAS PLAY PRO 3.2 MI LAPTOP Android APK
 # Build with a fresh unique applicationId so Android installs this beside prior versions.
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/unique-package-install-20261124c]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/sebas-play-pro32-mi-laptop-independent-20261124]
     paths:
       - "src/**"
       - "public/**"
@@ -75,7 +75,7 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.pro30.independent20261124c"
+          EXPECTED="com.eleazarcompany.sebasplay.pro32milaptopindependent20261124b"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
@@ -83,7 +83,7 @@ jobs:
       - name: Upload SEBAS PLAY Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-0-INDEPENDIENTE-20261124C
+          name: SEBAS-PLAY-PRO-3-2-MI-LAPTOP-INDEPENDIENTE-20261124B
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
