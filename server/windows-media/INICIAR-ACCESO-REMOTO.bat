@@ -24,12 +24,12 @@ echo  SEBAS PLAY - ACCESO REMOTO TEMPORAL
 echo ==========================================================
 echo.
 echo IMPORTANTE:
-echo - Primero inicia SEBAS PLAY con start-server.bat.
+echo - Este archivo inicia el servidor si aun no esta encendido.
 echo - Esta direccion es temporal y puede cambiar al reiniciar.
 echo - No compartas el enlace publico con personas desconocidas.
 echo - No abras el puerto 8787 en el router.
 echo.
-echo Iniciando tunel HTTPS hacia http://127.0.0.1:8787 ...
+echo Iniciando el servidor local de SEBAS PLAY...\ncall "%~dp0start-server.bat" --silent\nif errorlevel 1 (\n  echo No se pudo iniciar el servidor local.\n  pause\n  exit /b 1\n)\necho Iniciando tunel HTTPS hacia http://127.0.0.1:8787 ...
 echo Cuando aparezca trycloudflare.com, copia esa direccion.
 echo Manten esta ventana abierta mientras uses SEBAS PLAY fuera.
 echo.
