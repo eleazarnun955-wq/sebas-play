@@ -12,6 +12,20 @@ type MediaItem = {
   stream_url: string;
 };
 
+function normalizeServerBase(value: string) {
+  // Remove punctuation accidentally copied after the port (for example :8787.)
+  const cleaned = value.trim().replace(/[.,;]+$/, "").replace(/\\/+$/, "");
+  const parsed = new URL(cleaned);
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("La dirección debe comenzar con http:// o https://.");
+  }
+  if (!parsed.hostname) throw new Error("Escribe una dirección válida para la laptop.");
+  if (parsed.search || parsed.hash) {
+    throw new Error("La dirección del servidor no debe incluir parámetros ni fragmentos.");
+  }
+  return parsed.toString().replace(/\\/$/, "");
+}
+
 function formatBytes(bytes: number) {
   if (!Number.isFinite(bytes) || bytes < 0) return "—";
   const units = ["B", "KB", "MB", "GB", "TB"];
