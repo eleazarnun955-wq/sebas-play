@@ -74,7 +74,7 @@ set "SEBAS_PUBLIC_BASE_URL="
 set "SEBAS_URL_TTL_SECONDS=2592000"
 set "SEBAS_MAX_UPLOAD_BYTES=21474836480"
 "@
-  Set-Content -Path $configPath -Value $config -Encoding ASCII
+  Set-Content -Path $configPath -Value $config -Encoding Default
   $tokenText = "Token para el panel administrador de SEBAS PLAY:" + [Environment]::NewLine + $accessToken + [Environment]::NewLine + [Environment]::NewLine + "Guarda este archivo en privado. No lo publiques ni lo compartas."
   Set-Content -Path $tokenPath -Value $tokenText -Encoding UTF8
   Write-Host "Configuración privada creada." -ForegroundColor Green
