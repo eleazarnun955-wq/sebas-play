@@ -6,7 +6,9 @@ const config: CapacitorConfig = {
   webDir: "dist",
   bundledWebRuntime: false,
   android: {
-    allowMixedContent: false
+    // The Windows 10 media server serves signed video URLs over the local
+    // network using HTTP. Android's WebView otherwise blocks this mixed media.
+    allowMixedContent: true
   }
 };
 
