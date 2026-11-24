@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   // Fresh application ID: install side-by-side with all earlier SEBAS PLAY APKs.
-  appId: "com.eleazarcompany.sebasplay.pro30.sebasplay20261124f",
+  appId: "com.eleazarcompany.sebasplay.pro30.standalone20261124g",
   appName: "SEBAS PLAY PRO 3.0 MEJORADA",
   webDir: "dist",
   bundledWebRuntime: false,
