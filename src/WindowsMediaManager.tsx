@@ -14,7 +14,7 @@ type MediaItem = {
 
 function normalizeServerBase(value: string) {
   // Remove punctuation accidentally copied after the port (for example :8787.)
-  const cleaned = value.trim().replace(/[.,;]+$/, "").replace(/\\/+$/, "");
+  const cleaned = value.trim().replace(/[.,;]+$/, "").replace(/\/+$/, "");
   const parsed = new URL(cleaned);
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
     throw new Error("La dirección debe comenzar con http:// o https://.");
@@ -23,7 +23,7 @@ function normalizeServerBase(value: string) {
   if (parsed.search || parsed.hash) {
     throw new Error("La dirección del servidor no debe incluir parámetros ni fragmentos.");
   }
-  return parsed.toString().replace(/\\/$/, "");
+  return parsed.toString().replace(/\/$/, "");
 }
 
 function formatBytes(bytes: number) {
@@ -45,7 +45,7 @@ export default function WindowsMediaManager() {
   const [uploading, setUploading] = useState(false);
 
   async function connect() {
-    const base = serverUrl.trim().replace(/\/+$/, "");
+    const base = normalizeServerBase(serverUrl);
     if (!/^https?:\/\//i.test(base) || !token.trim()) {
       setMessage({ kind: "error", text: "Escribe la dirección del servidor y el token de administración." });
       return;
@@ -75,7 +75,7 @@ export default function WindowsMediaManager() {
     }
     setUploading(true); setMessage(null);
     try {
-      const base = serverUrl.trim().replace(/\/+$/, "");
+    const base = normalizeServerBase(serverUrl);
       const response = await fetch(`${base}/api/upload?name=${encodeURIComponent(file.name)}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token.trim()}`, "Content-Type": file.type || "application/octet-stream" },
