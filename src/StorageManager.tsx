@@ -189,7 +189,7 @@ export default function StorageManager() {
   }
 
   return <section className="storage-page">
-    <div className="storage-intro"><div><span className="storage-eyebrow">BIBLIOTECA HÍBRIDA</span><h2>Almacenamiento de SEBAS PLAY</h2><p>Guarda archivos en este teléfono para verlos sin internet o súbelos a la nube para compartir el catálogo con Roku.</p></div><button className="secondary-btn" onClick={() => void refresh()}><RefreshCw size={16}/> Actualizar</button></div>
+    <div className="storage-intro"><div><span className="storage-eyebrow">BIBLIOTECA HÍBRIDA</span><h2>Almacenamiento de SEBAS PLAY</h2><p>Elige dónde guardar cada película: en este teléfono para verla aquí sin internet, o en la nube gratuita para compartirla con los dispositivos conectados. La carga y eliminación se muestran únicamente en administración.</p></div><button className="secondary-btn" onClick={() => void refresh()}><RefreshCw size={16}/> Actualizar</button></div>
     <div className="storage-stats">
       <article><HardDrive size={22}/><span>En este teléfono</span><b>{formatBytes(localTotal)}</b><small>{localMovies.length} películas guardadas localmente</small></article>
       <article><CloudUpload size={22}/><span>Nube compartida</span><b>Supabase Storage</b><small>Cuota gratuita limitada; videos MP4 de hasta 50 MB por archivo.</small></article>
@@ -197,7 +197,7 @@ export default function StorageManager() {
     </div>
     <div className="storage-upload-card">
       <h3><Film size={19}/> Agregar película desde el celular</h3>
-      <label className="storage-file-picker">Seleccionar video<input type="file" accept="video/mp4,video/*,.mp4,.m4v,.mov,.webm" onChange={e => chooseFile(e.target.files?.[0] ?? null)} disabled={busy}/></label>
+      <label className="storage-file-picker">Seleccionar video<input type="file" accept="video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.mpeg,.mpg,.3gp,.ts,.m2ts,.ogv" onChange={e => chooseFile(e.target.files?.[0] ?? null)} disabled={busy}/></label>
       {selectedFile && <div className="storage-selected"><b>{selectedFile.name}</b><span>{formatBytes(selectedFile.size)}</span></div>}
       <label className="storage-field">Nombre para el catálogo<input value={cloudTitle} onChange={e => setCloudTitle(e.target.value)} placeholder="Título de la película" /></label>
       <label className="storage-field">Origen o autorización (obligatorio para nube)<input value={rightsNote} onChange={e => setRightsNote(e.target.value)} placeholder="Contenido propio, dominio público o licencia…" /></label>
