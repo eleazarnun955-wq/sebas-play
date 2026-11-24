@@ -12,6 +12,15 @@ on:
       - "package.json"
       - "capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "scripts/**"
+      - "package.json"
+      - "capacitor.config.ts"
+      - ".github/workflows/android-apk.yml"
 
 permissions:
   contents: read
@@ -71,7 +80,7 @@ jobs:
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
 
-      - name: Upload SEBAS PLAY PRO 3.0 APK
+      - name: Upload SEBAS PLAY Android APK
         uses: actions/upload-artifact@v4
         with:
           name: SEBAS-PLAY-PRO-3-0-INSTALACION-INDEPENDIENTE
