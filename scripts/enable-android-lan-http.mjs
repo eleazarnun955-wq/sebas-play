@@ -7,14 +7,14 @@ if (!fs.existsSync(manifestPath)) {
   process.exit(1);
 }
 let manifest = fs.readFileSync(manifestPath, "utf8");
-if (!/<application\b/.test(manifest)) {
-  console.error("El AndroidManifest.xml no contiene la etiqueta application.");
+if (!/<application[\s>]/i.test(manifest)) {
+  console.error("No se encontró la etiqueta application. Inicio: " + manifest.slice(0, 500));
   process.exit(1);
 }
 if (/android:usesCleartextTraffic=/.test(manifest)) {
   manifest = manifest.replace(/android:usesCleartextTraffic="[^"]*"/, 'android:usesCleartextTraffic="true"');
 } else {
-  manifest = manifest.replace(/<application\b/, '<application android:usesCleartextTraffic="true"');
+  manifest = manifest.replace(/<application[\s>]/i, '<application android:usesCleartextTraffic="true"');
 }
 fs.writeFileSync(manifestPath, manifest);
 console.log("Configuración aplicada: HTTP local habilitado para conectar con la laptop.");
