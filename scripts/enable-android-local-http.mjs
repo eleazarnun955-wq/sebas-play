@@ -7,15 +7,15 @@ if (!fs.existsSync(manifestPath)) {
 }
 
 let manifest = fs.readFileSync(manifestPath, "utf8");
-const applicationTag = /<application\\b([^>]*)>/s;
+const applicationTag = /<application\b([^>]*)>/s;
 const match = manifest.match(applicationTag);
 if (!match) {
   throw new Error("No se encontró la etiqueta <application> en AndroidManifest.xml.");
 }
 
-if (/android:usesCleartextTraffic\\s*=/.test(match[1])) {
+if (/android:usesCleartextTraffic\s*=/.test(match[1])) {
   manifest = manifest.replace(applicationTag, (full, attrs) =>
-    `<application${attrs.replace(/android:usesCleartextTraffic\\s*=\\s*"[^"]*"/, 'android:usesCleartextTraffic="true')}>`
+    `<application${attrs.replace(/android:usesCleartextTraffic\s*=\s*"[^"]*"/, 'android:usesCleartextTraffic="true')}>`
   );
 } else {
   manifest = manifest.replace(applicationTag, `<application$1 android:usesCleartextTraffic="true">`);
