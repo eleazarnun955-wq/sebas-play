@@ -1,10 +1,10 @@
-name: SEBAS PLAY PRO 3.1 CONEXION LAPTOP Android APK
+name: SEBAS PLAY PRO 3.2 MI LAPTOP Android APK
 # PRO 2.2 uses a distinct Android applicationId to install alongside PRO 2.1.
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123, fix/sebas-play-pro32-mi-laptop-android-20261124]
     paths:
       - "src/**"
       - "public/**"
@@ -49,7 +49,7 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Generate SEBAS PLAY Android launcher icons
+      - name: Enable Android HTTP access to laptop on local Wi-Fi\n        run: node scripts/enable-android-lan-http.mjs\n\n      - name: Generate SEBAS PLAY Android launcher icons
         run: node scripts/generate-android-icons.mjs
 
       - name: Build APK for separate installation
@@ -63,7 +63,7 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.pro31laptopdirect20261123"
+          EXPECTED="com.eleazarcompany.sebasplay.pro32milaptop20261124"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
@@ -71,7 +71,7 @@ jobs:
       - name: Upload SEBAS PLAY NUEVA APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-1-CONEXION-LAPTOP-Android
+          name: SEBAS-PLAY-PRO-3-2-MI-LAPTOP-Android
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
