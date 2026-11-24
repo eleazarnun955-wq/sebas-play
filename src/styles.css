@@ -90,3 +90,17 @@
 
 /* SEBAS PLAY PRO 3.0: category filters and always-available laptop entry */
 .viewer-category-bar{position:sticky;top:122px;z-index:8;display:flex;gap:8px;overflow-x:auto;padding:12px max(5vw,20px);background:#090909ed;border-bottom:1px solid #242424;backdrop-filter:blur(12px);scrollbar-width:none}.viewer-category-bar::-webkit-scrollbar{display:none}.viewer-category-bar button{flex:0 0 auto;border:1px solid #343434;border-radius:999px;padding:8px 14px;background:#171717;color:#ccc;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}.viewer-category-bar button.active,.viewer-category-bar button:hover{background:#e50914;border-color:#e50914;color:#fff}@media(max-width:650px){.viewer-category-bar{top:110px;padding:10px 4vw}.viewer-category-bar button{padding:7px 12px;font-size:10px}}
+
+
+/* SEBAS PLAY PRO 3.0 — Roku-inspired animated brand atmosphere */
+.viewer-shell{position:relative;isolation:isolate;overflow:hidden}
+.viewer-shell:before{content:"";position:fixed;z-index:-1;inset:-18%;pointer-events:none;background:radial-gradient(ellipse at 18% 28%,#e5091422 0,transparent 32%),radial-gradient(ellipse at 82% 68%,#5b1a2826 0,transparent 35%),url("/icons/sebas-play.svg") center 46%/min(62vw,620px) no-repeat;opacity:.22;filter:saturate(.8);animation:sebas-roku-drift 32s ease-in-out infinite alternate}
+.viewer-shell:after{content:"";position:fixed;z-index:-1;inset:0;pointer-events:none;background:linear-gradient(115deg,#050505e8,#080808b8 45%,#050505e8)}
+@keyframes sebas-roku-drift{0%{transform:translate3d(-2.5%,1%,0) scale(.94) rotate(-2deg)}50%{transform:translate3d(2%, -1%,0) scale(1.04) rotate(1deg)}100%{transform:translate3d(-1%,2%,0) scale(.98) rotate(2deg)}}
+.viewer-rating-panel{margin-top:18px;padding:16px;border:1px solid #393939;border-radius:12px;background:linear-gradient(135deg,#1b1b1b,#101010);display:grid;gap:12px}
+.viewer-rating-panel>b{font-size:14px}.viewer-rating-panel>div{display:flex;gap:10px;flex-wrap:wrap}
+.viewer-rating-panel button{display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border:1px solid #484848;border-radius:8px;background:#222;color:#fff;font-weight:700;cursor:pointer}
+.viewer-rating-panel button.selected,.viewer-rating-panel button:hover{border-color:#e50914;background:#3a1518}
+.viewer-rating-panel button:disabled{opacity:.6}.viewer-rating-panel button span{font-size:18px}
+.viewer-rating-panel small{color:#aaa;font-size:10px}
+@media(prefers-reduced-motion:reduce){.viewer-shell:before{animation:none}}
