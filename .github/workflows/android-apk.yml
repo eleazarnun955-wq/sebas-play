@@ -1,4 +1,4 @@
-name: SEBAS PLAY PRO 3.0 STREAMING Android APK
+name: SEBAS PLAY PRO 3.1 CONEXION LAPTOP Android APK
 # PRO 2.2 uses a distinct Android applicationId to install alongside PRO 2.1.
 
 on:
@@ -63,7 +63,7 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.pro30laptoproku.v3standalone20261120"
+          EXPECTED="com.eleazarcompany.sebasplay.pro31laptopdirect20261123"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
@@ -71,7 +71,7 @@ jobs:
       - name: Upload SEBAS PLAY NUEVA APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-0-STREAMING-Android
+          name: SEBAS-PLAY-PRO-3-1-CONEXION-LAPTOP-Android
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
