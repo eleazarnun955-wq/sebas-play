@@ -93,3 +93,8 @@
 
 /* Native Android VLC playback entry */
 .viewer-vlc-launch{width:100%;min-height:190px;border:1px solid #a8f05a66;border-radius:14px;background:radial-gradient(ellipse at 50% 30%,#263b2b,#101722 72%);color:#d1ff86;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:12px;padding:24px;cursor:pointer;box-shadow:0 12px 36px #0005}.viewer-vlc-launch:hover{border-color:#a8f05a;background:radial-gradient(ellipse at 50% 30%,#304b32,#101722 72%)}
+
+/* PRO 3.0 F4: always-visible direct access to the Windows laptop from the home header */
+.viewer-laptop-shortcut{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;min-height:40px;padding:0 15px;border:1px solid #e50914;border-radius:7px;background:#e50914;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 5px 18px #e5091438}
+.viewer-laptop-shortcut:hover,.viewer-laptop-shortcut:focus-visible{background:#b80710;border-color:#ff343d;outline:2px solid #ff343d;outline-offset:2px}
+@media(max-width:650px){.viewer-laptop-shortcut{order:2;min-height:38px;padding:0 12px;font-size:11px}.viewer-top .viewer-search{order:4;width:100%;max-width:none}.viewer-top{row-gap:10px}}
