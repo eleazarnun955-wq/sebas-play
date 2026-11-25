@@ -115,6 +115,27 @@ function refreshLibraryIndex() {
   return scanPromise;
 }
 
+// Watch the library for near-real-time changes on Windows. The periodic scan remains
+// enabled as a reconciliation fallback (including filesystems without recursive watch).
+let libraryWatcher = null;
+let watchDebounce = null;
+function startLibraryWatcher() {
+  try {
+    libraryWatcher = fs.watch(ROOT, { recursive:true }, (_eventType, filename) => {
+      if (!filename) return;
+      if (watchDebounce) clearTimeout(watchDebounce);
+      watchDebounce = setTimeout(() => { watchDebounce = null; void refreshLibraryIndex(); }, Math.max(250, Number(process.env.SEBAS_WATCH_DEBOUNCE_MS || 1200)));
+    });
+    libraryWatcher.on("error", error => {
+      console.warn("Vigilancia de biblioteca no disponible; continúa el escaneo periódico:", error.message);
+      libraryWatcher?.close();
+      libraryWatcher = null;
+    });
+  } catch (error) {
+    console.warn("Vigilancia recursiva no disponible; continúa el escaneo periódico:", error instanceof Error ? error.message : String(error));
+  }
+}
+
 function sendError(res, status, message) { json(res, status, { error:message }); }
 
 const server = http.createServer(async (req, res) => {
@@ -212,6 +233,6 @@ const server = http.createServer(async (req, res) => {
   }
   return sendError(res, 404, "Ruta no encontrada");
 });
-server.listen(PORT, HOST, () => { console.log("SEBAS PLAY Media Server activo en " + HOST + ":" + PORT); void refreshLibraryIndex(); setInterval(() => { void refreshLibraryIndex(); }, Math.max(15000, Number(process.env.SEBAS_SCAN_INTERVAL_MS || 30000))).unref(); });
+server.listen(PORT, HOST, () => { console.log("SEBAS PLAY Media Server activo en " + HOST + ":" + PORT); void refreshLibraryIndex(); startLibraryWatcher(); setInterval(() => { void refreshLibraryIndex(); }, Math.max(15000, Number(process.env.SEBAS_SCAN_INTERVAL_MS || 30000))).unref(); });
 process.on("SIGINT", () => server.close(() => process.exit(0)));
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
