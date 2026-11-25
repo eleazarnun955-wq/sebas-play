@@ -65,3 +65,11 @@ Base de trabajo e identidades independientes creadas. Las nueve funciones son el
 - `GET /api/status` requiere autenticación y reporta estado del último escaneo, cantidad de medios, sesiones de transmisión activas y espacio libre/total cuando el sistema lo permite.
 - El catálogo firmado se genera a partir del índice y conserva URL firmada por archivo.
 - Esta primera entrega es un escaneo periódico completo, no un watcher incremental por eventos de sistema de archivos; se debe medir con bibliotecas grandes en Windows 10 antes de reducir el intervalo.
+
+
+## Avance verificado — 25 de noviembre de 2026
+- El servidor Windows ahora acepta el token administrativo exclusivamente mediante `Authorization: Bearer`; los tokens enviados en parámetros de URL se rechazan. El panel Android/Web envía el token en el encabezado.
+- El smoke test valida el rechazo de credenciales en query strings y el preflight CORS del encabezado Authorization.
+- La compilación Android PRO 4.0 del commit `04ee1974e8eaadd88cbba1d1e155f1c064da2a8a` terminó correctamente. Artefacto preliminar de Actions: `SEBAS-PLAY-PRO-4.0-APK-INDEPENDIENTE`, ID `15019420832`, generado el 25-nov-2026 y con expiración 25-dic-2026.
+- La compilación general y los smoke tests del servidor Windows también terminaron correctamente para ese commit.
+- Este APK es una compilación de avance, no una versión final: faltan implementar y validar varias de las nueve funciones y realizar pruebas físicas en Android, Roku y Windows 10.
