@@ -1,10 +1,11 @@
-name: SEBAS PLAY PRO 3.2 MI LAPTOP Android APK
-# Build with a fresh unique applicationId so Android installs this beside prior versions.
+name: SEBAS PLAY PRO 3.2 MI LAPTOP + VLC Android APK
+# A new package ID avoids replacing or colliding with every previous SEBAS PLAY build.
+# Verification matches the unique PRO 3.0 VLC package ID.
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/sebas-play-pro32-mi-laptop-independent-20261124]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/unique-package-install-20261124c, fix/pro30-vlc-package-unique-20261125g3, fix/sebas-play-connection-vlc-playback-20261125d]
     paths:
       - "src/**"
       - "public/**"
@@ -58,8 +59,11 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Allow signed HTTP media and Internet permission for Windows laptop\n
+      - name: Allow signed HTTP media from Windows laptop
         run: node scripts/enable-android-local-http.mjs
+
+      - name: Integrate native VLC media engine for Android
+        run: node scripts/install-vlc-android.mjs
 
       - name: Generate SEBAS PLAY Android launcher icons
         run: node scripts/generate-android-icons.mjs
@@ -70,7 +74,7 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Verify independent Android package ID
+      - name: Verify package ID is the new independent one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
@@ -79,11 +83,14 @@ jobs:
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro30streaming20261120"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro22.adult20261120"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro21.independent20261120"
 
-      - name: Upload SEBAS PLAY Android APK
+      - name: Upload SEBAS PLAY PRO 3.0 VLC APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-2-MI-LAPTOP-INDEPENDIENTE-20261125C
+          name: SEBAS-PLAY-PRO-3-2-MI-LAPTOP-VLC-INDEPENDIENTE-20261125D
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
