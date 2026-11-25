@@ -19,7 +19,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 ## Trabajo que debe quedar integrado antes de la entrega única
 1. Escaneo de biblioteca: vigilancia incremental, reconciliación segura y pruebas de altas/cambios/eliminaciones sin tocar archivos. Implementado y probado en CI; el escaneo periódico se conserva como respaldo.
 2. Reproductor profesional: controles y estados coherentes; subtítulos/pistas cuando el dispositivo los soporte; reanudación robusta y manejo de errores.
-3. Sincronización real Android/Roku: progreso, vistos y favoritos con identidad de usuario/perfil compartida; no usar un usuario anónimo distinto por dispositivo como falsa sincronización.
+3. Sincronización Android/Roku: backend de vinculación segura, códigos temporales de un solo uso, tokens revocables y lectura/escritura de favoritos/progreso implementados. Falta completar pruebas físicas y los perfiles múltiples siguen pendientes.
 4. Metadatos: proveedor configurable, caché y edición manual protegida contra sobrescritura automática.
 5. Servidor Windows: instalación/arranque automático opcional y recuperación tras reinicio. El instalador ahora solicita consentimiento explícito antes de crear el acceso directo de inicio; responder No conserva el arranque manual. La desactivación reversible elimina únicamente ese acceso directo. El contrato se prueba en CI; falta validación física de instalación, reinicio y recuperación en Windows 10.
 6. Transcodificación: FFmpeg opcional, verificación de disponibilidad, cola/concurrencia limitada, caché temporal y limpieza segura.
@@ -29,7 +29,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 
 ## Criterios de salida
 - CI verde para build Android/web, pruebas del servidor y verificaciones de identidad.
-- Pruebas automatizadas de seguridad del servidor local: token administrativo solo en encabezado, traversal firmado rechazado, enlaces simbólicos excluidos, enlaces HMAC vencidos/manipulados rechazados y rutas confinadas a la biblioteca. RLS por propietario y la vinculación de perfiles Android/Roku siguen pendientes de integración y pruebas.
+- Pruebas automatizadas de seguridad del servidor local: token administrativo solo en encabezado, traversal firmado rechazado, enlaces simbólicos excluidos, enlaces HMAC vencidos/manipulados rechazados y rutas confinadas a la biblioteca. Las tablas de vinculación Roku tienen RLS y denegación directa para clientes; la función Edge verifica al usuario y el token de dispositivo. Falta prueba física del flujo completo.
 - Pruebas con archivos reales MP4/H.264/AAC y un formato que requiera transcodificación.
 - Pruebas físicas de catálogo y reproducción en Windows 10, Android y Roku, incluida una biblioteca mayor a 300 elementos.
 - Confirmar que ambas APK se instalan simultáneamente y que la nueva no solicita reemplazar PRO 4.0.
@@ -42,7 +42,7 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - Android ya carga favoritos e historial desde Supabase al iniciar sesión y guarda el progreso del reproductor. Se añadió refresco de la biblioteca personal cada 15 segundos mientras la app está visible y al volver a primer plano, usando la misma cuenta.
 - El refresco no requiere cambios de esquema y no altera datos de producción.
 - La publicación `supabase_realtime` no incluye actualmente `favorites` ni `watch_progress`; se dejó polling como alternativa segura, sin modificar la publicación de producción.
-- Roku PRO 5.0 todavía consulta el catálogo como cliente anónimo y no tiene inicio de sesión de usuario. Por ello no se debe afirmar que Roku sincroniza favoritos/progreso entre cuentas hasta implementar un flujo seguro de vinculación de TV y probarlo en un dispositivo físico. No se guardan contraseñas ni tokens de usuario en el código Roku.
+- Roku PRO 5.0 consulta el catálogo público como cliente anónimo y usa un token de dispositivo revocable para la biblioteca personal. No recibe ni guarda contraseñas ni JWT de usuario. La vinculación y sincronización están integradas en código, pero deben validarse en un Roku físico antes de considerarlas finalizadas.
 
 ## Vinculación Roku — avance 25-nov-2026
 
@@ -51,3 +51,9 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - Android PRO 5.0 incluye generación de código y lista/revocación de dispositivos. Roku PRO 5.0 incluye pantalla de vinculación, guarda el token en su registro privado, consulta favoritos/progreso y envía progreso de películas/episodios cada 15 segundos.
 - La función no entrega credenciales Supabase al Roku ni permite consultar datos de otra cuenta. La sincronización solo queda confirmada cuando se complete la prueba física de emparejamiento, favoritos, progreso y revocación en el dispositivo Roku.
 - El empaquetado de Roku y CI deben validar los nuevos componentes. No se debe marcar el trabajo como terminado hasta que pasen ambos workflows y las pruebas físicas.
+
+## Validación automatizada de vinculación
+
+- Se agregó `scripts/verify-pro50-pairing.mjs` a CI para comprobar acciones de la función Edge, hash de tokens, vencimiento/uso único de códigos, revocación, RLS, y cableado de Android/Roku.
+- Las migraciones de pairing ya están registradas tanto en el proyecto Supabase como en `supabase/migrations/` del repositorio.
+- La alerta de Supabase que permanece activa es la protección de contraseñas filtradas deshabilitada; es una configuración global de Auth ajena al pairing y no se cambió automáticamente.
