@@ -26,10 +26,27 @@ export default function ViewerApp(){
    supabase.from("live_channels").select("id,name,logo_url,category,country_code,stream_url,rights_note,created_at").eq("is_published",true).order("created_at",{ascending:false}),
    supabase.auth.getSession()
   ]);
-  if(!alive)return;const e=m.error||s.error||c.error;if(e)setError(e.message);const pro40 = import.meta.env.VITE_SEBAS_PRO40 === "true";setMovies(((m.data||[]) as Movie[]).filter(item=>!pro40||isDirectMediaUrl(item.video_url)));setSeries((s.data||[]) as Series[]);setChannels(((c.data||[]) as Channel[]).filter(item=>!pro40||isDirectMediaUrl(item.stream_url)));const u=session.data.session?.user||null;setUser(u);
+  if(!alive)return;const e=m.error||s.error||c.error;if(e)setError(e.message);const pro40 = import.meta.env.VITE_SEBAS_PRO40 === "true";setMovies(((m.data||[]) as Movie[]).filter(item=>!pro40||isDirectMediaUrl(item.video_url)));let visibleSeries=(s.data||[]) as Series[];
+  if(pro40&&visibleSeries.length){
+   const [seasonResult,episodeResult]=await Promise.all([
+    supabase.from("seasons").select("id,series_id"),
+    supabase.from("episodes").select("season_id,video_url").eq("is_published",true)
+   ]);
+   if(!alive)return;
+   if(!seasonResult.error&&!episodeResult.error){
+    const seriesBySeason=new Map<string,string>(((seasonResult.data||[]) as {id:string;series_id:string}[]).map(item=>[item.id,item.series_id]));
+    const playableSeriesIds=new Set<string>();
+    for(const item of (episodeResult.data||[]) as {season_id:string;video_url:string|null}[]){
+     const seriesId=seriesBySeason.get(item.season_id);
+     if(seriesId&&isDirectMediaUrl(item.video_url))playableSeriesIds.add(seriesId);
+    }
+    visibleSeries=visibleSeries.filter(item=>playableSeriesIds.has(item.id));
+   }else setError(seasonResult.error?.message||episodeResult.error?.message||"No se pudo validar los episodios del catálogo.");
+  }
+  setSeries(visibleSeries);setChannels(((c.data||[]) as Channel[]).filter(item=>!pro40||isDirectMediaUrl(item.stream_url)));const u=session.data.session?.user||null;setUser(u);
   if(u){const f=await supabase.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(alive&&!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(alive&&!h.error)setHistory((h.data||[]) as WatchProgress[])}
   setLoading(false);
- }void load();const catalogSub=supabase?.channel("sebas-play-public-catalog").on("postgres_changes",{event:"*",schema:"public",table:"movies"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"series"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"live_channels"},()=>void load()).subscribe();const sub=supabase?.auth.onAuthStateChange(async(_event,session)=>{if(!alive)return;const u=session?.user||null;setUser(u);if(u){const f=await supabase!.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase!.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(!h.error)setHistory((h.data||[]) as WatchProgress[])}else{setFavorites([]);setHistory([])}});return()=>{alive=false;sub?.data.subscription.unsubscribe();if(catalogSub)supabase?.removeChannel(catalogSub)}},[]);
+ }void load();const catalogSub=supabase?.channel("sebas-play-public-catalog").on("postgres_changes",{event:"*",schema:"public",table:"movies"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"series"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"seasons"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"episodes"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"live_channels"},()=>void load()).subscribe();const sub=supabase?.auth.onAuthStateChange(async(_event,session)=>{if(!alive)return;const u=session?.user||null;setUser(u);if(u){const f=await supabase!.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase!.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(!h.error)setHistory((h.data||[]) as WatchProgress[])}else{setFavorites([]);setHistory([])}});return()=>{alive=false;sub?.data.subscription.unsubscribe();if(catalogSub)supabase?.removeChannel(catalogSub)}},[]);
  useEffect(()=>{let alive=true;async function loadEpisodes(){if(!supabase||selected?.kind!=="series"){setSeasons([]);setEpisodes([]);setSeasonId("");return}
   const {data,error}=await supabase.from("seasons").select("id,season_number,title").eq("series_id",selected.item.id).order("season_number");
   if(!alive)return;if(error){setError(error.message);return}const list=(data||[]) as Season[];setSeasons(list);setSeasonId(current=>list.some(s=>s.id===current)?current:(list[0]?.id||""));
