@@ -61,6 +61,9 @@ jobs:
       - name: Allow signed HTTP media from Windows laptop
         run: node scripts/enable-android-local-http.mjs
 
+      - name: Integrate native VLC media engine for Android
+        run: node scripts/install-vlc-android.mjs
+
       - name: Generate SEBAS PLAY Android launcher icons
         run: node scripts/generate-android-icons.mjs
 
