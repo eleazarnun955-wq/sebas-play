@@ -7,12 +7,9 @@ sub loadCatalog()
 
     movies = fetchRows("movies", "id,title,synopsis,poster_url,release_year,video_url", "created_at")
     if movies = invalid
-        if m.top.errorMessage = invalid or m.top.errorMessage = "" then
-            m.top.errorMessage = "No se pudo consultar Películas. Revisa la conexión y permisos del catálogo."
-        end if
+        if m.top.errorMessage = invalid or m.top.errorMessage = "" then m.top.errorMessage = "No se pudo consultar Películas. Revisa conexión y permisos."
         return
     end if
-
     movieRow = root.CreateChild("ContentNode")
     movieRow.title = "Películas"
     for each movie in movies
@@ -27,15 +24,27 @@ sub loadCatalog()
     end for
 
     shows = fetchRows("series", "id,title,synopsis,poster_url,release_year", "created_at")
-    if shows <> invalid
-        showRow = root.CreateChild("ContentNode")
-        showRow.title = "Series"
+    seasons = fetchRows("seasons", "id,series_id,season_number,title", "season_number", false)
+    episodes = fetchRows("episodes", "id,season_id,episode_number,title,synopsis,duration_minutes,video_url", "episode_number")
+    if shows <> invalid and seasons <> invalid and episodes <> invalid
         for each show in shows
-            item = showRow.CreateChild("ContentNode")
-            item.title = show.title
-            item.hdPosterUrl = show.poster_url
-            item.description = show.synopsis
-            item.addFields({seriesId: show.id, releaseYear: show.release_year, contentType: "series"})
+            showRow = root.CreateChild("ContentNode")
+            showRow.title = show.title
+            showRow.addFields({seriesId: show.id, contentType: "series"})
+            for each season in seasons
+                if season.series_id = show.id
+                    for each episode in episodes
+                        if episode.season_id = season.id and episode.video_url <> invalid and episode.video_url <> ""
+                            item = showRow.CreateChild("ContentNode")
+                            item.title = "T" + season.season_number.ToStr() + " · E" + episode.episode_number.ToStr() + " · " + episode.title
+                            item.url = episode.video_url
+                            item.hdPosterUrl = show.poster_url
+                            item.description = episode.synopsis
+                            item.addFields({contentId: episode.id, seriesId: show.id, contentType: "episode"})
+                        end if
+                    end for
+                end if
+            end for
         end for
     end if
 
@@ -56,20 +65,19 @@ sub loadCatalog()
     end if
 
     m.top.catalog = root
-    if m.top.errorMessage = invalid or m.top.errorMessage = "" then
-        m.top.errorMessage = "Catálogo actualizado"
-    end if
+    if m.top.errorMessage = invalid or m.top.errorMessage = "" then m.top.errorMessage = "Catálogo actualizado"
 end sub
 
-function fetchRows(tableName as string, selectFields as string, orderField as string) as dynamic
+function fetchRows(tableName as string, selectFields as string, orderField as string, publishedOnly = true as boolean) as dynamic
     transfer = CreateObject("roUrlTransfer")
     transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
     transfer.InitClientCertificates()
-    transfer.SetUrl(SebasPlaySupabaseUrl() + "/rest/v1/" + tableName + "?select=" + selectFields + "&is_published=eq.true&order=" + orderField + ".desc&limit=100")
+    query = "?select=" + selectFields + "&order=" + orderField + ".desc&limit=300"
+    if publishedOnly then query = "?select=" + selectFields + "&is_published=eq.true&order=" + orderField + ".desc&limit=300"
+    transfer.SetUrl(SebasPlaySupabaseUrl() + "/rest/v1/" + tableName + query)
     transfer.AddHeader("apikey", SebasPlayPublishableKey())
     transfer.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     transfer.AddHeader("Accept", "application/json")
-
     response = transfer.GetToString()
     code = transfer.GetResponseCode()
     if response = invalid or response = "" or code < 200 or code >= 300
@@ -78,7 +86,6 @@ function fetchRows(tableName as string, selectFields as string, orderField as st
         m.top.errorMessage = "Catálogo " + tableName + " · HTTP " + code.ToStr() + " " + detail
         return invalid
     end if
-
     parsed = ParseJson(response)
     if type(parsed) <> "roArray"
         m.top.errorMessage = "Respuesta inesperada del catálogo: " + tableName
