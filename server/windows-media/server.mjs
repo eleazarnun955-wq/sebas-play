@@ -134,6 +134,11 @@ const server = http.createServer(async (req, res) => {
     try { const stats = await fs.promises.statfs(ROOT); storage = { total_bytes:Number(stats.blocks) * Number(stats.bsize), free_bytes:Number(stats.bavail) * Number(stats.bsize) }; } catch {}
     return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage });
   }
+  if (url.pathname === "/api/scan" && req.method === "POST") {
+    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    await refreshLibraryIndex();
+    return json(res, 200, { ok:true, library_count:libraryIndex.length, scan:scanState });
+  }
   if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
