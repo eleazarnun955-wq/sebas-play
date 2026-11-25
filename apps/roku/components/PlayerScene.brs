@@ -1,5 +1,6 @@
 sub init()
     m.video = m.top.FindNode("video")
+    m.errorLabel = m.top.FindNode("errorLabel")
     m.top.ObserveField("videoUrl", "startPlayback")
     m.top.ObserveField("videoTitle", "updateTitle")
     m.video.ObserveField("state", "onVideoState")
@@ -25,8 +26,8 @@ sub onVideoState()
     if state = "error"
         m.top.errorMessage = "Roku no pudo reproducir este archivo. Para Roku usa MP4 con video H.264 y audio AAC; MOV, WebM y algunos MP4 con otros códecs no son compatibles."
         m.video.control = "stop"
-        m.top.wasClosed = true
-        m.top.RemoveFromParent()
+        m.errorLabel.text = m.top.errorMessage
+        m.errorLabel.visible = true
     else if state = "finished"
         m.video.control = "stop"
         m.top.wasClosed = true
