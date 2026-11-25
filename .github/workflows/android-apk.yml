@@ -58,7 +58,7 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Allow signed HTTP media from Windows laptop
+      - name: Allow signed HTTP media and Internet permission for Windows laptop\n
         run: node scripts/enable-android-local-http.mjs
 
       - name: Generate SEBAS PLAY Android launcher icons
