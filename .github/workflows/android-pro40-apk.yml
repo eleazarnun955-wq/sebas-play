@@ -4,6 +4,16 @@ on:
   workflow_dispatch:
   push:
     branches: [sebas-play-pro40-independent-20261125]
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.pro40.config.ts"
+      - ".github/workflows/android-pro40-apk.yml"
     paths:
       - "src/**"
       - "public/**"
