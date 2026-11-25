@@ -28,7 +28,8 @@ sub loadCatalog()
     episodes = fetchRows("episodes", "id,season_id,episode_number,title,synopsis,duration_minutes,video_url", "episode_number")
     if shows <> invalid and seasons <> invalid and episodes <> invalid
         for each show in shows
-            showRow = root.CreateChild("ContentNode")
+            ' Build the row detached; append only when it contains playable episodes.
+            showRow = CreateObject("roSGNode", "ContentNode")
             showRow.title = show.title
             showRow.addFields({seriesId: show.id, contentType: "series"})
             for each season in seasons
@@ -45,6 +46,7 @@ sub loadCatalog()
                     end for
                 end if
             end for
+            if showRow.GetChildCount() > 0 then root.AppendChild(showRow)
         end for
     end if
 
