@@ -9,5 +9,6 @@
   <script type="text/brightscript" uri="PlayerScene.brs" />
   <children>
     <Video id="video" width="1920" height="1080" />
+    <Label id="errorLabel" visible="false" width="1500" translation="[210,780]" color="#FFFFFF" font="font:MediumSystemFont" />
   </children>
 </component>
