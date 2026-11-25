@@ -15,7 +15,6 @@ on:
       - "capacitor.pro40.config.ts"
       - ".github/workflows/android-pro40-apk.yml"
 
-
 permissions:
   contents: read
 
@@ -51,11 +50,30 @@ jobs:
         run: node scripts/enable-android-local-http.mjs
       - name: Generar iconos
         run: node scripts/generate-android-icons.mjs
+      - name: Configurar espejo Maven y reintentos
+        run: |
+          cat > android/ci-maven-mirror.init.gradle <<'EOF'
+          settingsEvaluated { settings ->
+              settings.pluginManagement.repositories.maven {
+                  url = uri("https://maven-central.storage-download.googleapis.com/maven2")
+              }
+              settings.dependencyResolutionManagement.repositories.maven {
+                  url = uri("https://maven-central.storage-download.googleapis.com/maven2")
+              }
+          }
+          allprojects {
+              repositories {
+                  maven {
+                      url = uri("https://maven-central.storage-download.googleapis.com/maven2")
+                  }
+              }
+          }
+          EOF
       - name: Compilar APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew --init-script ci-maven-mirror.init.gradle --no-daemon --max-workers=2 --refresh-dependencies assembleDebug
       - name: Verificar identidad independiente
         run: |
           APK=android/app/build/outputs/apk/debug/app-debug.apk
