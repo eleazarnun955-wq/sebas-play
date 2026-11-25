@@ -1,6 +1,6 @@
 name: SEBAS PLAY PRO 3.2 MI LAPTOP + VLC Android APK
 # A new package ID avoids replacing or colliding with every previous SEBAS PLAY build.
-# Verification matches the unique PRO 3.0 VLC package ID.
+# Verification matches the unique independent PRO 3.2 Mi Laptop + VLC package ID.
 
 on:
   workflow_dispatch:
