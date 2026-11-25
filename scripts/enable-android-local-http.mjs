@@ -37,5 +37,5 @@ fs.writeFileSync(securityPath, [
 
 const verified = fs.readFileSync(manifestPath, "utf8");
 if (!/<uses-permission\s+android:name="android\.permission\.INTERNET"/.test(verified)) throw new Error("No se pudo agregar el permiso INTERNET.");
-if (!/android:usesCleartextTraffic="true"/.test(verified) || !/android:networkSecurityConfig="@xml\/network_security_config"/.test(verified)) throw new Error("No se pudo habilitar HTTP local en Android.");
+if (!verified.includes('android:usesCleartextTraffic="true"') || !verified.includes('android:networkSecurityConfig="@xml/network_security_config"')) throw new Error("No se pudo habilitar HTTP local en Android.");
 console.log("Android preparado: permiso INTERNET y HTTP local habilitados para el servidor multimedia Windows.");
