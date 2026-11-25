@@ -1,5 +1,5 @@
-name: SEBAS PLAY PRO 3.0 MEJORADA Android APK
-# Build with a fresh unique applicationId so Android installs this beside prior versions.
+name: SEBAS PLAY PRO 3.0 VLC INDEPENDIENTE Android APK
+# A new package ID avoids replacing or colliding with every previous SEBAS PLAY build.
 
 on:
   workflow_dispatch:
@@ -73,20 +73,23 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Verify independent Android package ID
+      - name: Verify package ID is the new independent one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.pro30.sixfeatures20261124d"
+          EXPECTED="com.eleazarcompany.sebasplay.pro30.vlcfix20261125e"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro30streaming20261120"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro22.adult20261120"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro21.independent20261120"
 
-      - name: Upload SEBAS PLAY Android APK
+      - name: Upload SEBAS PLAY PRO 3.0 VLC APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-0-MEJORADA-20261124D
+          name: SEBAS-PLAY-PRO-3-0-VLC-INDEPENDIENTE-20261125E
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
