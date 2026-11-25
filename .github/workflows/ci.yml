@@ -18,5 +18,11 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Verify PRO 5.0 platform identity
+        run: |
+          grep -q 'text="SEBAS PLAY PRO 5.0"' apps/roku-pro40/components/HomeScene.xml
+          grep -q '^title=SEBAS PLAY PRO 5.0$' apps/roku-pro40/manifest
+          grep -q '^major_version=5$' apps/roku-pro40/manifest
+          grep -q 'com.eleazarcompany.sebasplay.pro50.independent20261125' capacitor.pro40.config.ts
       - name: Build admin panel
         run: npm run build
