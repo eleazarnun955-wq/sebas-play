@@ -92,6 +92,31 @@ try {
   assert.ok(autoCatalog.items.some(item => item.title === "new-arrival"), "new files should be indexed automatically without manual scan");
   assert.equal(autoCatalog.count, 3);
 
+  await fs.writeFile(path.join(temp, "new-arrival.mp4"), Buffer.from("AUTO-INDEXED-BUT-LONGER"));
+  let changedCatalog;
+  for (let i = 0; i < 20; i++) {
+    const response = await fetch("http://127.0.0.1:18787/api/catalog", {
+      headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+    });
+    changedCatalog = await response.json();
+    if (changedCatalog.items.find(item => item.title === "new-arrival")?.size_bytes === Buffer.byteLength("AUTO-INDEXED-BUT-LONGER")) break;
+    await wait(150);
+  }
+  assert.equal(changedCatalog.items.find(item => item.title === "new-arrival")?.size_bytes, Buffer.byteLength("AUTO-INDEXED-BUT-LONGER"), "changed files should refresh automatically");
+
+  await fs.unlink(path.join(temp, "new-arrival.mp4"));
+  let deletedCatalog;
+  for (let i = 0; i < 20; i++) {
+    const response = await fetch("http://127.0.0.1:18787/api/catalog", {
+      headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+    });
+    deletedCatalog = await response.json();
+    if (!deletedCatalog.items.some(item => item.title === "new-arrival")) break;
+    await wait(150);
+  }
+  assert.ok(!deletedCatalog.items.some(item => item.title === "new-arrival"), "deleted files should disappear from the catalog automatically");
+  assert.equal(deletedCatalog.count, 2);
+
   const sampleItem = catalog.items.find(item => item.title === "sample");
   assert.ok(sampleItem, "original test video should remain in the library");
   const stream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=0-5" } });
