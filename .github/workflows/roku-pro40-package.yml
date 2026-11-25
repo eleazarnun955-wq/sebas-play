@@ -23,6 +23,8 @@ jobs:
           test -f apps/roku-pro40/components/HomeScene.xml
           test -f apps/roku-pro40/components/CatalogTask.brs
           test -f apps/roku-pro40/components/PlayerScene.xml
+          test -f apps/roku-pro40/components/PairingTask.xml
+          test -f apps/roku-pro40/components/ProgressTask.xml
           grep -q "playbackStatus" apps/roku-pro40/components/PlayerScene.xml
           grep -q "function onKeyEvent" apps/roku-pro40/components/PlayerScene.brs
           grep -q "No se pudo reproducir este archivo" apps/roku-pro40/components/PlayerScene.brs
@@ -40,6 +42,13 @@ jobs:
           grep -q 'showRow.GetChildCount() > 0' apps/roku-pro40/components/CatalogTask.brs
           grep -q 'root.AppendChild(showRow)' apps/roku-pro40/components/CatalogTask.brs
           grep -q "pageSize = 300" apps/roku-pro40/components/CatalogTask.brs
+          grep -q "loadPersonalSync(root)" apps/roku-pro40/components/CatalogTask.brs
+          grep -q "functions/v1/roku-device-sync?action=sync" apps/roku-pro40/components/CatalogTask.brs
+          grep -q "KeyboardDialog" apps/roku-pro40/components/HomeScene.brs
+          grep -q "functions/v1/roku-device-sync" apps/roku-pro40/components/PairingTask.brs
+          grep -q "SEBASPLAYPRO50" apps/roku-pro40/components/PairingTask.brs
+          grep -q "onPositionChanged" apps/roku-pro40/components/PlayerScene.brs
+          grep -q "ProgressTask" apps/roku-pro40/components/PlayerScene.brs
           grep -q "offset = offset + pageSize" apps/roku-pro40/components/CatalogTask.brs
           grep -q "allRows.Push(row)" apps/roku-pro40/components/CatalogTask.brs
       - name: Package Roku channel source
