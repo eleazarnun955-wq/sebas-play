@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PlayerScene" extends="Group">
+  <interface>
+    <field id="videoUrl" type="string" />
+    <field id="videoTitle" type="string" />
+    <field id="wasClosed" type="boolean" value="false" />
+  </interface>
+  <script type="text/brightscript" uri="PlayerScene.brs" />
+  <children>
+    <Video id="video" width="1920" height="1080" />
+    <Label id="title" translation="[80,40]" width="1500" height="70" color="0xFFFFFFFF" />
+    <Label id="playbackStatus" translation="[180,900]" width="1560" height="110" horizAlign="center" vertAlign="center" wrap="true" color="0xFFFFFFFF" />
+  </children>
+</component>

@@ -2,7 +2,7 @@ name: SEBAS PLAY CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, sebas-play-pro40-independent-20261125]
   pull_request:
     branches: [main]
 

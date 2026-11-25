@@ -47,6 +47,14 @@ try {
   assert.match(uploaded.file, /uploaded\.mp4$/);
   const denied = await fetch("http://127.0.0.1:18787/api/catalog");
   assert.equal(denied.status, 401, "catalog must require admin token");
+  const queryTokenDenied = await fetch("http://127.0.0.1:18787/api/catalog?access_token=" + encodeURIComponent(env.SEBAS_ACCESS_TOKEN));
+  assert.equal(queryTokenDenied.status, 401, "admin token in URL must never authorize requests");
+  const preflight = await fetch("http://127.0.0.1:18787/api/catalog", {
+    method: "OPTIONS",
+    headers: { origin: "https://app.example.test", "access-control-request-method": "GET", "access-control-request-headers": "authorization" },
+  });
+  assert.equal(preflight.status, 204, "Authorization header preflight must be supported");
+  assert.match(preflight.headers.get("access-control-allow-headers") || "", /Authorization/i);
 
   const catalogResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
     headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
@@ -54,6 +62,19 @@ try {
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
   assert.equal(catalog.count, 2);
+  assert.equal(catalog.scan.count, 2, "automatic scanner should index original and uploaded media");
+  const scanDenied = await fetch("http://127.0.0.1:18787/api/scan", { method:"POST" });
+  assert.equal(scanDenied.status, 401, "manual library scan must require admin token");
+  const statusDenied = await fetch("http://127.0.0.1:18787/api/status");
+  assert.equal(statusDenied.status, 401, "server status must require admin token");
+  const statusResponse = await fetch("http://127.0.0.1:18787/api/status", {
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+  });
+  assert.equal(statusResponse.status, 200);
+  const serverStatus = await statusResponse.json();
+  assert.equal(serverStatus.library_count, 2);
+  assert.equal(serverStatus.scan.lastError, null);
+  assert.ok(serverStatus.storage === null || serverStatus.storage.free_bytes >= 0);
   const sampleItem = catalog.items.find(item => item.title === "sample");
   assert.ok(sampleItem, "original test video should remain in the library");
   const stream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=0-5" } });
@@ -82,7 +103,21 @@ try {
   const remoteCatalog = await remoteResponse.json();
   assert.ok(remoteCatalog.items[0].stream_url.startsWith("https://media.example.test/media/"));
 
-  console.log("PASS: home page, health, protected catalog, LAN/HTTPS URLs, signed playback and HTTP Range.");
+  // Verify a manual scan detects removals without touching the original library file.
+  await fs.unlink(path.join(temp, uploaded.file));
+  const refresh = await fetch("http://127.0.0.1:18787/api/scan", {
+    method:"POST",
+    headers:{ authorization:"Bearer " + env.SEBAS_ACCESS_TOKEN }
+  });
+  assert.equal(refresh.status, 200);
+  const refreshed = await refresh.json();
+  assert.equal(refreshed.library_count, 1, "manual scan should remove deleted files from the catalog index");
+  const refreshedCatalog = await fetch("http://127.0.0.1:18787/api/catalog", {
+    headers:{ authorization:"Bearer " + env.SEBAS_ACCESS_TOKEN }
+  });
+  assert.equal((await refreshedCatalog.json()).count, 1);
+
+  console.log("PASS: home page, health, protected catalog, incremental refresh/removal, LAN/HTTPS URLs, signed playback and HTTP Range.");
 } finally {
   child.kill("SIGTERM");
   await wait(150);

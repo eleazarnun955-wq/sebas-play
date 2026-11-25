@@ -43,6 +43,8 @@ export default function WindowsMediaManager() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [connected, setConnected] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [lastScan, setLastScan] = useState<string>("");
 
   async function connect() {
     const base = normalizeServerBase(serverUrl);
@@ -52,13 +54,13 @@ export default function WindowsMediaManager() {
     }
     setLoading(true); setMessage(null);
     try {
-      // Check reachability first, without credentials or a custom header. This avoids
-      // Android WebView cross-origin preflight failures on the laptop's local HTTP server.
+      // Check reachability without credentials; send the admin token only in a header.
       const healthResponse = await fetch(`${base}/health`, { cache: "no-store" });
       if (!healthResponse.ok) throw new Error(`La laptop respondió con HTTP ${healthResponse.status} en /health.`);
-      const catalogUrl = new URL(`${base}/api/catalog`);
-      catalogUrl.searchParams.set("access_token", token.trim());
-      const response = await fetch(catalogUrl.toString(), { cache: "no-store" });
+      const response = await fetch(`${base}/api/catalog`, {
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token.trim()}` },
+      });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
       setItems((payload.items || []) as MediaItem[]);
@@ -68,6 +70,29 @@ export default function WindowsMediaManager() {
       setConnected(false);
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo conectar con la laptop." });
     } finally { setLoading(false); }
+  }
+
+  async function scanNow() {
+    if (!connected || !serverUrl.trim() || !token.trim()) {
+      setMessage({ kind: "error", text: "Conecta primero la laptop para iniciar el escaneo." });
+      return;
+    }
+    setScanning(true); setMessage(null);
+    try {
+      const base = normalizeServerBase(serverUrl);
+      const response = await fetch(`${base}/api/scan`, {
+        method: "POST",
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token.trim()}` },
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
+      setLastScan(new Date().toLocaleString());
+      await connect();
+      setMessage({ kind: "ok", text: `Escaneo completado. El servidor informa ${result.library_count ?? result.count ?? "—"} archivos en la biblioteca.` });
+    } catch (error) {
+      setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo completar el escaneo de la laptop." });
+    } finally { setScanning(false); }
   }
 
   async function uploadFile(file: File) {
@@ -84,19 +109,18 @@ export default function WindowsMediaManager() {
     const base = normalizeServerBase(serverUrl);
       const uploadUrl = new URL(`${base}/api/upload`);
       uploadUrl.searchParams.set("name", file.name);
-      uploadUrl.searchParams.set("access_token", token.trim());
       const response = await fetch(uploadUrl.toString(), {
         method: "POST",
-        // The server detects the video format from its filename. text/plain is a
-        // CORS-safelisted content type, avoiding an OPTIONS preflight in Android WebView.
-        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        // The server handles the Authorization preflight and never receives secrets in URLs.
+        headers: { "Content-Type": "text/plain;charset=UTF-8", Authorization: `Bearer ${token.trim()}` },
         body: file,
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
-      const catalogUrl = new URL(`${base}/api/catalog`);
-      catalogUrl.searchParams.set("access_token", token.trim());
-      const catalogResponse = await fetch(catalogUrl.toString(), { cache: "no-store" });
+      const catalogResponse = await fetch(`${base}/api/catalog`, {
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token.trim()}` },
+      });
       const catalog = await catalogResponse.json();
       if (!catalogResponse.ok) throw new Error(catalog.error || "No se pudo actualizar el catálogo del servidor.");
       const nextItems = (catalog.items || []) as MediaItem[];
@@ -155,7 +179,7 @@ export default function WindowsMediaManager() {
         </div>
       </div>
       {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
-      <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop</p></div><button className="secondary-btn" onClick={() => void connect()} disabled={loading || !connected}><RefreshCw size={15} /> Actualizar</button></div>
+      <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop{lastScan ? ` · Último escaneo: ${lastScan}` : ""}</p></div><div className="wm-list-actions"><button className="secondary-btn" onClick={() => void scanNow()} disabled={loading || scanning || !connected}><RefreshCw size={15} className={scanning ? "spin" : ""} /> {scanning ? "Escaneando…" : "Escanear ahora"}</button><button className="secondary-btn" onClick={() => void connect()} disabled={loading || scanning || !connected}><RefreshCw size={15} /> Actualizar</button></div></div>
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
         <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small></div><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button></div>)}</div>}
       <p className="wm-footnote">Los títulos se guardan como borradores. Revisa los derechos, la portada y la información de cada ficha antes de publicarla. Renueva los enlaces firmados desde aquí antes de que venzan.</p>
