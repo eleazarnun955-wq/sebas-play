@@ -10,7 +10,7 @@ Instalador de un clic para Windows 10 de 32 o 64 bits. No requiere instalar Node
 4. Cuando aparezca la ventana de carpetas, elige la carpeta principal donde guardas tus películas y series. También se revisan sus subcarpetas.
 5. Acepta la regla del Firewall para redes privadas si Windows la solicita.
 
-El servidor se inicia, abre la página de estado y queda configurado para arrancar cuando inicies sesión en Windows. PRO 4.0 actualiza automáticamente el índice de archivos compatibles cada 30 segundos (configurable), reutiliza los metadatos de archivos sin cambios y detecta altas, cambios y eliminaciones. También permite forzar una actualización autenticada con `POST /api/scan`. Nunca mueve ni borra archivos.
+El servidor se inicia, abre la página de estado y queda configurado para arrancar cuando inicies sesión en Windows. El inicio automático se configura únicamente al ejecutar el instalador; puedes quitarlo en cualquier momento con QUITAR-INICIO-AUTOMATICO.bat. El servidor actualiza automáticamente el índice de archivos compatibles cada 30 segundos (configurable), reutiliza los metadatos de archivos sin cambios y detecta altas, cambios y eliminaciones. También permite forzar una actualización autenticada con `POST /api/scan`. Nunca mueve ni borra archivos.
 
 ## Conexión en casa
 
@@ -35,6 +35,7 @@ La primera instalación configura la red local. Para reproducir desde fuera de c
 - La laptop debe permanecer encendida y sin suspensión mientras transmite.
 - El instalador no modifica ni reemplaza las aplicaciones Android/Roku.
 - Para iniciar manualmente, usa start-server.bat.
-- Para detener el servidor, cierra la ventana minimizada SEBAS PLAY Media Server o reinicia Windows.
+- Para desactivar el inicio automático sin borrar nada, ejecuta QUITAR-INICIO-AUTOMATICO.bat.
+- Para detener el servidor en ejecución, cierra la ventana minimizada SEBAS PLAY Media Server o reinicia Windows.
 
 Aloja únicamente contenido propio, de dominio público o con autorización/licencia para distribuirlo.
