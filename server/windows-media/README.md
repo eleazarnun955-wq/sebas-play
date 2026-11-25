@@ -16,7 +16,7 @@ El servidor se inicia, abre la página de estado y queda configurado para arranc
 
 La laptop y los dispositivos deben estar conectados a la misma red Wi-Fi. El servidor muestra la dirección local de la laptop, por ejemplo http://192.168.1.15:8787. No uses localhost desde el teléfono o Roku.
 
-El archivo SEBAS-PLAY-ACCESS-TOKEN.txt contiene el token privado que se introduce en el panel administrador de SEBAS PLAY. No lo compartas. El estado avanzado autenticado está disponible en `/api/status` e informa cantidad de medios indexados, sesiones de reproducción y espacio libre.
+El archivo SEBAS-PLAY-ACCESS-TOKEN.txt contiene el token privado que se introduce en el panel administrador de SEBAS PLAY. El panel lo envía exclusivamente en el encabezado Authorization: Bearer; el servidor rechaza tokens en parámetros de URL. No lo compartas. El estado avanzado autenticado está disponible en `/api/status` e informa cantidad de medios indexados, sesiones de reproducción y espacio libre.
 
 ## Android y Roku
 
