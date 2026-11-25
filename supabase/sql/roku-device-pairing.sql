@@ -29,3 +29,16 @@ revoke all on table public.device_pairing_sessions from anon, authenticated;
 revoke all on table public.paired_devices from anon, authenticated;
 grant all on table public.device_pairing_sessions to service_role;
 grant all on table public.paired_devices to service_role;
+
+-- Explicit deny-all RLS policies document that clients must use the Edge Function.
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='device_pairing_sessions' and policyname='Deny direct client access') then
+    create policy "Deny direct client access" on public.device_pairing_sessions
+      for all to anon, authenticated using (false) with check (false);
+  end if;
+  if not exists (select 1 from pg_policies where schemaname='public' and tablename='paired_devices' and policyname='Deny direct client access') then
+    create policy "Deny direct client access" on public.paired_devices
+      for all to anon, authenticated using (false) with check (false);
+  end if;
+end $$;
