@@ -35,3 +35,11 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 - Confirmar que ambas APK se instalan simultáneamente y que la nueva no solicita reemplazar PRO 4.0.
 
 Este documento es un registro de alcance y aceptación, no una afirmación de que las nueve funciones ya estén implementadas.
+
+## Sincronización personal — avance de implementación
+
+- Las tablas existentes `favorites` y `watch_progress` ya tienen índices únicos por usuario/tipo/ID y políticas RLS de lectura/escritura/actualización/borrado por `auth.uid()`.
+- Android ya carga favoritos e historial desde Supabase al iniciar sesión y guarda el progreso del reproductor. Se añadió refresco de la biblioteca personal cada 15 segundos mientras la app está visible y al volver a primer plano, usando la misma cuenta.
+- El refresco no requiere cambios de esquema y no altera datos de producción.
+- La publicación `supabase_realtime` no incluye actualmente `favorites` ni `watch_progress`; se dejó polling como alternativa segura, sin modificar la publicación de producción.
+- Roku PRO 5.0 todavía consulta el catálogo como cliente anónimo y no tiene inicio de sesión de usuario. Por ello no se debe afirmar que Roku sincroniza favoritos/progreso entre cuentas hasta implementar un flujo seguro de vinculación de TV y probarlo en un dispositivo físico. No se guardan contraseñas ni tokens de usuario en el código Roku.
