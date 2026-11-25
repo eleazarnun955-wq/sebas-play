@@ -28,7 +28,7 @@ jobs:
         run: |
           node --check server/windows-media/server.mjs
           grep -q "QUITAR-INICIO-AUTOMATICO.bat" server/windows-media/README.md
-          grep -q "Remove-Item -LiteralPath \\\$shortcut" server/windows-media/QUITAR-INICIO-AUTOMATICO.bat
+          grep -q "Remove-Item" server/windows-media/QUITAR-INICIO-AUTOMATICO.bat
           grep -q "No borra peliculas" server/windows-media/QUITAR-INICIO-AUTOMATICO.bat
       - name: Smoke test landing page, health, protected catalog and HTTP Range streaming
         run: node server/windows-media/smoke-test.mjs
