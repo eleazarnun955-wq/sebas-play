@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Activity, Clapperboard, Film, Radio, Search, Play, Tv2, X, LoaderCircle, AlertCircle, Heart, LogIn, LogOut, HardDrive } from "lucide-react";
 import { supabase } from "./lib/supabase";
+import { isDirectMediaUrl } from "./lib/direct-media-url";
 import { isNativeVlcAvailable, openNativeVlc } from "./lib/vlc-player";
 import FreePlatforms from "./FreePlatforms";
 import StorageManager from "./StorageManager";
@@ -25,7 +26,7 @@ export default function ViewerApp(){
    supabase.from("live_channels").select("id,name,logo_url,category,country_code,stream_url,rights_note,created_at").eq("is_published",true).order("created_at",{ascending:false}),
    supabase.auth.getSession()
   ]);
-  if(!alive)return;const e=m.error||s.error||c.error;if(e)setError(e.message);setMovies((m.data||[]) as Movie[]);setSeries((s.data||[]) as Series[]);setChannels((c.data||[]) as Channel[]);const u=session.data.session?.user||null;setUser(u);
+  if(!alive)return;const e=m.error||s.error||c.error;if(e)setError(e.message);const pro40 = import.meta.env.VITE_SEBAS_PRO40 === "true";setMovies(((m.data||[]) as Movie[]).filter(item=>!pro40||isDirectMediaUrl(item.video_url)));setSeries((s.data||[]) as Series[]);setChannels(((c.data||[]) as Channel[]).filter(item=>!pro40||isDirectMediaUrl(item.stream_url)));const u=session.data.session?.user||null;setUser(u);
   if(u){const f=await supabase.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(alive&&!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(alive&&!h.error)setHistory((h.data||[]) as WatchProgress[])}
   setLoading(false);
  }void load();const catalogSub=supabase?.channel("sebas-play-public-catalog").on("postgres_changes",{event:"*",schema:"public",table:"movies"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"series"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"live_channels"},()=>void load()).subscribe();const sub=supabase?.auth.onAuthStateChange(async(_event,session)=>{if(!alive)return;const u=session?.user||null;setUser(u);if(u){const f=await supabase!.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase!.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(!h.error)setHistory((h.data||[]) as WatchProgress[])}else{setFavorites([]);setHistory([])}});return()=>{alive=false;sub?.data.subscription.unsubscribe();if(catalogSub)supabase?.removeChannel(catalogSub)}},[]);
@@ -33,7 +34,7 @@ export default function ViewerApp(){
   const {data,error}=await supabase.from("seasons").select("id,season_number,title").eq("series_id",selected.item.id).order("season_number");
   if(!alive)return;if(error){setError(error.message);return}const list=(data||[]) as Season[];setSeasons(list);setSeasonId(current=>list.some(s=>s.id===current)?current:(list[0]?.id||""));
  }void loadEpisodes();return()=>{alive=false}},[selected]);
- useEffect(()=>{let alive=true;async function load(){if(!supabase||!seasonId){setEpisodes([]);return}const {data,error}=await supabase.from("episodes").select("id,season_id,episode_number,title,synopsis,duration_minutes,video_url").eq("season_id",seasonId).eq("is_published",true).order("episode_number");if(!alive)return;if(error)setError(error.message);setEpisodes((data||[]) as Episode[])}void load();return()=>{alive=false}},[seasonId]);
+ useEffect(()=>{let alive=true;async function load(){if(!supabase||!seasonId){setEpisodes([]);return}const {data,error}=await supabase.from("episodes").select("id,season_id,episode_number,title,synopsis,duration_minutes,video_url").eq("season_id",seasonId).eq("is_published",true).order("episode_number");if(!alive)return;if(error)setError(error.message);setEpisodes(((data||[]) as Episode[]).filter(item=>import.meta.env.VITE_SEBAS_PRO40 !== "true"||isDirectMediaUrl(item.video_url)))}void load();return()=>{alive=false}},[seasonId]);
  const q=search.trim().toLocaleLowerCase();
  const fm=useMemo(()=>movies.filter(x=>(!q||[x.title,x.synopsis||"",...(x.genres||[])].join(" ").toLowerCase().includes(q))&&(activeGenre==="Todos"||(x.genres||[]).some(g=>g.toLocaleLowerCase()===activeGenre.toLocaleLowerCase()))),[movies,q,activeGenre]);
  const fs=useMemo(()=>series.filter(x=>(!q||[x.title,x.synopsis||"",...(x.genres||[])].join(" ").toLowerCase().includes(q))&&(activeGenre==="Todos"||(x.genres||[]).some(g=>g.toLocaleLowerCase()===activeGenre.toLocaleLowerCase()))),[series,q,activeGenre]);
