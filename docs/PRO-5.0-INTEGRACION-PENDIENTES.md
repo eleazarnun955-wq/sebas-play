@@ -14,7 +14,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 - Android: acceso directo “Mi laptop”, importación al catálogo como borrador, reproductor VLC cuando está disponible, historial y favoritos para usuarios autenticados. El progreso se registra/reanuda en el reproductor integrado; la reproducción delegada a VLC externo no reporta posición a la app.
 - Roku: consulta paginada de Supabase, filtro de URLs directas y estados básicos de reproducción. Se activó la interfaz nativa de controles del Video node para pausa/búsqueda y opciones de pistas compatibles con cada dispositivo; falta validación física en Roku.
 - APK PRO 5.0: compilación previa exitosa y verificación de identidad del paquete Android.
-- Roku PRO 5.0: identidad del manifest configurada; falta validación física del canal.
+- Roku PRO 5.0: identidad del manifest configurada; pairing seguro integrado en código y falta validación física del canal.
 
 ## Trabajo que debe quedar integrado antes de la entrega única
 1. Escaneo de biblioteca: vigilancia incremental, reconciliación segura y pruebas de altas/cambios/eliminaciones sin tocar archivos. Implementado y probado en CI; el escaneo periódico se conserva como respaldo.
@@ -43,3 +43,11 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - El refresco no requiere cambios de esquema y no altera datos de producción.
 - La publicación `supabase_realtime` no incluye actualmente `favorites` ni `watch_progress`; se dejó polling como alternativa segura, sin modificar la publicación de producción.
 - Roku PRO 5.0 todavía consulta el catálogo como cliente anónimo y no tiene inicio de sesión de usuario. Por ello no se debe afirmar que Roku sincroniza favoritos/progreso entre cuentas hasta implementar un flujo seguro de vinculación de TV y probarlo en un dispositivo físico. No se guardan contraseñas ni tokens de usuario en el código Roku.
+
+## Vinculación Roku — avance 25-nov-2026
+
+- Se añadieron en Supabase las tablas privadas `device_pairing_sessions` y `paired_devices`, ambas con RLS activo, sin permisos directos para `anon`/`authenticated` y políticas deny-all explícitas. El acceso queda limitado al rol de servicio dentro de la función Edge.
+- Se desplegó `roku-device-sync`: genera códigos de 12 caracteres válidos por cinco minutos para una cuenta autenticada; el código es de un solo uso; el Roku recibe un token aleatorio que solo se almacena como hash en la base de datos y se puede revocar desde Android.
+- Android PRO 5.0 incluye generación de código y lista/revocación de dispositivos. Roku PRO 5.0 incluye pantalla de vinculación, guarda el token en su registro privado, consulta favoritos/progreso y envía progreso de películas/episodios cada 15 segundos.
+- La función no entrega credenciales Supabase al Roku ni permite consultar datos de otra cuenta. La sincronización solo queda confirmada cuando se complete la prueba física de emparejamiento, favoritos, progreso y revocación en el dispositivo Roku.
+- El empaquetado de Roku y CI deben validar los nuevos componentes. No se debe marcar el trabajo como terminado hasta que pasen ambos workflows y las pruebas físicas.
