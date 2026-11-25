@@ -1,0 +1,65 @@
+name: SEBAS PLAY PRO 4.0 — APK independiente
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sebas-play-pro40-independent-20261125]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.pro40.config.ts"
+      - ".github/workflows/android-pro40-apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  android-pro40:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Compilar interfaz
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      - name: Generar proyecto Android PRO 4.0
+        run: npx cap add android --config capacitor.pro40.config.ts
+      - name: Sincronizar Capacitor
+        run: npx cap sync android --config capacitor.pro40.config.ts
+      - name: Configurar reproducción VLC
+        run: node scripts/install-vlc-android.mjs
+      - name: Generar iconos
+        run: node scripts/generate-android-icons.mjs
+      - name: Compilar APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Verificar identidad independiente
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
+          ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
+          EXPECTED=com.eleazarcompany.sebasplay.pro40.independent20261125
+          echo "Package detectado: $ACTUAL"
+          test "$ACTUAL" = "$EXPECTED"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-PRO-4.0-APK-INDEPENDIENTE
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
