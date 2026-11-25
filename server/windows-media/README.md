@@ -22,7 +22,7 @@ El archivo SEBAS-PLAY-ACCESS-TOKEN.txt contiene el token privado que se introduc
 
 Android y Roku siguen usando sus aplicaciones independientes y el catálogo compartido de Supabase. En el panel administrador se importa el catálogo local, se revisan las fichas y se publican las películas/episodios autorizados. No se suben los videos a Supabase Storage.
 
-Roku usa su reproductor nativo; se recomienda MP4 H.264/AAC. No hay transcodificación. Formatos admitidos por el servidor: MP4, M4V, MOV y WebM.
+Android abre los videos de la laptop con VLC nativo para ampliar la compatibilidad con contenedores y códecs habituales. El servidor admite MP4, M4V, MOV, WebM, MKV, AVI, WMV, FLV, MPG/MPEG, 3GP, TS/M2TS/MTS, VOB y OGV. Roku conserva su reproductor nativo y tiene límites propios; para Roku se recomienda MP4 H.264/AAC. El servidor no transcodifica.
 
 ## Acceso desde fuera de casa
 
