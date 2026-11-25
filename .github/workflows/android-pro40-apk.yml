@@ -14,14 +14,7 @@ on:
       - "package-lock.json"
       - "capacitor.pro40.config.ts"
       - ".github/workflows/android-pro40-apk.yml"
-    paths:
-      - "src/**"
-      - "public/**"
-      - "scripts/**"
-      - "package.json"
-      - "package-lock.json"
-      - "capacitor.pro40.config.ts"
-      - ".github/workflows/android-pro40-apk.yml"
+
 
 permissions:
   contents: read
