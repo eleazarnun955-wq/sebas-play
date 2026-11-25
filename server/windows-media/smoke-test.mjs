@@ -54,6 +54,17 @@ try {
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
   assert.equal(catalog.count, 2);
+  assert.equal(catalog.scan.count, 2, "automatic scanner should index original and uploaded media");
+  const statusDenied = await fetch("http://127.0.0.1:18787/api/status");
+  assert.equal(statusDenied.status, 401, "server status must require admin token");
+  const statusResponse = await fetch("http://127.0.0.1:18787/api/status", {
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+  });
+  assert.equal(statusResponse.status, 200);
+  const serverStatus = await statusResponse.json();
+  assert.equal(serverStatus.library_count, 2);
+  assert.equal(serverStatus.scan.lastError, null);
+  assert.ok(serverStatus.storage === null || serverStatus.storage.free_bytes >= 0);
   const sampleItem = catalog.items.find(item => item.title === "sample");
   assert.ok(sampleItem, "original test video should remain in the library");
   const stream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=0-5" } });
