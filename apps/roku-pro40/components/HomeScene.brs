@@ -18,6 +18,7 @@ sub onCatalogError()
     if m.task.errorMessage <> invalid then m.status.text = m.task.errorMessage
 end sub
 sub onItemSelected()
+    if m.player <> invalid then return
     selection = m.rows.rowItemSelected
     if selection = invalid then return
     row = m.rows.content.GetChild(selection[0])
@@ -27,9 +28,14 @@ sub onItemSelected()
     player = CreateObject("roSGNode", "PlayerScene")
     player.videoUrl = item.url
     player.videoTitle = item.title
-    m.top.AppendChild(player)
-    player.ObserveField("wasClosed", "onPlayerClosed")
+    m.player = player
+    m.top.AppendChild(m.player)
+    m.player.ObserveField("wasClosed", "onPlayerClosed")
 end sub
 sub onPlayerClosed()
+    if m.player <> invalid
+        m.top.RemoveChild(m.player)
+        m.player = invalid
+    end if
     m.rows.SetFocus(true)
 end sub
