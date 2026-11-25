@@ -7,6 +7,10 @@ import { spawn } from "node:child_process";
 const temp = await fs.mkdtemp(path.join(os.tmpdir(), "sebas-play-media-"));
 const sample = Buffer.from("SEBAS-PLAY-TEST");
 await fs.writeFile(path.join(temp, "sample.mp4"), sample);
+await fs.writeFile(path.join(temp, "sample.mkv"), Buffer.from("MKV-TEST"));
+await fs.writeFile(path.join(temp, "sample.avi"), Buffer.from("AVI-TEST"));
+await fs.mkdir(path.join(temp, "Subcarpeta"), { recursive: true });
+await fs.writeFile(path.join(temp, "Subcarpeta", "episode.webm"), Buffer.from("WEBM-TEST"));
 const env = {
   ...process.env,
   SEBAS_MEDIA_ROOT: temp,
@@ -53,9 +57,15 @@ try {
   });
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
-  assert.equal(catalog.count, 2);
+  assert.equal(catalog.count, 4, "catalog must include MP4, MKV, AVI and recursively found WebM");
+  assert.ok(catalog.items.some(item => item.file === "sample.mkv" && item.mime_type === "video/x-matroska"));
+  assert.ok(catalog.items.some(item => item.file === "sample.avi" && item.mime_type === "video/x-msvideo"));
+  assert.ok(catalog.items.some(item => item.file === path.join("Subcarpeta", "episode.webm").split(path.sep).join("/")));
   const sampleItem = catalog.items.find(item => item.title === "sample");
   assert.ok(sampleItem, "original test video should remain in the library");
+  const mkvItem = catalog.items.find(item => item.file === "sample.mkv");
+  const aviItem = catalog.items.find(item => item.file === "sample.avi");
+  assert.ok(mkvItem && aviItem, "MKV and AVI must be listed alongside MP4");
   const stream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=0-5" } });
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
@@ -82,7 +92,7 @@ try {
   const remoteCatalog = await remoteResponse.json();
   assert.ok(remoteCatalog.items[0].stream_url.startsWith("https://media.example.test/media/"));
 
-  console.log("PASS: home page, health, protected catalog, LAN/HTTPS URLs, signed playback and HTTP Range.");
+  console.log("PASS: recursive catalog includes MP4/MKV/AVI/WebM, plus protected access, LAN/HTTPS URLs, signed playback and HTTP Range.");
 } finally {
   child.kill("SIGTERM");
   await wait(150);
