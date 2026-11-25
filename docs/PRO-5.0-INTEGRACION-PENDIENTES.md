@@ -21,7 +21,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 2. Reproductor profesional: controles y estados coherentes; subtítulos/pistas cuando el dispositivo los soporte; reanudación robusta y manejo de errores.
 3. Sincronización real Android/Roku: progreso, vistos y favoritos con identidad de usuario/perfil compartida; no usar un usuario anónimo distinto por dispositivo como falsa sincronización.
 4. Metadatos: proveedor configurable, caché y edición manual protegida contra sobrescritura automática.
-5. Servidor Windows: instalación/arranque automático opcional y recuperación tras reinicio. La salud autenticada y el firewall limitado a red privada ya existen; el cierre ordenado del proceso y sus timers/watcher ya se prueban en CI.
+5. Servidor Windows: instalación/arranque automático opcional y recuperación tras reinicio. Inicio automático y desactivación reversible ya están incluidos; falta validación física de instalación, reinicio y recuperación en Windows 10.
 6. Transcodificación: FFmpeg opcional, verificación de disponibilidad, cola/concurrencia limitada, caché temporal y limpieza segura.
 7. EPG: importación XMLTV configurable, mapeo de canales, zona horaria y actualización programada.
 8. Perfiles: perfiles locales/de cuenta, PIN almacenado solo como hash y RLS probado por propietario.
