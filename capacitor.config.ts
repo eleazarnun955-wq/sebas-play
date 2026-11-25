@@ -2,8 +2,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   // New unique ID to avoid collisions with both the original app and previous test APKs.
-  appId: "com.eleazarcompany.sebasplay.pro32milaptopindependent20261125c",
-  appName: "SEBAS PLAY PRO 3.2 MI LAPTOP",
+  appId: "com.eleazarcompany.sebasplay.pro32milaptopvlc20261125d",
+  appName: "SEBAS PLAY PRO 3.2 MI LAPTOP VLC",
   webDir: "dist",
   bundledWebRuntime: false,
   android: {
