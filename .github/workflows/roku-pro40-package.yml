@@ -1,0 +1,38 @@
+name: SEBAS PLAY PRO 4.0 — Roku independiente
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sebas-play-pro40-independent-20261125]
+    paths:
+      - "apps/roku-pro40/**"
+      - ".github/workflows/roku-pro40-package.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package-roku:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate independent Roku package
+        run: |
+          test -f apps/roku-pro40/manifest
+          test -f apps/roku-pro40/source/main.brs
+          test -f apps/roku-pro40/components/HomeScene.xml
+          test -f apps/roku-pro40/components/CatalogTask.brs
+          test -f apps/roku-pro40/components/PlayerScene.xml
+          grep -q "SEBAS PLAY PRO 4.0" apps/roku-pro40/manifest
+          grep -q "major_version=4" apps/roku-pro40/manifest
+          grep -q "title=SEBAS PLAY PRO 4.0" apps/roku-pro40/manifest
+      - name: Package Roku channel source
+        run: |
+          cd apps/roku-pro40
+          zip -r ../../SEBAS-PLAY-PRO-4.0-ROKU-SOURCE.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-PRO-4.0-ROKU-INDEPENDIENTE
+          path: SEBAS-PLAY-PRO-4.0-ROKU-SOURCE.zip
+          if-no-files-found: error
+          retention-days: 30
