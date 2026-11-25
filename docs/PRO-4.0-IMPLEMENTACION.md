@@ -93,3 +93,10 @@ Base de trabajo e identidades independientes creadas. Las nueve funciones son el
 - Se añadieron verificaciones CI para el mensaje de error, control Atrás y detención del video.
 - Commit funcional: `73cbc1df840fde5683672b3b1a3410261a990ce9`; interfaz: `366a0e166a074c5a7c531f954ed97c792b3b522a`; validación: `8473c1212c3eb684c2c905d83e50dbffcc9cfe91`.
 - Pendiente probar en dispositivo Roku real; la simulación CI no confirma compatibilidad de todos los códecs ni comportamiento del control remoto en hardware.
+
+
+## Prioridad crítica — acceso al panel de administración
+- Auditoría de solo lectura del proyecto Supabase `sebas-play`: existen dos cuentas confirmadas; una tiene `app_metadata.role = admin` y otra no tiene rol administrativo. No se expusieron correos ni credenciales.
+- El panel ya valida `app_metadata.role` (correcto y seguro: no confiar en `user_metadata`). Se ajustó el flujo para que, si la contraseña es válida pero el correo no tiene rol admin, cierre únicamente la sesión local y vuelva al formulario con un mensaje claro. Así se evita quedar atrapado en la pantalla de acceso denegado.
+- No se modificaron usuarios, roles, contraseñas, RLS ni datos de producción. Falta confirmar con el usuario cuál es el correo de acceso (sin pedir contraseña) y probar el login en el panel publicado.
+- Cambio: `118fdaa0eca51597b0bf65acc889f3b0a9258300`.
