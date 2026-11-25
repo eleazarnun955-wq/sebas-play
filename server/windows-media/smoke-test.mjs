@@ -57,7 +57,7 @@ try {
   });
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
-  assert.equal(catalog.count, 4, "catalog must include MP4, MKV, AVI and recursively found WebM");
+  assert.equal(catalog.count, 5, "catalog must include MP4, MKV, AVI, recursively found WebM and the uploaded MP4");
   assert.ok(catalog.items.some(item => item.file === "sample.mkv" && item.mime_type === "video/x-matroska"));
   assert.ok(catalog.items.some(item => item.file === "sample.avi" && item.mime_type === "video/x-msvideo"));
   assert.ok(catalog.items.some(item => item.file === path.join("Subcarpeta", "episode.webm").split(path.sep).join("/")));
