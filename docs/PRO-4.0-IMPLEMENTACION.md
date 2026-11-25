@@ -79,3 +79,9 @@ Base de trabajo e identidades independientes creadas. Las nueve funciones son el
 - El panel de conexión con Windows ahora incluye el control **Escanear ahora**, que invoca `POST /api/scan` con autenticación Bearer y después vuelve a cargar el catálogo.
 - La interfaz muestra la hora del último escaneo iniciado desde el panel y el conteo de archivos informado por el servidor.
 - El cambio está en el commit `bbed79cd2fd7323ed2a0689c33fa70826dfb60df` de la rama independiente. Aún debe pasar CI y probarse con el servidor real en Windows 10.
+
+
+## Avance adicional — catálogo Roku paginado
+- El cliente Roku ahora consulta películas, series, temporadas, episodios y canales en páginas de 300 registros, acumulando resultados hasta encontrar una página incompleta (límite de seguridad: 100 páginas).
+- Esto elimina el truncamiento silencioso que ocurría al superar los primeros 300 registros de una tabla y ayuda a mantener Android/Roku con catálogos grandes.
+- Commit: `f0f1f17715894fba7784e4a4846f62681a3ba2b6`. Pendiente validar con el catálogo real y un Roku físico.
