@@ -24,12 +24,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check JavaScript syntax and opt-out installer
+      - name: Check JavaScript syntax and installer consent contract
         run: |
           node --check server/windows-media/server.mjs
-          grep -q "QUITAR-INICIO-AUTOMATICO.bat" server/windows-media/README.md
-          grep -q "Remove-Item" server/windows-media/QUITAR-INICIO-AUTOMATICO.bat
-          grep -qi "no borra peliculas" server/windows-media/QUITAR-INICIO-AUTOMATICO.bat
+          node server/windows-media/installer-contract-test.mjs
       - name: Smoke test landing page, health, protected catalog and HTTP Range streaming
         run: node server/windows-media/smoke-test.mjs
       - uses: actions/upload-artifact@v4
