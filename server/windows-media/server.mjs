@@ -90,7 +90,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (url.pathname === "/" && req.method === "GET") {
     const base = requestBaseUrl(req);
-    const html = `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>SEBAS PLAY · Servidor</title><style>*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf3ff;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:22px}.card{width:min(100%,560px);background:#1b2940;border:1px solid #33445f;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0005}h1{margin:0 0 8px;font-size:28px}p{color:#b9c8dc;line-height:1.55}.ok{color:#68e0a0;font-weight:700}.link{display:block;margin:12px 0;padding:14px;border-radius:12px;background:#263954;color:#fff;text-decoration:none;overflow-wrap:anywhere}.small{font-size:13px;color:#9eb0c8}</style><main class="card"><div class="ok">● SERVIDOR ACTIVO</div><h1>SEBAS PLAY</h1><p>El servidor multimedia de tu laptop está encendido y disponible en esta red.</p><a class="link" href="${base}/health">Comprobar estado del servidor</a><p>El catálogo y las películas están protegidos. Conecta desde el panel administrador de SEBAS PLAY usando el token privado de esta laptop.</p><p>Biblioteca local: <b>Peliculas</b><br>Formatos: MP4, M4V, MOV y WebM</p><p class="small">Esta página confirma que la laptop responde. Para administrar la biblioteca, usa el panel de SEBAS PLAY y sus credenciales privadas. No compartas tu token.</p></main></html>`;
+    const html = `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827"><title>SEBAS PLAY · Servidor</title><style>*{box-sizing:border-box}body{margin:0;background:#101827;color:#edf3ff;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;padding:22px}.card{width:min(100%,560px);background:#1b2940;border:1px solid #33445f;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0005}h1{margin:0 0 8px;font-size:28px}p{color:#b9c8dc;line-height:1.55}.ok{color:#68e0a0;font-weight:700}.link{display:block;margin:12px 0;padding:14px;border-radius:12px;background:#263954;color:#fff;text-decoration:none;overflow-wrap:anywhere}.small{font-size:13px;color:#9eb0c8}</style><main class="card"><div class="ok">● SERVIDOR ACTIVO</div><h1>SEBAS PLAY</h1><p>El servidor multimedia de tu laptop está encendido y disponible en esta red.</p><a class="link" href="${base}/health">Comprobar estado del servidor</a><p>El catálogo y las películas están protegidos. Conecta desde el panel administrador de SEBAS PLAY usando el token privado de esta laptop.</p><p>Biblioteca local: <b>Peliculas</b><br>Formatos: MP4, MKV, AVI, MOV, WebM, WMV, FLV, MPEG, TS, VOB y más</p><p class="small">Esta página confirma que la laptop responde. Para administrar la biblioteca, usa el panel de SEBAS PLAY y sus credenciales privadas. No compartas tu token.</p></main></html>`;
     res.writeHead(200, { "content-type":"text/html; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" });
     return res.end(html);
   }
@@ -103,7 +103,7 @@ const server = http.createServer(async (req, res) => {
     const rawName = (url.searchParams.get("name") || "").split("/").pop() || "";
     const cleanName = rawName.replace(/[^\p{L}\p{N}._ -]/gu, "_").replace(/^\.+/, "").trim();
     const ext = path.extname(cleanName).toLowerCase();
-    if (!cleanName || !ALLOWED.has(ext)) return sendError(res, 415, "Formato no admitido. Usa MP4, M4V, MOV o WebM.");
+    if (!cleanName || !ALLOWED.has(ext)) return sendError(res, 415, "Formato no admitido. Consulta la lista de formatos de video compatibles del servidor.");
     const fileName = `${Date.now()}-${cleanName}`;
     const destination = safePath(fileName);
     try {
@@ -118,7 +118,7 @@ const server = http.createServer(async (req, res) => {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     try {
       const items = await walk(ROOT, "", req);
-      return json(res, 200, { items, count:items.length, generated_at:new Date().toISOString(), note:"Solo archivos locales MP4/M4V/MOV/WebM. Publica únicamente contenido con derechos." });
+      return json(res, 200, { items, count:items.length, generated_at:new Date().toISOString(), note:"Archivos locales en contenedores de video comunes. La compatibilidad de códecs depende del reproductor. Publica únicamente contenido con derechos." });
     } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
   }
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/media/")) {
@@ -160,6 +160,6 @@ const server = http.createServer(async (req, res) => {
   }
   return sendError(res, 404, "Ruta no encontrada");
 });
-server.listen(PORT, HOST, () => console.log(`SEBAS PLAY Media Server activo en http://${HOST}:${PORT}\nPrueba local: http://localhost:${PORT}/health\nBiblioteca: ${ROOT}\nArchivos compatibles: MP4, M4V, MOV, WebM`));
+server.listen(PORT, HOST, () => console.log(`SEBAS PLAY Media Server activo en http://${HOST}:${PORT}\nPrueba local: http://localhost:${PORT}/health\nBiblioteca: ${ROOT}\nArchivos compatibles: MP4, MKV, AVI, MOV, WebM, WMV, FLV, MPEG, TS, VOB y más`));
 process.on("SIGINT", () => server.close(() => process.exit(0)));
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
