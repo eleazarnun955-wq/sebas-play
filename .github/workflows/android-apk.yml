@@ -75,7 +75,7 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.pro32milaptopindependent20261125c"
+          EXPECTED="com.eleazarcompany.sebasplay.com.eleazarcompany.sebasplay.pro32milaptopindependent20261125d"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
@@ -83,7 +83,7 @@ jobs:
       - name: Upload SEBAS PLAY Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-3-2-MI-LAPTOP-INDEPENDIENTE-20261125C
+          name: SEBAS-PLAY-PRO-3-2-MI-LAPTOP-INDEPENDIENTE-20261125D
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
