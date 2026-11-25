@@ -121,8 +121,16 @@ sub onItemSelected()
     player.videoTitle = item.Title
     m.top.AppendChild(player)
     player.ObserveField("wasClosed", "onPlayerClosed")
+    player.ObserveField("errorMessage", "onPlayerError")
 end sub
 
 sub onPlayerClosed()
     m.rows.SetFocus(true)
+end sub
+
+sub onPlayerError()
+    player = m.top.FindNode("PlayerScene")
+    if player <> invalid and player.errorMessage <> invalid and player.errorMessage <> ""
+        m.status.text = player.errorMessage
+    end if
 end sub
