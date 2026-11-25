@@ -15,6 +15,8 @@ const env = {
   SEBAS_ACCESS_TOKEN: "test-access-token-that-is-long-enough-123456",
   SEBAS_SIGNING_SECRET: "test-signing-secret-that-is-long-enough-for-hmac-123456789",
   SEBAS_PUBLIC_BASE_URL: "http://127.0.0.1:18787",
+  SEBAS_SCAN_INTERVAL_MS: "500",
+  SEBAS_WATCH_DEBOUNCE_MS: "250",
 };
 const child = spawn(process.execPath, [new URL("./server.mjs", import.meta.url).pathname], { env, stdio: ["ignore", "pipe", "pipe"] });
 let logs = "";
@@ -75,6 +77,21 @@ try {
   assert.equal(serverStatus.library_count, 2);
   assert.equal(serverStatus.scan.lastError, null);
   assert.ok(serverStatus.storage === null || serverStatus.storage.free_bytes >= 0);
+  // New media files are discovered automatically (filesystem watcher on Windows,
+  // short reconciliation interval on platforms without recursive watch support).
+  await fs.writeFile(path.join(temp, "new-arrival.mp4"), Buffer.from("AUTO-INDEXED"));
+  let autoCatalog;
+  for (let i = 0; i < 20; i++) {
+    const response = await fetch("http://127.0.0.1:18787/api/catalog", {
+      headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+    });
+    autoCatalog = await response.json();
+    if (autoCatalog.items.some(item => item.title === "new-arrival")) break;
+    await wait(150);
+  }
+  assert.ok(autoCatalog.items.some(item => item.title === "new-arrival"), "new files should be indexed automatically without manual scan");
+  assert.equal(autoCatalog.count, 3);
+
   const sampleItem = catalog.items.find(item => item.title === "sample");
   assert.ok(sampleItem, "original test video should remain in the library");
   const stream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=0-5" } });
@@ -111,13 +128,13 @@ try {
   });
   assert.equal(refresh.status, 200);
   const refreshed = await refresh.json();
-  assert.equal(refreshed.library_count, 1, "manual scan should remove deleted files from the catalog index");
+  assert.equal(refreshed.library_count, 2, "manual scan should remove deleted files from the catalog index while retaining original and newly added media");
   const refreshedCatalog = await fetch("http://127.0.0.1:18787/api/catalog", {
     headers:{ authorization:"Bearer " + env.SEBAS_ACCESS_TOKEN }
   });
-  assert.equal((await refreshedCatalog.json()).count, 1);
+  assert.equal((await refreshedCatalog.json()).count, 2);
 
-  console.log("PASS: home page, health, protected catalog, incremental refresh/removal, LAN/HTTPS URLs, signed playback and HTTP Range.");
+  console.log("PASS: home page, health, protected catalog, automatic indexing, refresh/removal, LAN/HTTPS URLs, signed playback and HTTP Range.");
 } finally {
   child.kill("SIGTERM");
   await wait(150);
