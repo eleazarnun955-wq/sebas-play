@@ -6,15 +6,13 @@ sub saveProgress()
         m.top.completed = true
         return
     end if
-    durationValue = invalid
-    if m.top.durationSeconds > 0 then durationValue = m.top.durationSeconds
     payload = {
         action: "progress",
         content_type: m.top.contentType,
         content_id: m.top.contentId,
-        position_seconds: m.top.positionSeconds,
-        duration_seconds: durationValue
+        position_seconds: m.top.positionSeconds
     }
+    if m.top.durationSeconds > 0 then payload.duration_seconds = m.top.durationSeconds
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
