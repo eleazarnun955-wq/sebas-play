@@ -10,7 +10,7 @@ Instalador de un clic para Windows 10 de 32 o 64 bits. No requiere instalar Node
 4. Cuando aparezca la ventana de carpetas, elige la carpeta principal donde guardas tus películas y series. También se revisan sus subcarpetas.
 5. Acepta la regla del Firewall para redes privadas si Windows la solicita.
 
-El servidor se inicia, abre la página de estado y queda configurado para arrancar cuando inicies sesión en Windows. PRO 4.0 actualiza automáticamente el índice de archivos compatibles cada 30 segundos (configurable) sin mover ni borrar archivos.
+El servidor se inicia, abre la página de estado y queda configurado para arrancar cuando inicies sesión en Windows. PRO 4.0 actualiza automáticamente el índice de archivos compatibles cada 30 segundos (configurable), reutiliza los metadatos de archivos sin cambios y detecta altas, cambios y eliminaciones. También permite forzar una actualización autenticada con `POST /api/scan`. Nunca mueve ni borra archivos.
 
 ## Conexión en casa
 
