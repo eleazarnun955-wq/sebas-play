@@ -123,6 +123,7 @@ const server = http.createServer(async (req, res) => {
     const destination = safePath(fileName);
     try {
       await pipeline(req, fs.createWriteStream(destination, { flags: "wx" }));
+      await refreshLibraryIndex();
       return json(res, 201, { ok:true, file:fileName, size_bytes:length, mime_type:MIME[ext] });
     } catch (error) {
       await fs.promises.unlink(destination).catch(() => {});
