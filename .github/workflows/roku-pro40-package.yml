@@ -27,6 +27,9 @@ jobs:
           grep -q "function onKeyEvent" apps/roku-pro40/components/PlayerScene.brs
           grep -q "No se pudo reproducir este archivo" apps/roku-pro40/components/PlayerScene.brs
           grep -q "m.video.control = \"stop\"" apps/roku-pro40/components/PlayerScene.brs
+          grep -q "m.top.RemoveChild(m.player)" apps/roku-pro40/components/HomeScene.brs
+          grep -q "if m.player <> invalid then return" apps/roku-pro40/components/HomeScene.brs
+          grep -q "m.player = invalid" apps/roku-pro40/components/HomeScene.brs
           grep -q "SEBAS PLAY PRO 5.0" apps/roku-pro40/manifest
           grep -q "major_version=5" apps/roku-pro40/manifest
           grep -q "title=SEBAS PLAY PRO 5.0" apps/roku-pro40/manifest
