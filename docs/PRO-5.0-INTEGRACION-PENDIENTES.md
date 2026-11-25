@@ -10,18 +10,18 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 - Android y Roku deben consultar el mismo catálogo y nunca presentar páginas HTML/embed como si fueran archivos reproducibles.
 
 ## Estado heredado comprobado
-- Servidor Windows: escaneo periódico, índice local, escaneo manual autenticado, enlaces HMAC y soporte HTTP Range.
-- Android: acceso directo “Mi laptop”, importación al catálogo como borrador, reproductor VLC cuando está disponible, historial y favoritos para usuarios autenticados.
+- Servidor Windows: índice local, escaneo manual autenticado, enlaces HMAC y HTTP Range; vigilancia incremental de altas/cambios/eliminaciones con reconciliación periódica y apagado ordenado probado por CI.
+- Android: acceso directo “Mi laptop”, importación al catálogo como borrador, reproductor VLC cuando está disponible, historial y favoritos para usuarios autenticados. El progreso se registra/reanuda en el reproductor integrado; la reproducción delegada a VLC externo no reporta posición a la app.
 - Roku: consulta paginada de Supabase, filtro de URLs directas y estados básicos de reproducción. Se activó la interfaz nativa de controles del Video node para pausa/búsqueda y opciones de pistas compatibles con cada dispositivo; falta validación física en Roku.
 - APK PRO 5.0: compilación previa exitosa y verificación de identidad del paquete Android.
 - Roku PRO 5.0: identidad del manifest configurada; falta validación física del canal.
 
 ## Trabajo que debe quedar integrado antes de la entrega única
-1. Escaneo de biblioteca: pasar de escaneo periódico completo a vigilancia incremental, con reconciliación segura y pruebas de altas/cambios/eliminaciones sin tocar archivos.
+1. Escaneo de biblioteca: vigilancia incremental, reconciliación segura y pruebas de altas/cambios/eliminaciones sin tocar archivos. Implementado y probado en CI; el escaneo periódico se conserva como respaldo.
 2. Reproductor profesional: controles y estados coherentes; subtítulos/pistas cuando el dispositivo los soporte; reanudación robusta y manejo de errores.
 3. Sincronización real Android/Roku: progreso, vistos y favoritos con identidad de usuario/perfil compartida; no usar un usuario anónimo distinto por dispositivo como falsa sincronización.
 4. Metadatos: proveedor configurable, caché y edición manual protegida contra sobrescritura automática.
-5. Servidor Windows: instalación/arranque automático opcional, recuperación tras reinicio, salud y firewall limitado a red privada.
+5. Servidor Windows: instalación/arranque automático opcional y recuperación tras reinicio. La salud autenticada y el firewall limitado a red privada ya existen; el cierre ordenado del proceso y sus timers/watcher ya se prueban en CI.
 6. Transcodificación: FFmpeg opcional, verificación de disponibilidad, cola/concurrencia limitada, caché temporal y limpieza segura.
 7. EPG: importación XMLTV configurable, mapeo de canales, zona horaria y actualización programada.
 8. Perfiles: perfiles locales/de cuenta, PIN almacenado solo como hash y RLS probado por propietario.
@@ -34,7 +34,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 - Pruebas físicas de catálogo y reproducción en Windows 10, Android y Roku, incluida una biblioteca mayor a 300 elementos.
 - Confirmar que ambas APK se instalan simultáneamente y que la nueva no solicita reemplazar PRO 4.0.
 
-Este documento es un registro de alcance y aceptación, no una afirmación de que las nueve funciones ya estén implementadas.
+Este documento es un registro de alcance y aceptación, no una afirmación de que las nueve funciones ya estén implementadas. El escaneo incremental y el apagado ordenado del servidor están completados; siguen pendientes las demás integraciones indicadas.
 
 ## Sincronización personal — avance de implementación
 
