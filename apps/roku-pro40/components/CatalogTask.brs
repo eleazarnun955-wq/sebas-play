@@ -13,7 +13,7 @@ sub loadCatalog()
     movieRow = root.CreateChild("ContentNode")
     movieRow.title = "Películas"
     for each movie in movies
-        if movie.video_url <> invalid and movie.video_url <> ""
+        if isDirectPlayableUrl(movie.video_url)
             item = movieRow.CreateChild("ContentNode")
             item.title = movie.title
             item.url = movie.video_url
@@ -34,7 +34,7 @@ sub loadCatalog()
             for each season in seasons
                 if season.series_id = show.id
                     for each episode in episodes
-                        if episode.season_id = season.id and episode.video_url <> invalid and episode.video_url <> ""
+                        if episode.season_id = season.id and isDirectPlayableUrl(episode.video_url)
                             item = showRow.CreateChild("ContentNode")
                             item.title = "T" + season.season_number.ToStr() + " · E" + episode.episode_number.ToStr() + " · " + episode.title
                             item.url = episode.video_url
@@ -53,7 +53,7 @@ sub loadCatalog()
         channelRow = root.CreateChild("ContentNode")
         channelRow.title = "Televisión en vivo"
         for each channel in channels
-            if channel.stream_url <> invalid and channel.stream_url <> ""
+            if isDirectPlayableUrl(channel.stream_url)
                 item = channelRow.CreateChild("ContentNode")
                 item.title = channel.name
                 item.url = channel.stream_url
@@ -92,4 +92,18 @@ function fetchRows(tableName as string, selectFields as string, orderField as st
         return invalid
     end if
     return parsed
+end function
+
+' PRO 4.0 never lists HTML/embed pages as playable media.
+' Only known direct Roku-compatible media resource extensions are admitted.
+function isDirectPlayableUrl(value as dynamic) as boolean
+    if value = invalid or type(value) <> "String" or value = "" then return false
+    clean = LCase(Trim(value))
+    if Left(clean, 7) <> "http://" and Left(clean, 8) <> "https://" then return false
+    if Instr(1, clean, "/embed/") > 0 or Right(clean, 6) = "/embed" then return false
+    queryAt = Instr(1, clean, "?")
+    if queryAt > 0 then clean = Left(clean, queryAt - 1)
+    hashAt = Instr(1, clean, "#")
+    if hashAt > 0 then clean = Left(clean, hashAt - 1)
+    return Right(clean, 4) = ".mp4" or Right(clean, 4) = ".m4v" or Right(clean, 4) = ".mov" or Right(clean, 5) = ".m3u8"
 end function
