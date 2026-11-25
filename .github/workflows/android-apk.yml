@@ -1,5 +1,6 @@
 name: SEBAS PLAY PRO 3.0 VLC INDEPENDIENTE Android APK
 # A new package ID avoids replacing or colliding with every previous SEBAS PLAY build.
+# Verification matches the unique PRO 3.0 VLC package ID.
 
 on:
   workflow_dispatch:
