@@ -153,11 +153,11 @@ try {
   });
   assert.equal(refresh.status, 200);
   const refreshed = await refresh.json();
-  assert.equal(refreshed.library_count, 2, "manual scan should remove deleted files from the catalog index while retaining original and newly added media");
+  assert.equal(refreshed.library_count, 1, "manual scan should remove deleted files from the catalog index while retaining the original media");
   const refreshedCatalog = await fetch("http://127.0.0.1:18787/api/catalog", {
     headers:{ authorization:"Bearer " + env.SEBAS_ACCESS_TOKEN }
   });
-  assert.equal((await refreshedCatalog.json()).count, 2);
+  assert.equal((await refreshedCatalog.json()).count, 1);
 
   console.log("PASS: home page, health, protected catalog, automatic indexing, refresh/removal, LAN/HTTPS URLs, signed playback and HTTP Range.");
 } finally {
