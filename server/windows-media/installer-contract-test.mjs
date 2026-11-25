@@ -11,7 +11,7 @@ assert.match(installer, /choice \/C SN/i, "installer must ask before enabling au
 assert.match(installer, /if errorlevel 2 goto skip_autostart/i, "answering No must skip startup registration");
 assert.match(installer, /SEBAS PLAY Servidor\.lnk/i, "installer must create the documented startup shortcut only after consent");
 assert.match(installer, /:skip_autostart/i, "installer must provide a manual-start path");
-assert.match(start, /server\\.mjs/i, "manual launcher must still start the media server");
+assert.ok(start.includes("server.mjs"), "manual launcher must still start the media server");
 assert.match(uninstaller, /Remove-Item -LiteralPath \$shortcut/i, "uninstaller may remove only the startup shortcut");
 assert.doesNotMatch(uninstaller, /Remove-Item[^\r\n]*(server-config|ACCESS-TOKEN|Peliculas|runtime)/i, "uninstaller must never delete media or private configuration");
 assert.match(readme, /inicio automático es opcional/i, "documentation must describe opt-in startup");
