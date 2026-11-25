@@ -143,7 +143,7 @@ try {
 
   const traversalExpiry = Math.floor(Date.now()/1000) + 60;
   const traversalRel = "../" + path.basename(outsidePath);
-  const traversalSig = crypto.createHmac("sha256", env.SEBAS_SIGNING_SECRET).update(traversalRel + "\\n" + traversalExpiry).digest("hex");
+  const traversalSig = crypto.createHmac("sha256", env.SEBAS_SIGNING_SECRET).update(traversalRel + "\n" + traversalExpiry).digest("hex");
   const traversal = await fetch("http://127.0.0.1:18787/media/..%2F" + encodeURIComponent(path.basename(outsidePath)) + "?exp=" + traversalExpiry + "&sig=" + traversalSig);
   assert.equal(traversal.status, 400, "even a correctly signed path traversal must be rejected");
 
