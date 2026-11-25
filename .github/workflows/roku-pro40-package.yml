@@ -23,6 +23,10 @@ jobs:
           test -f apps/roku-pro40/components/HomeScene.xml
           test -f apps/roku-pro40/components/CatalogTask.brs
           test -f apps/roku-pro40/components/PlayerScene.xml
+          grep -q "playbackStatus" apps/roku-pro40/components/PlayerScene.xml
+          grep -q "function onKeyEvent" apps/roku-pro40/components/PlayerScene.brs
+          grep -q "No se pudo reproducir este archivo" apps/roku-pro40/components/PlayerScene.brs
+          grep -q "m.video.control = \"stop\"" apps/roku-pro40/components/PlayerScene.brs
           grep -q "SEBAS PLAY PRO 4.0" apps/roku-pro40/manifest
           grep -q "major_version=4" apps/roku-pro40/manifest
           grep -q "title=SEBAS PLAY PRO 4.0" apps/roku-pro40/manifest
