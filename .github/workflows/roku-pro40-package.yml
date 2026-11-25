@@ -32,6 +32,9 @@ jobs:
           grep -q "/embed/" apps/roku-pro40/components/CatalogTask.brs
           grep -q 'showRow.GetChildCount() > 0' apps/roku-pro40/components/CatalogTask.brs
           grep -q 'root.AppendChild(showRow)' apps/roku-pro40/components/CatalogTask.brs
+          grep -q "pageSize = 300" apps/roku-pro40/components/CatalogTask.brs
+          grep -q "offset = offset + pageSize" apps/roku-pro40/components/CatalogTask.brs
+          grep -q "allRows.Push(row)" apps/roku-pro40/components/CatalogTask.brs
       - name: Package Roku channel source
         run: |
           cd apps/roku-pro40
