@@ -23,7 +23,7 @@ function detectStreamFormat(url as string) as string
     if Right(cleanUrl, 5) = ".m3u8" then return "hls"
     if Right(cleanUrl, 4) = ".mpd" then return "dash"
     if Right(cleanUrl, 4) = ".mkv" then return "mkv"
-    if Right(cleanUrl, 4) = ".web" then return "webm"
+    if Right(cleanUrl, 5) = ".webm" then return "webm"
     return "mp4"
 end function
 
