@@ -58,7 +58,13 @@ sub onCatalogLoaded()
     catalog = m.task.catalog
     if catalog <> invalid
         m.rows.content = catalog
+        m.personalSync = m.task.personalSync
         m.status.text = "Explora con tu control remoto · SEBAS PLAY PRO 5.0"
+        if m.personalSync <> invalid
+            favCount = m.personalSync.favorites.Count()
+            progressCount = m.personalSync.watch_progress.Count()
+            m.status.text = "Cuenta vinculada · " + favCount.ToStr() + " favoritos · " + progressCount.ToStr() + " reproducciones sincronizadas"
+        end if
     end if
 end sub
 
@@ -91,6 +97,19 @@ sub onItemSelected()
     player = CreateObject("roSGNode", "PlayerScene")
     player.videoUrl = mediaUrl
     player.videoTitle = item.Title
+    player.contentId = item.contentId
+    player.contentType = item.contentType
+    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO50")
+    player.deviceToken = registry.Read("device_token", "")
+    player.resumePosition = 0
+    if m.personalSync <> invalid and m.personalSync.watch_progress <> invalid
+        for each progress in m.personalSync.watch_progress
+            if progress.content_id = item.contentId and progress.content_type = item.contentType
+                player.resumePosition = progress.position_seconds
+                exit for
+            end if
+        end for
+    end if
     m.top.AppendChild(player)
     player.ObserveField("wasClosed", "onPlayerClosed")
 end sub
