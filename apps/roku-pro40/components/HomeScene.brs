@@ -48,6 +48,9 @@ sub onPairingCompleted()
         m.status.text = "No se pudo vincular: " + m.pairTask.errorMessage
     else
         m.status.text = "Roku vinculado a tu cuenta. Favoritos y progreso se sincronizarán."
+        m.task = CreateObject("roSGNode", "CatalogTask")
+        m.task.ObserveField("catalog", "onCatalogLoaded")
+        m.task.ObserveField("errorMessage", "onCatalogError")
         m.task.control = "RUN"
     end if
     m.top.RemoveChild(m.pairTask)
