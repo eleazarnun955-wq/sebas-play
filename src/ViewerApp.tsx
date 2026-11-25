@@ -51,15 +51,16 @@ export default function ViewerApp(){
  // Realtime no está habilitado todavía para estas dos tablas en el proyecto; por eso usamos
  // refresco al volver a la app y una consulta ligera cada 15 segundos, sin cambiar el esquema.
  useEffect(()=>{
-  if(!supabase||!user?.id)return;
+  const client=supabase;
+  if(!client||!user?.id)return;
   let active=true,syncing=false;
   const refreshPersonalLibrary=async()=>{
    if(syncing||!active)return;
    syncing=true;
    try{
     const [f,h]=await Promise.all([
-     supabase.from("favorites").select("content_type,content_id").eq("user_id",user.id),
-     supabase.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(50)
+     client.from("favorites").select("content_type,content_id").eq("user_id",user.id),
+     client.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(50)
     ]);
     if(!active)return;
     if(!f.error)setFavorites((f.data||[]) as Favorite[]);
