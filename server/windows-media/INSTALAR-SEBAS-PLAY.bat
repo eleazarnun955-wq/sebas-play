@@ -13,11 +13,20 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Configurando inicio automatico de Windows...
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$root='%~dp0'.TrimEnd('\'); $startup=[Environment]::GetFolderPath('Startup'); $w=New-Object -ComObject WScript.Shell; $s=$w.CreateShortcut((Join-Path $startup 'SEBAS PLAY Servidor.lnk')); $s.TargetPath=$env:ComSpec; $s.Arguments='/c ""'+(Join-Path $root 'start-server.bat')+'" --silent"'; $s.WorkingDirectory=$root; $s.WindowStyle=7; $s.Save()"
+echo El inicio automatico es opcional.
+choice /C SN /N /M "Deseas iniciar SEBAS PLAY automaticamente al entrar a Windows? [S/N]: "
+if errorlevel 2 goto skip_autostart
+if errorlevel 1 (
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$root='%~dp0'.TrimEnd('\'); $startup=[Environment]::GetFolderPath('Startup'); $w=New-Object -ComObject WScript.Shell; $s=$w.CreateShortcut((Join-Path $startup 'SEBAS PLAY Servidor.lnk')); $s.TargetPath=$env:ComSpec; $s.Arguments='/c ""'+(Join-Path $root 'start-server.bat')+'" --silent"'; $s.WorkingDirectory=$root; $s.WindowStyle=7; $s.Save()"
+  echo Inicio automatico activado.
+)
+goto start_server
+:skip_autostart
+echo Inicio automatico omitido. Puedes iniciar el servidor manualmente con start-server.bat.
+:start_server
 echo.
 echo Iniciando servidor...
 call "%~dp0start-server.bat"
 echo.
-echo Instalacion terminada. La laptop iniciara SEBAS PLAY al entrar a Windows.
+echo Instalacion terminada.
 pause
