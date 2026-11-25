@@ -1,9 +1,9 @@
-name: SEBAS PLAY PRO 4.0 — APK independiente
+name: SEBAS PLAY PRO 5.0 — APK independiente
 
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-pro40-independent-20261125]
+    branches: [sebas-play-pro50-independent-20261125]
   pull_request:
     branches: [main]
     paths:
@@ -20,7 +20,7 @@ permissions:
   contents: read
 
 jobs:
-  android-pro40:
+  android-pro50:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,10 +38,10 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SEBAS_PRO40: "true"
-      - name: Preparar configuración exclusiva PRO 4.0
+          VITE_SEBAS_PRO50: "true"
+      - name: Preparar configuración exclusiva PRO 5.0
         run: cp capacitor.pro40.config.ts capacitor.config.ts
-      - name: Generar proyecto Android PRO 4.0
+      - name: Generar proyecto Android PRO 5.0
         run: npx cap add android
       - name: Sincronizar Capacitor
         run: npx cap sync android
@@ -61,12 +61,12 @@ jobs:
           APK=android/app/build/outputs/apk/debug/app-debug.apk
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED=com.eleazarcompany.sebasplay.pro40.independent20261125
+          EXPECTED=com.eleazarcompany.sebasplay.pro50.independent20261125
           echo "Package detectado: $ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-PRO-4.0-APK-INDEPENDIENTE
+          name: SEBAS-PLAY-PRO-5.0-APK-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
