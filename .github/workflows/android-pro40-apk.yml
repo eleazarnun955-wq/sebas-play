@@ -39,10 +39,12 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SEBAS_PRO40: "true"
+      - name: Preparar configuración exclusiva PRO 4.0
+        run: cp capacitor.pro40.config.ts capacitor.config.ts
       - name: Generar proyecto Android PRO 4.0
-        run: npx cap add android --config capacitor.pro40.config.ts
+        run: npx cap add android
       - name: Sincronizar Capacitor
-        run: npx cap sync android --config capacitor.pro40.config.ts
+        run: npx cap sync android
       - name: Configurar reproducción VLC
         run: node scripts/install-vlc-android.mjs
       - name: Permitir HTTP solo para el servidor local de la laptop
