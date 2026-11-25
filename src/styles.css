@@ -88,3 +88,61 @@
 @media(max-width:650px){.viewer-nav{top:70px;gap:20px;overflow-x:auto;white-space:nowrap;padding:0 4vw;scrollbar-width:none}.viewer-nav::-webkit-scrollbar{display:none}.viewer-nav a{font-size:10px}.viewer-top{z-index:11}.viewer-nav{z-index:10}}
 
 .viewer-laptop-button{display:inline-flex;align-items:center;gap:7px;border:1px solid #20a4a0!important;border-radius:9px;background:#123b3c!important;color:#8ef0e8!important;padding:8px 12px!important;font:inherit;font-size:11px!important;font-weight:900!important;letter-spacing:.45px;cursor:pointer;white-space:nowrap}.viewer-laptop-button:hover,.viewer-laptop-button:focus-visible{background:#176260!important;color:#fff!important;outline:2px solid #65d8d1;outline-offset:2px}
+
+
+/* PRO 3.2 Android: permanent bottom navigation with direct laptop access */
+@media(max-width:650px){
+  .viewer-nav{
+    position:fixed!important;
+    top:auto!important;
+    right:0;
+    bottom:0;
+    left:0;
+    z-index:10001!important;
+    min-height:68px;
+    height:calc(68px + env(safe-area-inset-bottom));
+    padding:6px 5px calc(6px + env(safe-area-inset-bottom));
+    display:flex;
+    align-items:center;
+    justify-content:space-around;
+    gap:2px;
+    overflow:visible;
+    white-space:normal;
+    background:rgba(12,12,12,.98);
+    border-top:1px solid #3a3a3a;
+    border-bottom:0;
+    box-shadow:0 -8px 24px #0009;
+  }
+  .viewer-nav a{
+    flex:1 1 0;
+    min-width:0;
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:6px 2px;
+    font-size:9px;
+    line-height:1.15;
+  }
+  .viewer-nav a:last-child{display:none}
+  .viewer-nav .viewer-laptop-button{
+    flex:1.25 1 0;
+    min-width:0;
+    min-height:50px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    padding:5px 2px!important;
+    border-radius:9px!important;
+    font-size:9px!important;
+    line-height:1.1;
+    white-space:normal;
+    box-shadow:0 0 12px #20a4a044;
+  }
+  .viewer-nav .viewer-laptop-button svg{width:19px;height:19px}
+  .viewer-main{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  .viewer-footer{padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+}
