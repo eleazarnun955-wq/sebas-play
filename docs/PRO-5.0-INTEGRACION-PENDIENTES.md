@@ -21,7 +21,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 2. Reproductor profesional: controles y estados coherentes; subtítulos/pistas cuando el dispositivo los soporte; reanudación robusta y manejo de errores.
 3. Sincronización real Android/Roku: progreso, vistos y favoritos con identidad de usuario/perfil compartida; no usar un usuario anónimo distinto por dispositivo como falsa sincronización.
 4. Metadatos: proveedor configurable, caché y edición manual protegida contra sobrescritura automática.
-5. Servidor Windows: instalación/arranque automático opcional y recuperación tras reinicio. Inicio automático y desactivación reversible ya están incluidos; falta validación física de instalación, reinicio y recuperación en Windows 10.
+5. Servidor Windows: instalación/arranque automático opcional y recuperación tras reinicio. El instalador ahora solicita consentimiento explícito antes de crear el acceso directo de inicio; responder No conserva el arranque manual. La desactivación reversible elimina únicamente ese acceso directo. El contrato se prueba en CI; falta validación física de instalación, reinicio y recuperación en Windows 10.
 6. Transcodificación: FFmpeg opcional, verificación de disponibilidad, cola/concurrencia limitada, caché temporal y limpieza segura.
 7. EPG: importación XMLTV configurable, mapeo de canales, zona horaria y actualización programada.
 8. Perfiles: perfiles locales/de cuenta, PIN almacenado solo como hash y RLS probado por propietario.
@@ -34,7 +34,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 - Pruebas físicas de catálogo y reproducción en Windows 10, Android y Roku, incluida una biblioteca mayor a 300 elementos.
 - Confirmar que ambas APK se instalan simultáneamente y que la nueva no solicita reemplazar PRO 4.0.
 
-Este documento es un registro de alcance y aceptación, no una afirmación de que las nueve funciones ya estén implementadas. El escaneo incremental y el apagado ordenado del servidor están completados; siguen pendientes las demás integraciones indicadas.
+Este documento es un registro de alcance y aceptación, no una afirmación de que las nueve funciones ya estén implementadas. El escaneo incremental, el apagado ordenado y la solicitud explícita de consentimiento para el inicio automático del servidor están implementados; siguen pendientes las demás integraciones indicadas.
 
 ## Sincronización personal — avance de implementación
 
