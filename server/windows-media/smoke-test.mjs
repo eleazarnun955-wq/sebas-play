@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -6,7 +7,10 @@ import { spawn } from "node:child_process";
 
 const temp = await fs.mkdtemp(path.join(os.tmpdir(), "sebas-play-media-"));
 const sample = Buffer.from("SEBAS-PLAY-TEST");
+const outsidePath = path.join(os.tmpdir(), "sebas-play-outside-" + process.pid + ".mp4");
 await fs.writeFile(path.join(temp, "sample.mp4"), sample);
+await fs.writeFile(outsidePath, Buffer.from("OUTSIDE-LIBRARY"));
+await fs.symlink(outsidePath, path.join(temp, "outside-link.mp4"));
 const env = {
   ...process.env,
   SEBAS_MEDIA_ROOT: temp,
@@ -64,6 +68,7 @@ try {
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
   assert.equal(catalog.count, 2);
+  assert.ok(!catalog.items.some(item => item.file === "outside-link.mp4"), "symbolic links must never enter the media catalog");
   assert.equal(catalog.scan.count, 2, "automatic scanner should index original and uploaded media");
   const scanDenied = await fetch("http://127.0.0.1:18787/api/scan", { method:"POST" });
   assert.equal(scanDenied.status, 401, "manual library scan must require admin token");
@@ -136,6 +141,12 @@ try {
   const invalidRange = await fetch(sampleItem.stream_url, { headers:{ range:"bytes=9999-10000" } });
   assert.equal(invalidRange.status, 416, "unsatisfiable byte ranges should return 416");
 
+  const traversalExpiry = Math.floor(Date.now()/1000) + 60;
+  const traversalRel = "../" + path.basename(outsidePath);
+  const traversalSig = crypto.createHmac("sha256", env.SEBAS_SIGNING_SECRET).update(traversalRel + "\\n" + traversalExpiry).digest("hex");
+  const traversal = await fetch("http://127.0.0.1:18787/media/..%2F" + encodeURIComponent(path.basename(outsidePath)) + "?exp=" + traversalExpiry + "&sig=" + traversalSig);
+  assert.equal(traversal.status, 400, "even a correctly signed path traversal must be rejected");
+
   const expiredUrl = new URL(sampleItem.stream_url);
   expiredUrl.searchParams.set("exp", String(Math.floor(Date.now()/1000) - 60));
   const expired = await fetch(expiredUrl);
@@ -199,4 +210,5 @@ try {
   assert.equal(child.exitCode, 0, "media server should exit cleanly after SIGTERM: " + logs);
   assert.ok(logs.includes("apagado ordenado (SIGTERM)"), "server should log its graceful shutdown path");
   await fs.rm(temp, { recursive: true, force: true });
+  await fs.rm(outsidePath, { force: true });
 }
