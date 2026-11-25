@@ -3,6 +3,8 @@
   <interface>
     <field id="catalog" type="node" />
     <field id="errorMessage" type="string" />
+    <field id="laptopUrl" type="string" />
+    <field id="laptopToken" type="string" />
   </interface>
   <script type="text/brightscript" uri="CatalogTask.brs" />
   <script type="text/brightscript" uri="pkg:/source/config.brs" />
