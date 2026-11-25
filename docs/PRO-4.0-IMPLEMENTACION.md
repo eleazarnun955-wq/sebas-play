@@ -57,3 +57,11 @@ Base de trabajo e identidades independientes creadas. Las nueve funciones son el
 - No se borran filas ni archivos de la base de datos; únicamente se omiten del catálogo PRO 4.0.
 - Los enlaces directos con URL firmada se aceptan porque la validación usa la ruta antes de los parámetros de consulta.
 - La compatibilidad final de cada códec y contenedor debe validarse en el modelo físico de Roku; un enlace directo no garantiza que el dispositivo soporte el códec.
+
+
+## Implementación adicional del servidor Windows (PRO 4.0)
+- El servidor mantiene un índice de medios en memoria y vuelve a escanear la carpeta raíz y subcarpetas cada 30 segundos (mínimo configurable de 15 segundos con `SEBAS_SCAN_INTERVAL_MS`).
+- Los escaneos omiten enlaces simbólicos y solo indexan extensiones que el servidor ya admite; no mueven, renombran ni eliminan archivos.
+- `GET /api/status` requiere autenticación y reporta estado del último escaneo, cantidad de medios, sesiones de transmisión activas y espacio libre/total cuando el sistema lo permite.
+- El catálogo firmado se genera a partir del índice y conserva URL firmada por archivo.
+- Esta primera entrega es un escaneo periódico completo, no un watcher incremental por eventos de sistema de archivos; se debe medir con bibliotecas grandes en Windows 10 antes de reducir el intervalo.
