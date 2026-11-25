@@ -145,12 +145,17 @@ export default function App() {
       const confirmedSession = verified.user
         ? { ...verifiedSession, user: verified.user }
         : verifiedSession;
-      setSession(confirmedSession);
       setPassword("");
       if (confirmedSession.user.app_metadata?.role === "admin") {
+        setSession(confirmedSession);
         notify("ok", "Acceso de administrador verificado correctamente.");
       } else {
-        notify("error", "Tu cuenta inició sesión, pero Supabase todavía no entrega el rol de administrador. Cierra sesión e inténtalo nuevamente.");
+        // Do not leave a non-admin session on the admin dashboard.
+        // Clear only this device's session and return to the login form so
+        // the operator can retry with the account that owns app_metadata.role.
+        setSession(null);
+        await supabase.auth.signOut({ scope: "local" });
+        notify("error", "La contraseña es correcta, pero este correo no tiene permisos de administrador. Entra con la cuenta administradora de SEBAS PLAY.");
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "No se pudo conectar con el servicio de acceso.";
