@@ -47,6 +47,14 @@ try {
   assert.match(uploaded.file, /uploaded\.mp4$/);
   const denied = await fetch("http://127.0.0.1:18787/api/catalog");
   assert.equal(denied.status, 401, "catalog must require admin token");
+  const queryTokenDenied = await fetch("http://127.0.0.1:18787/api/catalog?access_token=" + encodeURIComponent(env.SEBAS_ACCESS_TOKEN));
+  assert.equal(queryTokenDenied.status, 401, "admin token in URL must never authorize requests");
+  const preflight = await fetch("http://127.0.0.1:18787/api/catalog", {
+    method: "OPTIONS",
+    headers: { origin: "https://app.example.test", "access-control-request-method": "GET", "access-control-request-headers": "authorization" },
+  });
+  assert.equal(preflight.status, 204, "Authorization header preflight must be supported");
+  assert.match(preflight.headers.get("access-control-allow-headers") || "", /Authorization/i);
 
   const catalogResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
     headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
