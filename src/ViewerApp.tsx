@@ -47,6 +47,32 @@ export default function ViewerApp(){
   if(u){const f=await supabase.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(alive&&!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(alive&&!h.error)setHistory((h.data||[]) as WatchProgress[])}
   setLoading(false);
  }void load();const catalogSub=supabase?.channel("sebas-play-public-catalog").on("postgres_changes",{event:"*",schema:"public",table:"movies"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"series"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"seasons"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"episodes"},()=>void load()).on("postgres_changes",{event:"*",schema:"public",table:"live_channels"},()=>void load()).subscribe();const sub=supabase?.auth.onAuthStateChange(async(_event,session)=>{if(!alive)return;const u=session?.user||null;setUser(u);if(u){const f=await supabase!.from("favorites").select("content_type,content_id").eq("user_id",u.id);if(!f.error)setFavorites((f.data||[]) as Favorite[]);const h=await supabase!.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",u.id).order("updated_at",{ascending:false}).limit(12);if(!h.error)setHistory((h.data||[]) as WatchProgress[])}else{setFavorites([]);setHistory([])}});return()=>{alive=false;sub?.data.subscription.unsubscribe();if(catalogSub)supabase?.removeChannel(catalogSub)}},[]);
+ // Mantiene la biblioteca personal sincronizada entre sesiones/dispositivos que usan la misma cuenta.
+ // Realtime no está habilitado todavía para estas dos tablas en el proyecto; por eso usamos
+ // refresco al volver a la app y una consulta ligera cada 15 segundos, sin cambiar el esquema.
+ useEffect(()=>{
+  if(!supabase||!user?.id)return;
+  let active=true,syncing=false;
+  const refreshPersonalLibrary=async()=>{
+   if(syncing||!active)return;
+   syncing=true;
+   try{
+    const [f,h]=await Promise.all([
+     supabase.from("favorites").select("content_type,content_id").eq("user_id",user.id),
+     supabase.from("watch_progress").select("content_type,content_id,position_seconds,duration_seconds,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(50)
+    ]);
+    if(!active)return;
+    if(!f.error)setFavorites((f.data||[]) as Favorite[]);
+    if(!h.error)setHistory((h.data||[]) as WatchProgress[]);
+    if(f.error||h.error)setError(f.error?.message||h.error?.message||"No se pudo actualizar tu biblioteca personal.");
+   }finally{syncing=false}
+  };
+  const onVisibility=()=>{if(document.visibilityState==="visible")void refreshPersonalLibrary()};
+  void refreshPersonalLibrary();
+  const timer=window.setInterval(()=>{if(document.visibilityState==="visible")void refreshPersonalLibrary()},15000);
+  document.addEventListener("visibilitychange",onVisibility);
+  return()=>{active=false;window.clearInterval(timer);document.removeEventListener("visibilitychange",onVisibility)};
+ },[user?.id]);
  useEffect(()=>{let alive=true;async function loadEpisodes(){if(!supabase||selected?.kind!=="series"){setSeasons([]);setEpisodes([]);setSeasonId("");return}
   const {data,error}=await supabase.from("seasons").select("id,season_number,title").eq("series_id",selected.item.id).order("season_number");
   if(!alive)return;if(error){setError(error.message);return}const list=(data||[]) as Season[];setSeasons(list);setSeasonId(current=>list.some(s=>s.id===current)?current:(list[0]?.id||""));
