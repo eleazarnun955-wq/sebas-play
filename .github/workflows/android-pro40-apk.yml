@@ -24,13 +24,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
       - name: Instalar dependencias
-        run: npm ci
+        run: npm install
       - name: Compilar interfaz
         run: npm run build
         env:
@@ -42,6 +41,8 @@ jobs:
         run: npx cap sync android --config capacitor.pro40.config.ts
       - name: Configurar reproducción VLC
         run: node scripts/install-vlc-android.mjs
+      - name: Permitir HTTP solo para el servidor local de la laptop
+        run: node scripts/enable-android-local-http.mjs
       - name: Generar iconos
         run: node scripts/generate-android-icons.mjs
       - name: Compilar APK
