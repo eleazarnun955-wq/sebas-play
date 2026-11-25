@@ -73,3 +73,9 @@ Base de trabajo e identidades independientes creadas. Las nueve funciones son el
 - La compilación Android PRO 4.0 del commit `04ee1974e8eaadd88cbba1d1e155f1c064da2a8a` terminó correctamente. Artefacto preliminar de Actions: `SEBAS-PLAY-PRO-4.0-APK-INDEPENDIENTE`, ID `15019420832`, generado el 25-nov-2026 y con expiración 25-dic-2026.
 - La compilación general y los smoke tests del servidor Windows también terminaron correctamente para ese commit.
 - Este APK es una compilación de avance, no una versión final: faltan implementar y validar varias de las nueve funciones y realizar pruebas físicas en Android, Roku y Windows 10.
+
+
+## Avance adicional — escaneo manual desde la app
+- El panel de conexión con Windows ahora incluye el control **Escanear ahora**, que invoca `POST /api/scan` con autenticación Bearer y después vuelve a cargar el catálogo.
+- La interfaz muestra la hora del último escaneo iniciado desde el panel y el conteo de archivos informado por el servidor.
+- El cambio está en el commit `bbed79cd2fd7323ed2a0689c33fa70826dfb60df` de la rama independiente. Aún debe pasar CI y probarse con el servidor real en Windows 10.
