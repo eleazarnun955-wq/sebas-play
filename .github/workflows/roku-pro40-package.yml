@@ -29,7 +29,7 @@ jobs:
           grep -q "function isDirectPlayableUrl" apps/roku-pro40/components/CatalogTask.brs
           grep -q "if isDirectPlayableUrl(movie.video_url)" apps/roku-pro40/components/CatalogTask.brs
           grep -q "if isDirectPlayableUrl(channel.stream_url)" apps/roku-pro40/components/CatalogTask.brs
-          grep -q "application" apps/roku-pro40/manifest || true
+          grep -q "/embed/" apps/roku-pro40/components/CatalogTask.brs
       - name: Package Roku channel source
         run: |
           cd apps/roku-pro40
