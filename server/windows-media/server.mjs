@@ -66,20 +66,29 @@ function safePath(rel) {
   if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
   return full;
 }
-async function walk(dir, prefix = "", req) {
+async function scanLibrary(dir = ROOT, prefix = "") {
   const out = [];
   for (const ent of await fs.promises.readdir(dir, { withFileTypes:true })) {
-    const abs = path.join(dir, ent.name);
-    const rel = path.join(prefix, ent.name);
+    const abs = path.join(dir, ent.name), rel = path.join(prefix, ent.name);
     if (ent.isSymbolicLink()) continue;
-    if (ent.isDirectory()) out.push(...await walk(abs, rel, req));
+    if (ent.isDirectory()) out.push(...await scanLibrary(abs, rel));
     else if (ent.isFile() && ALLOWED.has(path.extname(ent.name).toLowerCase())) {
       const st = await fs.promises.stat(abs);
-      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:path.basename(ent.name, path.extname(ent.name)), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], stream_url:signedUrl(rel, req) });
+      out.push({ id:crypto.createHash("sha1").update(rel).digest("hex"), title:path.basename(ent.name, path.extname(ent.name)), file:rel.split(path.sep).join("/"), size_bytes:st.size, modified_at:st.mtime.toISOString(), mime_type:MIME[path.extname(ent.name).toLowerCase()] });
     }
   }
   return out;
 }
+let libraryIndex = [];
+let scanState = { scanning:false, lastScanAt:null, lastError:null, count:0 };
+const activeStreams = new Set();
+async function refreshLibraryIndex() {
+  if (scanState.scanning) return;
+  scanState.scanning = true;
+  try { const next = await scanLibrary(); libraryIndex = next; scanState = { scanning:false, lastScanAt:new Date().toISOString(), lastError:null, count:next.length }; }
+  catch (error) { scanState = { ...scanState, scanning:false, lastError:error instanceof Error ? error.message : "Error de escaneo" }; }
+}
+
 function sendError(res, status, message) { json(res, status, { error:message }); }
 
 const server = http.createServer(async (req, res) => {
@@ -95,6 +104,12 @@ const server = http.createServer(async (req, res) => {
     return res.end(html);
   }
   if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
+  if (url.pathname === "/api/status" && req.method === "GET") {
+    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    let storage = null;
+    try { const stats = await fs.promises.statfs(ROOT); storage = { total_bytes:Number(stats.blocks) * Number(stats.bsize), free_bytes:Number(stats.bavail) * Number(stats.bsize) }; } catch {}
+    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage });
+  }
   if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
@@ -117,8 +132,9 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/api/catalog" && req.method === "GET") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     try {
-      const items = await walk(ROOT, "", req);
-      return json(res, 200, { items, count:items.length, generated_at:new Date().toISOString(), note:"Solo archivos locales MP4/M4V/MOV/WebM. Publica únicamente contenido con derechos." });
+      if (!scanState.lastScanAt && !scanState.scanning) await refreshLibraryIndex();
+      const items = libraryIndex.map(item => ({ ...item, stream_url:signedUrl(item.file.split("/").join(path.sep), req) }));
+      return json(res, 200, { items, count:items.length, generated_at:new Date().toISOString(), scan:scanState, note:"Índice automático local MP4/M4V/MOV/WebM. Publica únicamente contenido con derechos." });
     } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
   }
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/media/")) {
@@ -153,13 +169,17 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(status, headers);
       if (req.method === "HEAD") return res.end();
       const stream = fs.createReadStream(realFile, { start, end });
-      stream.on("error", () => { if (!res.headersSent) sendError(res, 500, "Error leyendo el archivo"); else res.destroy(); });
+      const session = { startedAt:Date.now(), file:rel }; activeStreams.add(session);
+      const release = () => activeStreams.delete(session);
+      stream.on("close", release);
+      stream.on("error", () => { release(); if (!res.headersSent) sendError(res, 500, "Error leyendo el archivo"); else res.destroy(); });
+      res.on("close", () => { if (!stream.destroyed) stream.destroy(); release(); });
       stream.pipe(res);
     } catch { return sendError(res, 404, "Archivo no encontrado"); }
     return;
   }
   return sendError(res, 404, "Ruta no encontrada");
 });
-server.listen(PORT, HOST, () => console.log(`SEBAS PLAY Media Server activo en http://${HOST}:${PORT}\nPrueba local: http://localhost:${PORT}/health\nBiblioteca: ${ROOT}\nArchivos compatibles: MP4, M4V, MOV, WebM`));
+server.listen(PORT, HOST, () => { console.log("SEBAS PLAY Media Server activo en " + HOST + ":" + PORT); void refreshLibraryIndex(); setInterval(() => { void refreshLibraryIndex(); }, Math.max(15000, Number(process.env.SEBAS_SCAN_INTERVAL_MS || 30000))).unref(); });
 process.on("SIGINT", () => server.close(() => process.exit(0)));
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
