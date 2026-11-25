@@ -35,6 +35,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SEBAS_PRO40: "true"
       - name: Generar proyecto Android PRO 4.0
         run: npx cap add android --config capacitor.pro40.config.ts
       - name: Sincronizar Capacitor
