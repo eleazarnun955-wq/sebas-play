@@ -3,7 +3,7 @@ name: SEBAS PLAY Windows media server checks
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/windows-media-server-android-roku, fix/windows-server-first-run, fix/windows-media-network-autostart, sebas-play-pro40-independent-20261125]
+    branches: [main, feature/windows-media-server-android-roku, fix/windows-server-first-run, fix/windows-media-network-autostart, sebas-play-pro40-independent-20261125, sebas-play-pro50-independent-20261125]
     paths:
       - "server/windows-media/**"
       - ".github/workflows/windows-media-server.yml"
