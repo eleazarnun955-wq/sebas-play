@@ -10,7 +10,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 - Android y Roku deben consultar el mismo catálogo y nunca presentar páginas HTML/embed como si fueran archivos reproducibles.
 
 ## Estado heredado comprobado
-- Servidor Windows: índice local, escaneo manual autenticado, enlaces HMAC y HTTP Range; vigilancia incremental de altas/cambios/eliminaciones con reconciliación periódica y apagado ordenado probado por CI.
+- Servidor Windows: índice local, escaneo manual autenticado, enlaces HMAC y HTTP Range; vigilancia incremental de altas/cambios/eliminaciones con reconciliación periódica y apagado ordenado probado por CI. Las pruebas también verifican rechazo de tokens en URL, firmas vencidas/manipuladas, traversal firmado y exclusión de enlaces simbólicos.
 - Android: acceso directo “Mi laptop”, importación al catálogo como borrador, reproductor VLC cuando está disponible, historial y favoritos para usuarios autenticados. El progreso se registra/reanuda en el reproductor integrado; la reproducción delegada a VLC externo no reporta posición a la app.
 - Roku: consulta paginada de Supabase, filtro de URLs directas y estados básicos de reproducción. Se activó la interfaz nativa de controles del Video node para pausa/búsqueda y opciones de pistas compatibles con cada dispositivo; falta validación física en Roku.
 - APK PRO 5.0: compilación previa exitosa y verificación de identidad del paquete Android.
@@ -29,12 +29,12 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 
 ## Criterios de salida
 - CI verde para build Android/web, pruebas del servidor y verificaciones de identidad.
-- Pruebas automatizadas de seguridad: token administrativo solo en encabezado, rutas confinadas a la biblioteca y RLS por propietario.
+- Pruebas automatizadas de seguridad del servidor local: token administrativo solo en encabezado, traversal firmado rechazado, enlaces simbólicos excluidos, enlaces HMAC vencidos/manipulados rechazados y rutas confinadas a la biblioteca. RLS por propietario y la vinculación de perfiles Android/Roku siguen pendientes de integración y pruebas.
 - Pruebas con archivos reales MP4/H.264/AAC y un formato que requiera transcodificación.
 - Pruebas físicas de catálogo y reproducción en Windows 10, Android y Roku, incluida una biblioteca mayor a 300 elementos.
 - Confirmar que ambas APK se instalan simultáneamente y que la nueva no solicita reemplazar PRO 4.0.
 
-Este documento es un registro de alcance y aceptación, no una afirmación de que las nueve funciones ya estén implementadas. El escaneo incremental, el apagado ordenado y la solicitud explícita de consentimiento para el inicio automático del servidor están implementados; siguen pendientes las demás integraciones indicadas.
+Este documento es un registro de alcance y aceptación, no una afirmación de que las nueve funciones ya estén implementadas. El escaneo incremental, el apagado ordenado, la solicitud explícita de consentimiento para el inicio automático y las pruebas automatizadas de confinamiento de rutas/enlaces simbólicos están implementados y pasan CI; siguen pendientes las demás integraciones indicadas.
 
 ## Sincronización personal — avance de implementación
 
