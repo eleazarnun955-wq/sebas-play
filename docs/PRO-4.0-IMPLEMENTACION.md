@@ -85,3 +85,11 @@ Base de trabajo e identidades independientes creadas. Las nueve funciones son el
 - El cliente Roku ahora consulta películas, series, temporadas, episodios y canales en páginas de 300 registros, acumulando resultados hasta encontrar una página incompleta (límite de seguridad: 100 páginas).
 - Esto elimina el truncamiento silencioso que ocurría al superar los primeros 300 registros de una tabla y ayuda a mantener Android/Roku con catálogos grandes.
 - Commit: `f0f1f17715894fba7784e4a4846f62681a3ba2b6`. Pendiente validar con el catálogo real y un Roku físico.
+
+
+## Avance adicional — recuperación del reproductor Roku
+- El reproductor muestra estados de conexión/carga, reproducción y pausa; ante un error deja un mensaje visible para el usuario en lugar de cerrarse inmediatamente.
+- La tecla Atrás detiene el video y devuelve el control al catálogo; al finalizar también se cierra limpiamente.
+- Se añadieron verificaciones CI para el mensaje de error, control Atrás y detención del video.
+- Commit funcional: `73cbc1df840fde5683672b3b1a3410261a990ce9`; interfaz: `366a0e166a074c5a7c531f954ed97c792b3b522a`; validación: `8473c1212c3eb684c2c905d83e50dbffcc9cfe91`.
+- Pendiente probar en dispositivo Roku real; la simulación CI no confirma compatibilidad de todos los códecs ni comportamiento del control remoto en hardware.
