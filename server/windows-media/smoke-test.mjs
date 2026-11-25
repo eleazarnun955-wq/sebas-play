@@ -61,7 +61,7 @@ try {
   assert.ok(catalog.items.some(item => item.file === "sample.mkv" && item.mime_type === "video/x-matroska"));
   assert.ok(catalog.items.some(item => item.file === "sample.avi" && item.mime_type === "video/x-msvideo"));
   assert.ok(catalog.items.some(item => item.file === path.join("Subcarpeta", "episode.webm").split(path.sep).join("/")));
-  const sampleItem = catalog.items.find(item => item.title === "sample");
+  const sampleItem = catalog.items.find(item => item.file === "sample.mp4");
   assert.ok(sampleItem, "original test video should remain in the library");
   const mkvItem = catalog.items.find(item => item.file === "sample.mkv");
   const aviItem = catalog.items.find(item => item.file === "sample.avi");
