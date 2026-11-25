@@ -152,7 +152,7 @@ sub loadPersonalSync(root as object)
                 sourceRow = root.GetChild(rowIndex)
                 for itemIndex = 0 to sourceRow.GetChildCount() - 1
                     sourceItem = sourceRow.GetChild(itemIndex)
-                    if sourceItem.contentId = favorite.content_id and sourceItem.contentType = favorite.content_type
+                    if (sourceItem.contentId = favorite.content_id and sourceItem.contentType = favorite.content_type) or (favorite.content_type = "series" and sourceItem.seriesId = favorite.content_id)
                         copy = favoritesRow.CreateChild("ContentNode")
                         copy.title = sourceItem.title
                         copy.url = sourceItem.url
