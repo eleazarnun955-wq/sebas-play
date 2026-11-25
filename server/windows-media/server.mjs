@@ -14,8 +14,8 @@ const SIGNING_SECRET = process.env.SEBAS_SIGNING_SECRET || "";
 const PUBLIC_BASE = (process.env.SEBAS_PUBLIC_BASE_URL || "").replace(/\/$/, "");
 const URL_TTL_SECONDS = Math.max(3600, Number(process.env.SEBAS_URL_TTL_SECONDS || 2592000));
 const MAX_UPLOAD_BYTES = Math.max(1, Number(process.env.SEBAS_MAX_UPLOAD_BYTES || 21474836480));
-const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm"]);
-const MIME = { ".mp4":"video/mp4", ".m4v":"video/x-m4v", ".mov":"video/quicktime", ".webm":"video/webm" };
+const ALLOWED = new Set([".mp4", ".m4v", ".mov", ".webm", ".mkv", ".avi", ".wmv", ".flv", ".mpg", ".mpeg", ".m4v", ".3gp", ".ts", ".m2ts", ".mts", ".vob", ".ogv"]);
+const MIME = { ".mp4":"video/mp4", ".m4v":"video/x-m4v", ".mov":"video/quicktime", ".webm":"video/webm", ".mkv":"video/x-matroska", ".avi":"video/x-msvideo", ".wmv":"video/x-ms-wmv", ".flv":"video/x-flv", ".mpg":"video/mpeg", ".mpeg":"video/mpeg", ".3gp":"video/3gpp", ".ts":"video/mp2t", ".m2ts":"video/mp2t", ".mts":"video/mp2t", ".vob":"video/dvd", ".ogv":"video/ogg" };
 
 if (!ACCESS_TOKEN || ACCESS_TOKEN.length < 24) {
   console.error("Falta la clave de acceso. Ejecuta setup-server.ps1 para preparar el servidor.");
