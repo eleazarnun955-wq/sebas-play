@@ -5,6 +5,9 @@ sub init()
     m.top.ObserveField("videoUrl", "startPlayback")
     m.top.ObserveField("videoTitle", "updateTitle")
     m.video.ObserveField("state", "onVideoState")
+    ' Use Roku's native transport overlay for pause, seek, rewind/forward,
+    ' and device-supported caption/audio controls.
+    m.video.enableUI = true
     m.top.SetFocus(true)
     m.status.text = "Preparando reproducción…"
 end sub
