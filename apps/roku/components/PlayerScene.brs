@@ -22,7 +22,12 @@ end sub
 
 sub onVideoState()
     state = m.video.state
-    if state = "finished" or state = "error"
+    if state = "error"
+        m.top.errorMessage = "Roku no pudo reproducir este archivo. Para Roku usa MP4 con video H.264 y audio AAC; MOV, WebM y algunos MP4 con otros códecs no son compatibles."
+        m.video.control = "stop"
+        m.top.wasClosed = true
+        m.top.RemoveFromParent()
+    else if state = "finished"
         m.video.control = "stop"
         m.top.wasClosed = true
         m.top.RemoveFromParent()
