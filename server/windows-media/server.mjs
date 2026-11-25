@@ -66,17 +66,36 @@ function safePath(rel) {
   if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
   return full;
 }
-async function scanLibrary(dir = ROOT, prefix = "") {
+async function scanLibrary(previousItems = []) {
+  // Iterative traversal avoids recursive spread limits on large libraries.
+  // Reuse unchanged catalog records when size and modification time match.
+  const previous = new Map(previousItems.map(item => [item.file, item]));
   const out = [];
-  for (const ent of await fs.promises.readdir(dir, { withFileTypes:true })) {
-    const abs = path.join(dir, ent.name), rel = path.join(prefix, ent.name);
-    if (ent.isSymbolicLink()) continue;
-    if (ent.isDirectory()) out.push(...await scanLibrary(abs, rel));
-    else if (ent.isFile() && ALLOWED.has(path.extname(ent.name).toLowerCase())) {
+  const pending = [{ dir:ROOT, prefix:"" }];
+  while (pending.length) {
+    const current = pending.pop();
+    const entries = await fs.promises.readdir(current.dir, { withFileTypes:true });
+    for (const ent of entries) {
+      const abs = path.join(current.dir, ent.name);
+      const rel = current.prefix ? path.join(current.prefix, ent.name) : ent.name;
+      if (ent.isSymbolicLink()) continue;
+      if (ent.isDirectory()) {
+        pending.push({ dir:abs, prefix:rel });
+        continue;
+      }
+      const ext = path.extname(ent.name).toLowerCase();
+      if (!ent.isFile() || !ALLOWED.has(ext)) continue;
+      const file = rel.split(path.sep).join("/");
       const st = await fs.promises.stat(abs);
-      out.push({ id:crypto.createHash("sha1").update(rel).digest("hex"), title:path.basename(ent.name, path.extname(ent.name)), file:rel.split(path.sep).join("/"), size_bytes:st.size, modified_at:st.mtime.toISOString(), mime_type:MIME[path.extname(ent.name).toLowerCase()] });
+      const cached = previous.get(file);
+      if (cached && cached.size_bytes === st.size && Date.parse(cached.modified_at) === st.mtimeMs) {
+        out.push(cached);
+      } else {
+        out.push({ id:crypto.createHash("sha1").update(file).digest("hex"), title:path.basename(ent.name, ext), file, size_bytes:st.size, modified_at:st.mtime.toISOString(), mime_type:MIME[ext] });
+      }
     }
   }
+  out.sort((a, b) => a.file.localeCompare(b.file, "es"));
   return out;
 }
 let libraryIndex = [];
@@ -87,7 +106,7 @@ function refreshLibraryIndex() {
   if (scanPromise) return scanPromise;
   scanState.scanning = true;
   scanPromise = (async () => {
-    try { const next = await scanLibrary(); libraryIndex = next; scanState = { scanning:false, lastScanAt:new Date().toISOString(), lastError:null, count:next.length }; }
+    try { const next = await scanLibrary(libraryIndex); libraryIndex = next; scanState = { scanning:false, lastScanAt:new Date().toISOString(), lastError:null, count:next.length }; }
     catch (error) { scanState = { ...scanState, scanning:false, lastError:error instanceof Error ? error.message : "Error de escaneo" }; }
     finally { scanPromise = null; }
   })();
