@@ -123,6 +123,36 @@ try {
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
   assert.equal(await stream.text(), "SEBAS-");
+
+  const headStream = await fetch(sampleItem.stream_url, { method:"HEAD", headers:{ range:"bytes=0-5" } });
+  assert.equal(headStream.status, 206, "HEAD requests should preserve range metadata");
+  assert.equal(headStream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
+  assert.equal(await headStream.text(), "", "HEAD requests must not return a video body");
+
+  const suffixStream = await fetch(sampleItem.stream_url, { headers:{ range:"bytes=-4" } });
+  assert.equal(suffixStream.status, 206, "suffix byte ranges should be supported");
+  assert.equal(await suffixStream.text(), "TEST", "suffix ranges should return the requested tail bytes");
+
+  const invalidRange = await fetch(sampleItem.stream_url, { headers:{ range:"bytes=9999-10000" } });
+  assert.equal(invalidRange.status, 416, "unsatisfiable byte ranges should return 416");
+
+  const expiredUrl = new URL(sampleItem.stream_url);
+  expiredUrl.searchParams.set("exp", String(Math.floor(Date.now()/1000) - 60));
+  const expired = await fetch(expiredUrl);
+  assert.equal(expired.status, 401, "expired signed playback links must be rejected");
+
+  const tamperedUrl = new URL(sampleItem.stream_url);
+  tamperedUrl.searchParams.set("sig", "0".repeat(64));
+  const tampered = await fetch(tamperedUrl);
+  assert.equal(tampered.status, 403, "tampered signed playback links must be rejected");
+
+  const unauthorizedUpload = await fetch("http://127.0.0.1:18787/api/upload?name=blocked.mp4", {
+    method:"POST",
+    headers:{ "content-type":"video/mp4" },
+    body:Buffer.from("SHOULD-NOT-BE-WRITTEN"),
+  });
+  assert.equal(unauthorizedUpload.status, 401, "uploads must require the admin token");
+  assert.equal(await fs.access(path.join(temp, "blocked.mp4")).then(() => true).catch(() => false), false, "unauthorized upload must not create a file");
   // LAN requests must create URLs pointing to the laptop, never localhost.
   const lanResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
     headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "x-forwarded-host": "192.168.1.15:18787", "x-forwarded-proto": "http" }
@@ -159,7 +189,7 @@ try {
   });
   assert.equal((await refreshedCatalog.json()).count, 1);
 
-  console.log("PASS: home page, health, protected catalog, automatic indexing, refresh/removal, LAN/HTTPS URLs, signed playback and HTTP Range.");
+  console.log("PASS: home page, health, protected catalog/uploads, automatic indexing, refresh/removal, LAN/HTTPS URLs, signed playback expiry/tampering, HEAD and HTTP Range.");
 } finally {
   if (child.exitCode === null) {
     const exited = new Promise(resolve => child.once("exit", resolve));
