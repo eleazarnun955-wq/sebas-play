@@ -71,29 +71,41 @@ sub loadCatalog()
 end sub
 
 function fetchRows(tableName as string, selectFields as string, orderField as string, publishedOnly = true as boolean) as dynamic
-    transfer = CreateObject("roUrlTransfer")
-    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    transfer.InitClientCertificates()
-    query = "?select=" + selectFields + "&order=" + orderField + ".desc&limit=300"
-    if publishedOnly then query = "?select=" + selectFields + "&is_published=eq.true&order=" + orderField + ".desc&limit=300"
-    transfer.SetUrl(SebasPlaySupabaseUrl() + "/rest/v1/" + tableName + query)
-    transfer.AddHeader("apikey", SebasPlayPublishableKey())
-    transfer.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
-    transfer.AddHeader("Accept", "application/json")
-    response = transfer.GetToString()
-    code = transfer.GetResponseCode()
-    if response = invalid or response = "" or code < 200 or code >= 300
-        detail = ""
-        if response <> invalid then detail = Left(response, 180)
-        m.top.errorMessage = "Catálogo " + tableName + " · HTTP " + code.ToStr() + " " + detail
-        return invalid
-    end if
-    parsed = ParseJson(response)
-    if type(parsed) <> "roArray"
-        m.top.errorMessage = "Respuesta inesperada del catálogo: " + tableName
-        return invalid
-    end if
-    return parsed
+    allRows = []
+    offset = 0
+    pageSize = 300
+    ' Read the complete catalog in bounded pages instead of silently truncating
+    ' every category at the first 300 records.
+    for pageNumber = 1 to 100
+        transfer = CreateObject("roUrlTransfer")
+        transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+        transfer.InitClientCertificates()
+        query = "?select=" + selectFields + "&order=" + orderField + ".desc&limit=" + pageSize.ToStr() + "&offset=" + offset.ToStr()
+        if publishedOnly then query = "?select=" + selectFields + "&is_published=eq.true&order=" + orderField + ".desc&limit=" + pageSize.ToStr() + "&offset=" + offset.ToStr()
+        transfer.SetUrl(SebasPlaySupabaseUrl() + "/rest/v1/" + tableName + query)
+        transfer.AddHeader("apikey", SebasPlayPublishableKey())
+        transfer.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
+        transfer.AddHeader("Accept", "application/json")
+        response = transfer.GetToString()
+        code = transfer.GetResponseCode()
+        if response = invalid or response = "" or code < 200 or code >= 300
+            detail = ""
+            if response <> invalid then detail = Left(response, 180)
+            m.top.errorMessage = "Catálogo " + tableName + " · HTTP " + code.ToStr() + " " + detail
+            return invalid
+        end if
+        parsed = ParseJson(response)
+        if type(parsed) <> "roArray"
+            m.top.errorMessage = "Respuesta inesperada del catálogo: " + tableName
+            return invalid
+        end if
+        for each row in parsed
+            allRows.Push(row)
+        end for
+        if parsed.Count() < pageSize then exit for
+        offset = offset + pageSize
+    end for
+    return allRows
 end function
 
 ' PRO 4.0 never lists HTML/embed pages as playable media.
