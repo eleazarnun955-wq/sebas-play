@@ -12,7 +12,7 @@ Esta lista pertenece a la rama independiente `sebas-play-pro50-independent-20261
 ## Estado heredado comprobado
 - Servidor Windows: escaneo periódico, índice local, escaneo manual autenticado, enlaces HMAC y soporte HTTP Range.
 - Android: acceso directo “Mi laptop”, importación al catálogo como borrador, reproductor VLC cuando está disponible, historial y favoritos para usuarios autenticados.
-- Roku: consulta paginada de Supabase, filtro de URLs directas y estados básicos de reproducción.
+- Roku: consulta paginada de Supabase, filtro de URLs directas y estados básicos de reproducción. Se activó la interfaz nativa de controles del Video node para pausa/búsqueda y opciones de pistas compatibles con cada dispositivo; falta validación física en Roku.
 - APK PRO 5.0: compilación previa exitosa y verificación de identidad del paquete Android.
 - Roku PRO 5.0: identidad del manifest configurada; falta validación física del canal.
 
