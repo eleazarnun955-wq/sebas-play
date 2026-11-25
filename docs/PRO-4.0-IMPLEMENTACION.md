@@ -47,3 +47,13 @@ Este trabajo se desarrolla únicamente en la rama `sebas-play-pro40-independent-
 ## Estado
 
 Base de trabajo e identidades independientes creadas. Las nueve funciones son el alcance de una única entrega PRO 4.0; esta especificación no afirma que ya estén implementadas ni probadas. No publicar ni reemplazar versiones previas hasta completar todos los criterios de aceptación.
+
+
+## Regla de reproducción directa (PRO 4.0)
+- El catálogo nuevo solo presenta recursos HTTP(S) cuyo path termina en una extensión de vídeo directa admitida por el cliente.
+- Se excluyen páginas HTML, páginas de inserción/reproductores web (incluidas rutas `/embed/`) y enlaces sin extensión multimedia reconocible.
+- Android PRO 4.0 aplica el filtro mediante `VITE_SEBAS_PRO40=true`; las versiones anteriores no activan ese filtro en sus builds.
+- Roku PRO 4.0 aplica el mismo criterio a películas, episodios y canales: MP4, M4V, MOV y HLS M3U8.
+- No se borran filas ni archivos de la base de datos; únicamente se omiten del catálogo PRO 4.0.
+- Los enlaces directos con URL firmada se aceptan porque la validación usa la ruta antes de los parámetros de consulta.
+- La compatibilidad final de cada códec y contenedor debe validarse en el modelo físico de Roku; un enlace directo no garantiza que el dispositivo soporte el códec.
