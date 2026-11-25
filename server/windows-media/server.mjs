@@ -36,10 +36,12 @@ function safeEqual(a, b) {
   const bb = Buffer.from(String(b || ""));
   return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
 }
-function authorized(req, url) {
+function authorized(req) {
   const header = req.headers.authorization || "";
   const bearer = header.startsWith("Bearer ") ? header.slice(7) : "";
-  return safeEqual(bearer, ACCESS_TOKEN) || safeEqual(url.searchParams.get("access_token"), ACCESS_TOKEN);
+  // Admin credentials are accepted only in headers, never in URLs where
+  // proxies, browser history, and access logs could retain them.
+  return safeEqual(bearer, ACCESS_TOKEN);
 }
 function signature(rel, exp) {
   return crypto.createHmac("sha256", SIGNING_SECRET).update(`${rel}\n${exp}`).digest("hex");
