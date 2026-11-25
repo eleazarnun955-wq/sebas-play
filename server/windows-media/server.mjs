@@ -81,12 +81,17 @@ async function scanLibrary(dir = ROOT, prefix = "") {
 }
 let libraryIndex = [];
 let scanState = { scanning:false, lastScanAt:null, lastError:null, count:0 };
+let scanPromise = null;
 const activeStreams = new Set();
-async function refreshLibraryIndex() {
-  if (scanState.scanning) return;
+function refreshLibraryIndex() {
+  if (scanPromise) return scanPromise;
   scanState.scanning = true;
-  try { const next = await scanLibrary(); libraryIndex = next; scanState = { scanning:false, lastScanAt:new Date().toISOString(), lastError:null, count:next.length }; }
-  catch (error) { scanState = { ...scanState, scanning:false, lastError:error instanceof Error ? error.message : "Error de escaneo" }; }
+  scanPromise = (async () => {
+    try { const next = await scanLibrary(); libraryIndex = next; scanState = { scanning:false, lastScanAt:new Date().toISOString(), lastError:null, count:next.length }; }
+    catch (error) { scanState = { ...scanState, scanning:false, lastError:error instanceof Error ? error.message : "Error de escaneo" }; }
+    finally { scanPromise = null; }
+  })();
+  return scanPromise;
 }
 
 function sendError(res, status, message) { json(res, status, { error:message }); }
