@@ -233,6 +233,25 @@ const server = http.createServer(async (req, res) => {
   }
   return sendError(res, 404, "Ruta no encontrada");
 });
-server.listen(PORT, HOST, () => { console.log("SEBAS PLAY Media Server activo en " + HOST + ":" + PORT); void refreshLibraryIndex(); startLibraryWatcher(); setInterval(() => { void refreshLibraryIndex(); }, Math.max(15000, Number(process.env.SEBAS_SCAN_INTERVAL_MS || 30000))).unref(); });
-process.on("SIGINT", () => server.close(() => process.exit(0)));
-process.on("SIGTERM", () => server.close(() => process.exit(0)));
+let reconciliationTimer = null;
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log("SEBAS PLAY Media Server: apagado ordenado (" + signal + ").");
+  if (watchDebounce) { clearTimeout(watchDebounce); watchDebounce = null; }
+  if (reconciliationTimer) { clearInterval(reconciliationTimer); reconciliationTimer = null; }
+  if (libraryWatcher) { libraryWatcher.close(); libraryWatcher = null; }
+  // Stop accepting requests and close keep-alive connections for clean Windows restarts.
+  server.close(() => process.exit(0));
+  if (typeof server.closeAllConnections === "function") server.closeAllConnections();
+}
+server.listen(PORT, HOST, () => {
+  console.log("SEBAS PLAY Media Server activo en " + HOST + ":" + PORT);
+  void refreshLibraryIndex();
+  startLibraryWatcher();
+  reconciliationTimer = setInterval(() => { void refreshLibraryIndex(); }, Math.max(15000, Number(process.env.SEBAS_SCAN_INTERVAL_MS || 30000)));
+  reconciliationTimer.unref();
+});
+process.once("SIGINT", () => shutdown("SIGINT"));
+process.once("SIGTERM", () => shutdown("SIGTERM"));
