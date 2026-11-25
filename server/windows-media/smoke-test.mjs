@@ -161,7 +161,12 @@ try {
 
   console.log("PASS: home page, health, protected catalog, automatic indexing, refresh/removal, LAN/HTTPS URLs, signed playback and HTTP Range.");
 } finally {
-  child.kill("SIGTERM");
-  await wait(150);
+  if (child.exitCode === null) {
+    const exited = new Promise(resolve => child.once("exit", resolve));
+    child.kill("SIGTERM");
+    await Promise.race([exited, wait(3000)]);
+  }
+  assert.equal(child.exitCode, 0, "media server should exit cleanly after SIGTERM: " + logs);
+  assert.ok(logs.includes("apagado ordenado (SIGTERM)"), "server should log its graceful shutdown path");
   await fs.rm(temp, { recursive: true, force: true });
 }
