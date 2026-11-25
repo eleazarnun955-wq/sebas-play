@@ -47,12 +47,16 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     section = CreateObject("roSGNode", "ContentNode")
     section.Title = "Películas de mi laptop"
     for each entry in parsed.items
-        item = section.CreateChild("ContentNode")
-        item.Title = safeString(entry.title)
-        item.Description = safeString(entry.file)
-        item.Url = safeString(entry.stream_url)
-        item.StreamFormat = "auto"
-        item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
+        fileName = LCase(safeString(entry.file))
+        ' Roku local playback is restricted to MP4 containers; Android VLC handles the other formats.
+        if Right(fileName, 4) = ".mp4"
+            item = section.CreateChild("ContentNode")
+            item.Title = safeString(entry.title)
+            item.Description = safeString(entry.file) + " · MP4 para Roku"
+            item.Url = safeString(entry.stream_url)
+            item.StreamFormat = "mp4"
+            item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
+        end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
     m.top.errorMessage = "Biblioteca de laptop: " + parsed.items.Count().ToStr() + " videos."
