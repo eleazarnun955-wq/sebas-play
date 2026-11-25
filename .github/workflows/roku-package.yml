@@ -3,7 +3,7 @@ name: SEBAS PLAY Roku package
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku]
+    branches: [main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/roku-laptop-folders-20261125]
     paths:
       - "apps/roku/**"
       - ".github/workflows/roku-package.yml"
