@@ -30,5 +30,6 @@ jobs:
           node server/windows-media/xmltv.test.mjs
           node scripts/profile-pin-test.mjs
           node scripts/verify-pro50-pairing.mjs
+          node scripts/verify-pro60-isolation.mjs
       - name: Build web interface
         run: npm run build
