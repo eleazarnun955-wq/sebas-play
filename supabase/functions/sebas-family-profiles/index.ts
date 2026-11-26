@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
-import { hashProfilePin, verifyProfilePin } from "../roku-device-sync/profile-security.mjs";
+import { hashProfilePin, verifyProfilePin } from "./profile-security.mjs";
 
 const url = Deno.env.get("SUPABASE_URL") ?? "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
