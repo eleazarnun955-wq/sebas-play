@@ -100,3 +100,12 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - Descarta registros mal formados, fechas invertidas y programas fuera de la ventana de 14 días hacia delante / 24 horas hacia atrás; no requiere EPG para el funcionamiento normal.
 - Hay pruebas de regresión para entidades/CDATA, canales, offsets, fechas inválidas y límites de tamaño, ejecutadas en CI y en el workflow del servidor Windows.
 - **Todavía no está conectado a una pantalla de configuración ni a la guía visual Android/Roku**. No descarga URLs externas ni hace peticiones de red; falta la capa segura de importación/configuración y mapeo de canales.
+
+
+## Perfiles familiares y PIN — preparación segura — 26-nov-2026
+
+- Se verificó el esquema real: `profiles` actual representa una fila por cuenta Auth (su ID referencia `auth.users`), no perfiles infantiles/familiares. Favoritos y progreso todavía se autorizan por `user_id`, y Roku vinculado también se asocia únicamente a la cuenta.
+- Se añadió `supabase/sql/pro50-family-profiles-draft.sql` como borrador no aplicado: crea perfiles familiares, credenciales PIN separadas, perfil predeterminado y claves foráneas para aislar favoritos, progreso y dispositivos.
+- Se añadió un helper PBKDF2-HMAC-SHA256 con sal aleatoria por PIN (310,000 iteraciones), comparación constante y validación de PIN de 4–8 dígitos; las pruebas están en `scripts/profile-pin-test.mjs`.
+- **No está listo para producción**: los clientes Android/Roku aún consultan favoritos y progreso directamente por `user_id`; las políticas RLS actuales permitirían ver los datos de todos los perfiles de la misma cuenta. Antes de habilitar perfiles infantiles, esas lecturas/escrituras deben pasar por el Edge Function con perfil activo verificado y límite de intentos atómico en servidor. El PIN nunca debe validarse solo en el dispositivo.
+- No se aplicó SQL ni se modificó el esquema de producción. El borrador debe revisarse y probarse en una rama/base de pruebas antes de generar una migración formal.
