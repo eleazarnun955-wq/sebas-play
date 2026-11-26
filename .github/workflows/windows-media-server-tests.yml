@@ -1,9 +1,9 @@
-name: SEBAS PLAY 12.0 Windows media server tests
+name: SEBAS PLAY 13.0 Windows media server tests
 
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-120-independent-full-improvements-20261126]
+    branches: [sebas-play-13-0-independent-full-improvements-20261126]
     paths:
       - "server/windows-media/**"
       - ".github/workflows/windows-media-server-tests.yml"
