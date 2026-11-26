@@ -13,7 +13,7 @@ function decodeXml(value) {
 }
 
 function attr(tag, name) {
-  const match = new RegExp("\\b" + name + "\\s*=\\s*(?:"([^"]*)"|'([^']*)')", "i").exec(tag);
+  const match = new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i").exec(tag);
   return match?.[1] ?? match?.[2] ?? null;
 }
 
