@@ -12,7 +12,7 @@ assert.ok(edge.includes("hashProfilePin"), "PINs must be hashed before persisten
 assert.ok(edge.includes("verifyProfilePin"), "PIN verification must use the secure verifier");
 assert.ok(edge.includes("locked_until"), "PIN failures must support temporary lockout");
 assert.ok(migration.includes("enable row level security"), "family profiles must have RLS enabled");
-assert.ok(migration.includes("auth.uid()) = user_id"), "RLS must restrict rows to the owner");
+assert.ok(migration.includes("revoke all on table public.family_profiles from anon, authenticated"), "client roles must not read PIN hashes");
 assert.ok(migration.includes("pin_hash"), "migration must store the derived PIN hash, not raw PIN");
 assert.ok(ui.includes("verify-profile-pin"), "viewer must call the PIN verification endpoint");
 assert.ok(ui.includes("Crear perfil"), "viewer must expose profile creation");
