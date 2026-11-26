@@ -74,3 +74,12 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - No se instala ni descarga FFmpeg y no se ejecuta transcodificación. La reproducción directa y HTTP Range continúan disponibles aunque FFmpeg no exista.
 - La prueba del servidor valida respuesta, autenticación y forma del resultado sin depender de que el ejecutable esté instalado.
 - Pendiente: diseñar y probar transcodificación bajo demanda, con límites de concurrencia, archivos temporales separados y limpieza segura; requerirá confirmar explícitamente cualquier instalación en la laptop.
+
+
+## Favoritos desde Roku — 26-nov-2026
+
+- La pantalla principal de Roku añade la acción «Agregar / quitar de Mi lista» para el elemento enfocado.
+- La acción usa el token de dispositivo revocable y la función `roku-device-sync`; nunca transmite la sesión ni contraseña de Supabase.
+- La operación add/remove se determina con la lista sincronizada de la cuenta y, tras guardar, se vuelve a consultar la biblioteca personal.
+- Para episodios, el favorito se guarda a nivel de serie cuando existe el identificador de serie.
+- CI comprueba el cableado del control y la solicitud autenticada. Falta validar el flujo con control remoto en Roku físico, incluyendo favoritos creados desde Android y reflejados en Roku y viceversa.
