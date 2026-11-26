@@ -120,7 +120,7 @@ export default function ViewerApp(){
   if(!supabase||!user){setError("Inicia sesión para administrar perfiles.");return}
   setProfilesOpen(true);setProfileBusy(true);setError("");
   try{
-   const {data,error}=await supabase.functions.invoke("roku-device-sync",{body:{action:"list-profiles"}});
+   const {data,error}=await supabase.functions.invoke("sebas-family-profiles",{body:{action:"list-profiles"}});
    if(error)throw error;
    setFamilyProfiles((data?.profiles||[]) as FamilyProfile[]);
   }catch(err){setError(err instanceof Error?err.message:"No se pudieron cargar los perfiles.")}
@@ -132,7 +132,7 @@ export default function ViewerApp(){
   try{
    const payload:{action:string;display_name:string;pin?:string}={action:"create-profile",display_name:profileName.trim()};
    if(profilePin)payload.pin=profilePin;
-   const {data,error}=await supabase.functions.invoke("roku-device-sync",{body:payload});
+   const {data,error}=await supabase.functions.invoke("sebas-family-profiles",{body:payload});
    if(error)throw error;
    if(!data?.profile)throw new Error(data?.error||"No se pudo crear el perfil.");
    setFamilyProfiles(old=>[...old,data.profile as FamilyProfile]);setProfileName("");setProfilePin("");
@@ -143,7 +143,7 @@ export default function ViewerApp(){
   if(!supabase)return;
   setProfileBusy(true);setError("");
   try{
-   const {data,error}=await supabase.functions.invoke("roku-device-sync",{body:{action:"verify-profile-pin",profile_id:profile.id,pin:profilePin}});
+   const {data,error}=await supabase.functions.invoke("sebas-family-profiles",{body:{action:"verify-profile-pin",profile_id:profile.id,pin:profilePin}});
    if(error)throw error;
    if(!data?.unlocked)throw new Error(data?.error||"No se pudo desbloquear el perfil.");
    setActiveProfileId(profile.id);setProfilePin("");setProfilesOpen(false);
@@ -154,7 +154,7 @@ export default function ViewerApp(){
   if(!supabase||!window.confirm("¿Eliminar este perfil? Esta acción no se puede deshacer."))return;
   setProfileBusy(true);setError("");
   try{
-   const {data,error}=await supabase.functions.invoke("roku-device-sync",{body:{action:"delete-profile",profile_id:profileId}});
+   const {data,error}=await supabase.functions.invoke("sebas-family-profiles",{body:{action:"delete-profile",profile_id:profileId}});
    if(error)throw error;
    if(!data?.ok)throw new Error(data?.error||"No se pudo eliminar el perfil.");
    setFamilyProfiles(old=>old.filter(item=>item.id!==profileId));
