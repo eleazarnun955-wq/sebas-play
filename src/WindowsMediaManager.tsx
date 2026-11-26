@@ -5,6 +5,9 @@ import "./windows-media.css";
 
 type ServerCapabilities = { ffmpeg:{available:boolean;version:string|null;reason:string|null};direct_play:boolean;http_range:boolean };
 
+type XmltvProgramme = { channel_id:string; start:string; stop:string; title:string; description:string|null; categories:string[] };
+type XmltvGuide = { channels:{id:string;display_names:string[]}[]; programmes:XmltvProgramme[]; imported_at:string; source:string };
+
 type MediaItem = {
   id: string;
   title: string;
@@ -55,6 +58,9 @@ export default function WindowsMediaManager() {
   const [capabilities, setCapabilities] = useState<ServerCapabilities | null>(null);
   const [epgImporting, setEpgImporting] = useState(false);
   const [epgStatus, setEpgStatus] = useState<string>("");
+  const [epgGuide, setEpgGuide] = useState<XmltvGuide|null>(null);
+  const [epgLoading, setEpgLoading] = useState(false);
+  const [epgChannel, setEpgChannel] = useState("all");
 
   async function connect() {
     const base = normalizeServerBase(serverUrl);
@@ -85,6 +91,7 @@ export default function WindowsMediaManager() {
         } else setCapabilities(null);
       } catch { setCapabilities(null); }
       setConnected(true);
+      await loadXmltvGuide();
       setMessage({ kind: "ok", text: `Conectado. Se encontraron ${payload.count || 0} videos compatibles.` });
     } catch (error) {
       setConnected(false);
@@ -115,6 +122,23 @@ export default function WindowsMediaManager() {
     } finally { setScanning(false); }
   }
 
+
+  async function loadXmltvGuide() {
+    if (!serverUrl.trim() || !token.trim()) return;
+    setEpgLoading(true);
+    try {
+      const base = normalizeServerBase(serverUrl);
+      const response = await fetch(`${base}/api/epg`, {
+        cache:"no-store", headers:{ Authorization:`Bearer ${token.trim()}` },
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
+      setEpgGuide(result.configured && result.guide ? result.guide as XmltvGuide : null);
+    } catch (error) {
+      setEpgStatus(error instanceof Error ? error.message : "No se pudo consultar la guía XMLTV.");
+    } finally { setEpgLoading(false); }
+  }
+
   async function importXmltv(file: File) {
     if (!connected || !serverUrl.trim() || !token.trim()) {
       setEpgStatus("Conecta primero la laptop para importar la guía.");
@@ -136,6 +160,7 @@ export default function WindowsMediaManager() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
       setEpgStatus(`Guía importada: ${result.channel_count} canales y ${result.programme_count} programas.`);
+      await loadXmltvGuide();
     } catch (error) {
       setEpgStatus(error instanceof Error ? error.message : "No se pudo importar la guía XMLTV.");
     } finally { setEpgImporting(false); }
@@ -229,8 +254,28 @@ export default function WindowsMediaManager() {
           <small>{epgImporting ? "Importando guía…" : "Importa un archivo XMLTV de hasta 8 MB. No es obligatorio: SEBAS PLAY funciona normalmente si no agregas una guía."}</small>
           {epgStatus && <small role="status">{epgStatus}</small>}
         </div>
-        <div className="wm-upload-card">
-          <label>Subir película desde este dispositivo</label>
+
+        {connected && <div className="wm-upload-card" style={{marginTop:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+            <label>Guía de televisión · horario local</label>
+            <button className="secondary-btn" type="button" onClick={()=>void loadXmltvGuide()} disabled={epgLoading}>{epgLoading?"Consultando…":"Actualizar guía"}</button>
+          </div>
+          {!epgGuide ? <small>{epgLoading?"Consultando la guía guardada en la laptop…":"Todavía no hay una guía XMLTV importada."}</small> : <>
+            <small>{epgGuide.channels.length} canales · {epgGuide.programmes.length} programas · Horas mostradas según la zona horaria de este dispositivo.</small>
+            <label>Canal<select value={epgChannel} onChange={e=>setEpgChannel(e.target.value)}><option value="all">Todos los canales</option>{epgGuide.channels.map(channel=><option key={channel.id} value={channel.id}>{channel.display_names[0]||channel.id}</option>)}</select></label>
+            <div style={{display:"grid",gap:8,maxHeight:280,overflowY:"auto"}}>
+              {epgGuide.programmes.filter(programme=>epgChannel==="all"||programme.channel_id===epgChannel).slice(0,60).map((programme,index)=>{
+                const channel=epgGuide.channels.find(item=>item.id===programme.channel_id);
+                const time=(value:string)=>new Date(value).toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
+                return <div key={programme.channel_id+programme.start+index} style={{padding:"10px 12px",borderRadius:10,background:"#ffffff0a",display:"grid",gridTemplateColumns:"100px 1fr",gap:10}}>
+                  <b>{time(programme.start)}–{time(programme.stop)}</b>
+                  <span><b>{programme.title}</b><small style={{display:"block",opacity:.72}}>{channel?.display_names[0]||programme.channel_id}{programme.categories?.length?" · "+programme.categories.join(", "):""}</small>{programme.description&&<small style={{display:"block",opacity:.72}}>{programme.description}</small>}</span>
+                </div>;
+              })}
+            </div>
+          </>}
+        </div>}
+\n        <div className="wm-upload-card">\n          <label>Subir película desde este dispositivo</label>
           <input type="file" accept=".mp4,.m4v,.mov,.webm,video/mp4,video/x-m4v,video/quicktime,video/webm" disabled={!connected || uploading} onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void uploadFile(file); event.currentTarget.value = ""; }} />
           <small>{uploading ? "Subiendo video a la laptop…" : "El archivo se guarda directamente en la carpeta Peliculas de Windows y se agrega como borrador al catálogo."}</small>
         </div>
