@@ -95,7 +95,13 @@ sub toggleFocusedFavorite()
         m.actions.SetFocus(true)
         return
     end if
-    if item.contentType <> "movie" and item.contentType <> "series" and item.contentType <> "channel"
+    contentId = item.contentId
+    contentType = item.contentType
+    if contentType = "episode" and item.seriesId <> invalid
+        contentId = item.seriesId
+        contentType = "series"
+    end if
+    if contentType <> "movie" and contentType <> "series" and contentType <> "channel"
         m.status.text = "Este elemento no admite favoritos."
         m.actions.SetFocus(true)
         return
@@ -107,11 +113,20 @@ sub toggleFocusedFavorite()
         m.actions.SetFocus(true)
         return
     end if
+    operation = "add"
+    if m.personalSync <> invalid and m.personalSync.favorites <> invalid
+        for each favorite in m.personalSync.favorites
+            if favorite.content_id = contentId and favorite.content_type = contentType
+                operation = "remove"
+                exit for
+            end if
+        end for
+    end if
     m.favoriteTask = CreateObject("roSGNode", "FavoriteTask")
     m.favoriteTask.deviceToken = token
-    m.favoriteTask.contentId = item.contentId
-    m.favoriteTask.contentType = item.contentType
-    m.favoriteTask.operation = "toggle"
+    m.favoriteTask.contentId = contentId
+    m.favoriteTask.contentType = contentType
+    m.favoriteTask.operation = operation
     m.favoriteTask.ObserveField("completed", "onFavoriteCompleted")
     m.top.AppendChild(m.favoriteTask)
     m.favoriteTask.control = "RUN"
