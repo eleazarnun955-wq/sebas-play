@@ -92,3 +92,11 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - Detecta cambios en el NFO en el siguiente escaneo, no altera el video ni el archivo NFO y no requiere API key.
 - Se añadieron pruebas de extracción, entidades XML/CDATA y actualización del sidecar. Pendiente validar con colecciones reales y distintos formatos NFO de Kodi/Jellyfin.
 - Los metadatos automáticos en línea y posters externos siguen pendientes; no se exige una clave TMDB para que la app funcione.
+
+
+## XMLTV — parser base opcional — 25-nov-2026
+
+- Se añadió un parser XMLTV independiente con límites de 8 MB y 10,000 programas, validación de fechas y offsets horarios, lectura de canales/nombres, títulos, descripciones y categorías.
+- Descarta registros mal formados, fechas invertidas y programas fuera de la ventana de 14 días hacia delante / 24 horas hacia atrás; no requiere EPG para el funcionamiento normal.
+- Hay pruebas de regresión para entidades/CDATA, canales, offsets, fechas inválidas y límites de tamaño, ejecutadas en CI y en el workflow del servidor Windows.
+- **Todavía no está conectado a una pantalla de configuración ni a la guía visual Android/Roku**. No descarga URLs externas ni hace peticiones de red; falta la capa segura de importación/configuración y mapeo de canales.
