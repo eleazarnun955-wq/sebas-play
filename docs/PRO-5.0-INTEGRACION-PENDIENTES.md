@@ -88,7 +88,7 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 ## Metadatos locales NFO — 26-nov-2026
 
 - El indexador Windows lee opcionalmente el sidecar NFO con el mismo nombre base del video (límite 256 KiB).
-- Extrae sinopsis, año, clasificación, géneros y duración; Android los copia al crear el borrador de película.
+- Extrae título, sinopsis, año, clasificación, géneros y duración; Android los copia al crear el borrador de película.
 - Detecta cambios en el NFO en el siguiente escaneo, no altera el video ni el archivo NFO y no requiere API key.
 - Se añadieron pruebas de extracción, entidades XML/CDATA y actualización del sidecar. Pendiente validar con colecciones reales y distintos formatos NFO de Kodi/Jellyfin.
 - Los metadatos automáticos en línea y posters externos siguen pendientes; no se exige una clave TMDB para que la app funcione.
