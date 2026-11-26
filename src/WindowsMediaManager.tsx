@@ -53,6 +53,8 @@ export default function WindowsMediaManager() {
   const [scanning, setScanning] = useState(false);
   const [lastScan, setLastScan] = useState<string>("");
   const [capabilities, setCapabilities] = useState<ServerCapabilities | null>(null);
+  const [epgImporting, setEpgImporting] = useState(false);
+  const [epgStatus, setEpgStatus] = useState<string>("");
 
   async function connect() {
     const base = normalizeServerBase(serverUrl);
@@ -111,6 +113,32 @@ export default function WindowsMediaManager() {
     } catch (error) {
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo completar el escaneo de la laptop." });
     } finally { setScanning(false); }
+  }
+
+  async function importXmltv(file: File) {
+    if (!connected || !serverUrl.trim() || !token.trim()) {
+      setEpgStatus("Conecta primero la laptop para importar la guía.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setEpgStatus("El archivo XMLTV no debe superar 8 MB.");
+      return;
+    }
+    setEpgImporting(true); setEpgStatus("");
+    try {
+      const base = normalizeServerBase(serverUrl);
+      const response = await fetch(`${base}/api/epg/import`, {
+        method: "POST",
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token.trim()}`, "Content-Type": "application/xml; charset=utf-8" },
+        body: await file.text(),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
+      setEpgStatus(`Guía importada: ${result.channel_count} canales y ${result.programme_count} programas.`);
+    } catch (error) {
+      setEpgStatus(error instanceof Error ? error.message : "No se pudo importar la guía XMLTV.");
+    } finally { setEpgImporting(false); }
   }
 
   async function uploadFile(file: File) {
@@ -195,6 +223,12 @@ export default function WindowsMediaManager() {
         <button className="primary-btn" onClick={() => void connect()} disabled={loading}>
           {loading ? <RefreshCw size={16} className="spin" /> : <Server size={16} />} {loading ? "Conectando…" : connected ? "Actualizar biblioteca" : "Conectar con laptop"}
         </button>
+        <div className="wm-upload-card">
+          <label>Guía de programación XMLTV (opcional)</label>
+          <input type="file" accept=".xml,.xmltv,application/xml,text/xml" disabled={!connected || epgImporting} onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void importXmltv(file); event.currentTarget.value = ""; }} />
+          <small>{epgImporting ? "Importando guía…" : "Importa un archivo XMLTV de hasta 8 MB. No es obligatorio: SEBAS PLAY funciona normalmente si no agregas una guía."}</small>
+          {epgStatus && <small role="status">{epgStatus}</small>}
+        </div>
         <div className="wm-upload-card">
           <label>Subir película desde este dispositivo</label>
           <input type="file" accept=".mp4,.m4v,.mov,.webm,video/mp4,video/x-m4v,video/quicktime,video/webm" disabled={!connected || uploading} onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void uploadFile(file); event.currentTarget.value = ""; }} />
