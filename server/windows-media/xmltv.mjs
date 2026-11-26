@@ -1,6 +1,13 @@
 const MAX_XMLTV_BYTES = 8 * 1024 * 1024;
 const MAX_PROGRAMMES = 10000;
 
+function decodeNumericEntity(raw, radix) {
+  const codePoint = Number.parseInt(raw, radix);
+  if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10ffff ||
+      (codePoint >= 0xd800 && codePoint <= 0xdfff)) return null;
+  return String.fromCodePoint(codePoint);
+}
+
 function decodeXml(value) {
   return String(value ?? "")
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")

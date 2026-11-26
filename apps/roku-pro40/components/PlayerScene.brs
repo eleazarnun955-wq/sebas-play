@@ -20,6 +20,8 @@ sub startPlayback()
     if m.top.videoUrl = invalid or m.top.videoUrl = "" then return
     m.lastSavedPosition = 0
     m.resumeApplied = false
+    m.pendingPosition = invalid
+    m.pendingDuration = 0
     m.top.wasClosed = false
     m.status.text = "Conectando con el servidor…"
     content = CreateObject("roSGNode", "ContentNode")
@@ -107,9 +109,14 @@ sub startProgressTask(positionSeconds as integer, durationSeconds as integer)
 end sub
 
 sub onProgressSaved()
+    saveError = ""
     if m.progressTask <> invalid
+        saveError = m.progressTask.errorMessage
         m.top.RemoveChild(m.progressTask)
         m.progressTask = invalid
+    end if
+    if saveError <> invalid and saveError <> "" and not m.top.wasClosed
+        m.status.text = "No se pudo guardar el progreso: " + saveError
     end if
     if m.pendingPosition <> invalid
         nextPosition = m.pendingPosition
