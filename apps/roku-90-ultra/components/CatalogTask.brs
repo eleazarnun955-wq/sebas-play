@@ -81,7 +81,8 @@ sub loadCatalog()
                 copy.url = sourceItem.url
                 copy.hdPosterUrl = sourceItem.hdPosterUrl
                 copy.description = sourceItem.description
-                copy.addFields({contentId: sourceItem.contentId, contentType: sourceItem.contentType, seriesId: sourceItem.seriesId})
+                copy.addFields({contentId: sourceItem.contentId, contentType: sourceItem.contentType})
+                if sourceItem.seriesId <> invalid then copy.addFields({seriesId: sourceItem.seriesId})
             end if
         end for
     end for
