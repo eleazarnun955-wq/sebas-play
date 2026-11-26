@@ -65,3 +65,12 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - Si ya hay una petición de progreso en curso, conserva el checkpoint más reciente y lo envía al terminar la petición anterior; así evita que una escritura antigua sobrescriba la posición final más reciente.
 - Se añadieron verificaciones de regresión estáticas en `scripts/verify-pro50-pairing.mjs` para proteger este comportamiento.
 - Pendiente: compilar/empaquetar Roku y probar pausa, salida, error y reanudación en hardware real. La prueba estática no sustituye la validación en un Roku físico.
+
+
+## Detección opcional de FFmpeg — 26-nov-2026
+
+- El servidor Windows ahora consulta `ffmpeg -version` mediante `execFile` (sin shell), con tiempo límite de 2.5 segundos y resultado cacheado durante la vida del proceso.
+- Se expone el estado autenticado en `/api/status` y `/api/capabilities`; el panel de administración muestra si FFmpeg está disponible y su versión.
+- No se instala ni descarga FFmpeg y no se ejecuta transcodificación. La reproducción directa y HTTP Range continúan disponibles aunque FFmpeg no exista.
+- La prueba del servidor valida respuesta, autenticación y forma del resultado sin depender de que el ejecutable esté instalado.
+- Pendiente: diseñar y probar transcodificación bajo demanda, con límites de concurrencia, archivos temporales separados y limpieza segura; requerirá confirmar explícitamente cualquier instalación en la laptop.
