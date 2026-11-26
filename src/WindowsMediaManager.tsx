@@ -317,12 +317,15 @@ export default function WindowsMediaManager() {
             </div>
           </>}
         </div>}
-\n        <div className="wm-upload-card">\n          <label>Subir película desde este dispositivo</label>
+
+        <div className="wm-upload-card">
+          <label>Subir película desde este dispositivo</label>
           <input type="file" accept=".mp4,.m4v,.mov,.webm,video/mp4,video/x-m4v,video/quicktime,video/webm" disabled={!connected || uploading} onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void uploadFile(file); event.currentTarget.value = ""; }} />
           <small>{uploading ? "Subiendo video a la laptop…" : "El archivo se guarda directamente en la carpeta Peliculas de Windows y se agrega como borrador al catálogo."}</small>
         </div>
       </div>
-      {transcodeMessage && <div className="wm-message ok"><CheckCircle2 size={17}/>{transcodeMessage}</div>}\n      {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
+      {transcodeMessage && <div className="wm-message ok"><CheckCircle2 size={17}/>{transcodeMessage}</div>}
+      {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
       {connected && capabilities && <div className="wm-capability">
         <div><b>Compatibilidad del servidor</b><span>Reproducción directa y transmisión por fragmentos (HTTP Range) disponibles.</span></div>
         <div className={capabilities.ffmpeg.available ? "wm-ffmpeg available" : "wm-ffmpeg unavailable"}>
