@@ -142,7 +142,34 @@ const server = http.createServer(async (req, res) => {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     try {
       const items = await walk(ROOT, "", req);
-      return json(res, 200, { items, count:items.length, counts:{ movies:items.filter(x=>x.media_type==="movie").length, episodes:items.filter(x=>x.media_type==="episode").length }, generated_at:new Date().toISOString(), note:"Archivos locales compatibles con VLC Android. Roku reproduce los formatos que admite su reproductor nativo. Publica únicamente contenido con derechos." });
+      const movies = items.filter(x => x.media_type === "movie");
+      const episodeItems = items.filter(x => x.media_type === "episode");
+      const seriesMap = new Map();
+      for (const episode of episodeItems) {
+        const key = episode.series_title.toLocaleLowerCase("es");
+        if (!seriesMap.has(key)) seriesMap.set(key, { title: episode.series_title, seasons: new Map(), episode_count: 0 });
+        const show = seriesMap.get(key);
+        if (!show.seasons.has(episode.season_number)) show.seasons.set(episode.season_number, []);
+        show.seasons.get(episode.season_number).push({
+          id: episode.id, title: episode.title, episode_number: episode.episode_number,
+          file: episode.file, size_bytes: episode.size_bytes, mime_type: episode.mime_type,
+          stream_url: episode.stream_url
+        });
+        show.episode_count++;
+      }
+      const series = [...seriesMap.values()].map(show => ({
+        title: show.title, episode_count: show.episode_count,
+        seasons: [...show.seasons.entries()].sort((a,b)=>a[0]-b[0]).map(([season_number, episodes]) => ({
+          season_number, episode_count: episodes.length,
+          episodes: episodes.sort((a,b)=>a.episode_number-b.episode_number)
+        }))
+      })).sort((a,b)=>a.title.localeCompare(b.title, "es"));
+      return json(res, 200, {
+        items, movies, series, count:items.length,
+        counts:{ movies:movies.length, episodes:episodeItems.length, series:series.length, seasons:series.reduce((n,s)=>n+s.seasons.length,0) },
+        generated_at:new Date().toISOString(),
+        note:"Biblioteca local agrupada automáticamente en películas, series, temporadas y episodios. Roku reproduce los formatos que admite su reproductor nativo. Publica únicamente contenido con derechos."
+      });
     } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
   }
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/media/")) {
