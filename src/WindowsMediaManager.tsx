@@ -3,6 +3,8 @@ import { HardDrive, RefreshCw, Film, CheckCircle2, AlertCircle, Server, ShieldCh
 import { supabase } from "./lib/supabase";
 import "./windows-media.css";
 
+type ServerCapabilities = { ffmpeg:{available:boolean;version:string|null;reason:string|null};direct_play:boolean;http_range:boolean };
+
 type MediaItem = {
   id: string;
   title: string;
@@ -45,6 +47,7 @@ export default function WindowsMediaManager() {
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [lastScan, setLastScan] = useState<string>("");
+  const [capabilities, setCapabilities] = useState<ServerCapabilities | null>(null);
 
   async function connect() {
     const base = normalizeServerBase(serverUrl);
@@ -64,6 +67,16 @@ export default function WindowsMediaManager() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
       setItems((payload.items || []) as MediaItem[]);
+      try {
+        const capabilityResponse = await fetch(`${base}/api/capabilities`, {
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${token.trim()}` },
+        });
+        const capabilityPayload = await capabilityResponse.json();
+        if (capabilityResponse.ok && capabilityPayload.capabilities) {
+          setCapabilities(capabilityPayload.capabilities as ServerCapabilities);
+        } else setCapabilities(null);
+      } catch { setCapabilities(null); }
       setConnected(true);
       setMessage({ kind: "ok", text: `Conectado. Se encontraron ${payload.count || 0} videos compatibles.` });
     } catch (error) {
@@ -179,6 +192,13 @@ export default function WindowsMediaManager() {
         </div>
       </div>
       {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
+      {connected && capabilities && <div className="wm-capability">
+        <div><b>Compatibilidad del servidor</b><span>Reproducción directa y transmisión por fragmentos (HTTP Range) disponibles.</span></div>
+        <div className={capabilities.ffmpeg.available ? "wm-ffmpeg available" : "wm-ffmpeg unavailable"}>
+          <b>FFmpeg: {capabilities.ffmpeg.available ? "Detectado" : "No detectado"}</b>
+          <span>{capabilities.ffmpeg.available ? capabilities.ffmpeg.version : "La reproducción directa sigue disponible. No se instaló ni activó ninguna transcodificación."}</span>
+        </div>
+      </div>}
       <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop{lastScan ? ` · Último escaneo: ${lastScan}` : ""}</p></div><div className="wm-list-actions"><button className="secondary-btn" onClick={() => void scanNow()} disabled={loading || scanning || !connected}><RefreshCw size={15} className={scanning ? "spin" : ""} /> {scanning ? "Escaneando…" : "Escanear ahora"}</button><button className="secondary-btn" onClick={() => void connect()} disabled={loading || scanning || !connected}><RefreshCw size={15} /> Actualizar</button></div></div>
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
         <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small></div><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button></div>)}</div>}
