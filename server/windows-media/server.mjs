@@ -72,6 +72,43 @@ function safePath(rel) {
   if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
   return full;
 }
+function decodeXmlText(value) {
+  return String(value || "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (_match, code) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/\s+/g, " ").trim();
+}
+async function readNfoMetadata(mediaPath) {
+  const nfoPath = path.join(path.dirname(mediaPath), path.basename(mediaPath, path.extname(mediaPath)) + ".nfo");
+  try {
+    const stat = await fs.promises.stat(nfoPath);
+    if (!stat.isFile() || stat.size > 256 * 1024) return { modified_at:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
+    const xml = await fs.promises.readFile(nfoPath, "utf8");
+    const value = (tag) => {
+      const match = xml.match(new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i"));
+      return match ? decodeXmlText(match[1]) : null;
+    };
+    const yearText = value("year") || (value("premiered") || "").slice(0, 4);
+    const year = Number.parseInt(yearText || "", 10);
+    const runtime = Number.parseInt(value("runtime") || "", 10);
+    const genres = [...xml.matchAll(/<genre(?:\\s[^>]*)?>([\\s\\S]*?)<\\/genre>/gi)]
+      .map(match => decodeXmlText(match[1])).filter(Boolean).slice(0, 12);
+    return {
+      modified_at:stat.mtimeMs,
+      synopsis:value("plot") || value("outline") || null,
+      release_year:Number.isInteger(year) && year >= 1888 && year <= 2200 ? year : null,
+      age_rating:value("mpaa") || null,
+      genres:[...new Set(genres)],
+      duration_minutes:Number.isInteger(runtime) && runtime > 0 && runtime <= 1000 ? runtime : null,
+    };
+  } catch {
+    return { modified_at:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
+  }
+}
+
 async function scanLibrary(previousItems = []) {
   // Iterative traversal avoids recursive spread limits on large libraries.
   // Reuse unchanged catalog records when size and modification time match.
@@ -93,11 +130,18 @@ async function scanLibrary(previousItems = []) {
       if (!ent.isFile() || !ALLOWED.has(ext)) continue;
       const file = rel.split(path.sep).join("/");
       const st = await fs.promises.stat(abs);
+      const nfo = await readNfoMetadata(abs);
       const cached = previous.get(file);
-      if (cached && cached.size_bytes === st.size && Date.parse(cached.modified_at) === st.mtimeMs) {
+      if (cached && cached.size_bytes === st.size && Date.parse(cached.modified_at) === st.mtimeMs && cached.nfo_modified_at === nfo.modified_at) {
         out.push(cached);
       } else {
-        out.push({ id:crypto.createHash("sha1").update(file).digest("hex"), title:path.basename(ent.name, ext), file, size_bytes:st.size, modified_at:st.mtime.toISOString(), mime_type:MIME[ext] });
+        out.push({
+          id:crypto.createHash("sha1").update(file).digest("hex"),
+          title:path.basename(ent.name, ext), file, size_bytes:st.size,
+          modified_at:st.mtime.toISOString(), mime_type:MIME[ext],
+          synopsis:nfo.synopsis, release_year:nfo.release_year, age_rating:nfo.age_rating,
+          genres:nfo.genres, duration_minutes:nfo.duration_minutes, nfo_modified_at:nfo.modified_at,
+        });
       }
     }
   }
