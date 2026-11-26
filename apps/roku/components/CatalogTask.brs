@@ -93,6 +93,29 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
 end sub
 
 sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
+    ' First verify that the address really points to the Windows media server.
+    healthRequest = CreateObject("roUrlTransfer")
+    healthRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    healthRequest.InitClientCertificates()
+    healthRequest.SetMinimumTransferRate(1, 10)
+    healthRequest.SetUrl(baseUrl + "/health")
+    healthRequest.AddHeader("Accept", "application/json")
+    healthResponse = healthRequest.GetToString()
+    healthCode = healthRequest.GetResponseCode()
+    if healthCode <> 200
+        if healthCode > 0
+            m.top.errorMessage = "La dirección respondió HTTP " + healthCode.ToStr() + ". Comprueba la dirección base y que el servidor esté encendido."
+        else
+            m.top.errorMessage = "No se pudo contactar la laptop. Comprueba que ambos dispositivos tengan internet y que el servidor esté activo."
+        end if
+        return
+    end if
+    healthData = ParseJson(healthResponse)
+    if type(healthData) <> "roAssociativeArray" or healthData.ok <> true
+        m.top.errorMessage = "La dirección responde, pero no parece ser el servidor multimedia de SEBAS PLAY."
+        return
+    end if
+
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
@@ -106,10 +129,14 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         m.top.errorMessage = "TOKEN INCORRECTO: vuelve a conectar y pega el código privado de la laptop."
         return
     else if responseCode = 404
-        m.top.errorMessage = "No se encontró el servidor. Escribe la dirección base de la laptop, sin /health ni /api/catalog."
+        m.top.errorMessage = "No se encontró /api/catalog. Actualiza el servidor multimedia de la laptop."
         return
     else if responseCode <> 200
-        m.top.errorMessage = "La laptop respondió con HTTP " + responseCode.ToStr() + ". Revisa la dirección y el servidor."
+        if responseCode > 0
+            m.top.errorMessage = "La laptop respondió con HTTP " + responseCode.ToStr() + ". Revisa el servidor."
+        else
+            m.top.errorMessage = "La laptop dejó de responder al solicitar el catálogo. Inténtalo de nuevo."
+        end if
         return
     end if
     if response = invalid or response = ""
@@ -141,7 +168,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
-    m.top.errorMessage = "Laptop: " + parsed.items.Count().ToStr() + " archivos; " + playableCount.ToStr() + " MP4 disponibles en Roku."
+    m.top.errorMessage = "Laptop conectada: " + parsed.items.Count().ToStr() + " archivos; " + playableCount.ToStr() + " MP4 disponibles en Roku."
     if playableCount = 0 then m.top.errorMessage = m.top.errorMessage + " No hay MP4 con enlace reproducible para Roku."
     if unsupportedCount > 0 then m.top.errorMessage = m.top.errorMessage + " Otros " + unsupportedCount.ToStr() + " archivos se pueden abrir en Android con VLC."
 end sub
