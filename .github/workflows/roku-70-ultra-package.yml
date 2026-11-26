@@ -1,0 +1,42 @@
+name: SEBAS PLAY 7.0 ULTRA — Roku independiente
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sebas-play-70-ultra-independent-20261125]
+    paths:
+      - "apps/roku-70-ultra/**"
+      - ".github/workflows/roku-70-ultra-package.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package-roku:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate independent 7.0 ULTRA channel
+        run: |
+          test -f apps/roku-70-ultra/manifest
+          test -f apps/roku-70-ultra/source/main.brs
+          test -f apps/roku-70-ultra/components/HomeScene.xml
+          test -f apps/roku-70-ultra/components/CatalogTask.brs
+          test -f apps/roku-70-ultra/components/PlayerScene.xml
+          test -f apps/roku-70-ultra/components/PairingTask.xml
+          test -f apps/roku-70-ultra/components/ProgressTask.xml
+          grep -q '^title=SEBAS PLAY 7.0 ULTRA$' apps/roku-70-ultra/manifest
+          grep -q '^major_version=7$' apps/roku-70-ultra/manifest
+          grep -q 'SEBASPLAY70ULTRA' apps/roku-70-ultra/components/PairingTask.brs
+          grep -q 'SEBASPLAY70ULTRA' apps/roku-70-ultra/components/CatalogTask.brs
+          grep -q 'functions/v1/roku-device-sync?action=sync' apps/roku-70-ultra/components/CatalogTask.brs
+      - name: Package Roku channel source
+        run: |
+          cd apps/roku-70-ultra
+          zip -r ../../SEBAS-PLAY-7.0-ULTRA-ROKU-SOURCE.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-7.0-ULTRA-ROKU-SOURCE
+          path: SEBAS-PLAY-7.0-ULTRA-ROKU-SOURCE.zip
+          if-no-files-found: error
+          retention-days: 30
