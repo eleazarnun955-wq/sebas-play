@@ -33,7 +33,7 @@ sub pairDevice()
         return
     end if
     token = parsed.device_token.ToStr()
-    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO50")
+    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO60")
     registry.Write("device_token", token)
     registry.Write("device_name", m.top.deviceName)
     registry.Flush()
