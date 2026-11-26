@@ -6,11 +6,14 @@ import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { parseXmltv } from "./xmltv.mjs";
 
 const execFileAsync = promisify(execFile);
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.SEBAS_MEDIA_ROOT || path.join(HERE, "Peliculas"));
+const DATA_DIR = path.resolve(process.env.SEBAS_DATA_DIR || path.join(HERE, "data"));
+const EPG_FILE = path.join(DATA_DIR, "xmltv-guide.json");
 const HOST = process.env.SEBAS_HOST || "0.0.0.0";
 const PORT = Number(process.env.SEBAS_PORT || 8787);
 const ACCESS_TOKEN = process.env.SEBAS_ACCESS_TOKEN || "";
@@ -30,6 +33,9 @@ if (!SIGNING_SECRET || SIGNING_SECRET.length < 32) {
   process.exit(1);
 }
 fs.mkdirSync(ROOT, { recursive: true });
+fs.mkdirSync(DATA_DIR, { recursive: true });
+let epgGuide = null;
+try { epgGuide = JSON.parse(fs.readFileSync(EPG_FILE, "utf8")); } catch { epgGuide = null; }
 
 function json(res, status, value) {
   res.writeHead(status, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff", "access-control-allow-origin":"*", "access-control-allow-headers":"Authorization,Content-Type,Range", "access-control-expose-headers":"Content-Length,Content-Range,Accept-Ranges" });
@@ -250,6 +256,34 @@ const server = http.createServer(async (req, res) => {
     } catch (error) {
       await fs.promises.unlink(destination).catch(() => {});
       return sendError(res, 400, error instanceof Error ? error.message : "No se pudo guardar el archivo");
+    }
+  }
+  if (url.pathname === "/api/epg" && req.method === "GET") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    return json(res, 200, { ok:true, configured:Boolean(epgGuide), guide:epgGuide });
+  }
+  if (url.pathname === "/api/epg/import" && req.method === "POST") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    const chunks = [];
+    let total = 0;
+    try {
+      for await (const chunk of req) {
+        total += chunk.length;
+        if (total > 8 * 1024 * 1024) {
+          res.writeHead(413, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store" });
+          return res.end(JSON.stringify({ error:"El archivo XMLTV supera el límite de 8 MB." }));
+        }
+        chunks.push(chunk);
+      }
+      const parsed = parseXmltv(Buffer.concat(chunks).toString("utf8"));
+      if (!parsed.channels.length && !parsed.programmes.length) return sendError(res, 422, "El XMLTV no contiene canales ni programas válidos.");
+      const temporary = EPG_FILE + ".tmp";
+      await fs.promises.writeFile(temporary, JSON.stringify(parsed), { encoding:"utf8", flag:"w" });
+      await fs.promises.rename(temporary, EPG_FILE);
+      epgGuide = parsed;
+      return json(res, 200, { ok:true, channel_count:parsed.channels.length, programme_count:parsed.programmes.length, imported_at:parsed.imported_at });
+    } catch (error) {
+      return sendError(res, 400, error instanceof Error ? error.message : "No se pudo importar la guía XMLTV.");
     }
   }
   if (url.pathname === "/api/catalog" && req.method === "GET") {
