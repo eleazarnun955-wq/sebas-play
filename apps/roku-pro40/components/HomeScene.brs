@@ -2,9 +2,10 @@ sub init()
     m.rows = m.top.FindNode("catalogRows")
     m.status = m.top.FindNode("status")
     m.actions = m.top.FindNode("actions")
-    m.actions.buttons = ["Vincular Roku"]
+    m.actions.buttons = ["Vincular Roku", "Agregar / quitar de Mi lista"]
     m.actions.ObserveField("buttonSelected", "onActionSelected")
     m.rows.ObserveField("rowItemSelected", "onItemSelected")
+    m.rows.ObserveField("rowItemFocused", "onItemFocused")
     m.task = CreateObject("roSGNode", "CatalogTask")
     m.task.ObserveField("catalog", "onCatalogLoaded")
     m.task.ObserveField("errorMessage", "onCatalogError")
@@ -13,6 +14,10 @@ sub init()
 end sub
 
 sub onActionSelected()
+    if m.actions.buttonSelected = 1 then
+        toggleFocusedFavorite()
+        return
+    end if
     if m.actions.buttonSelected <> 0 then return
     m.pairDialog = CreateObject("roSGNode", "KeyboardDialog")
     m.pairDialog.title = "Vincular SEBAS PLAY PRO 5.0"
@@ -73,6 +78,59 @@ end sub
 
 sub onCatalogError()
     if m.task.errorMessage <> invalid then m.status.text = m.task.errorMessage
+end sub
+
+sub onItemFocused()
+    selection = m.rows.rowItemFocused
+    if selection = invalid then return
+    row = m.rows.content.GetChild(selection[0])
+    if row = invalid then return
+    m.focusedItem = row.GetChild(selection[1])
+end sub
+
+sub toggleFocusedFavorite()
+    item = m.focusedItem
+    if item = invalid or item.contentId = invalid or item.contentType = invalid
+        m.status.text = "Selecciona primero una película, serie o canal."
+        m.actions.SetFocus(true)
+        return
+    end if
+    if item.contentType <> "movie" and item.contentType <> "series" and item.contentType <> "channel"
+        m.status.text = "Este elemento no admite favoritos."
+        m.actions.SetFocus(true)
+        return
+    end if
+    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO50")
+    token = registry.Read("device_token", "")
+    if token = ""
+        m.status.text = "Vincula primero tu Roku desde Android."
+        m.actions.SetFocus(true)
+        return
+    end if
+    m.favoriteTask = CreateObject("roSGNode", "FavoriteTask")
+    m.favoriteTask.deviceToken = token
+    m.favoriteTask.contentId = item.contentId
+    m.favoriteTask.contentType = item.contentType
+    m.favoriteTask.operation = "toggle"
+    m.favoriteTask.ObserveField("completed", "onFavoriteCompleted")
+    m.top.AppendChild(m.favoriteTask)
+    m.favoriteTask.control = "RUN"
+    m.status.text = "Actualizando Mi lista..."
+end sub
+
+sub onFavoriteCompleted()
+    if m.favoriteTask.errorMessage <> invalid and m.favoriteTask.errorMessage <> ""
+        m.status.text = "No se pudo actualizar Mi lista: " + m.favoriteTask.errorMessage
+    else
+        m.status.text = "Mi lista sincronizada con tu cuenta."
+        m.task = CreateObject("roSGNode", "CatalogTask")
+        m.task.ObserveField("catalog", "onCatalogLoaded")
+        m.task.ObserveField("errorMessage", "onCatalogError")
+        m.task.control = "RUN"
+    end if
+    m.top.RemoveChild(m.favoriteTask)
+    m.favoriteTask = invalid
+    m.actions.SetFocus(true)
 end sub
 
 sub onItemSelected()
