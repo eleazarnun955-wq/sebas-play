@@ -66,6 +66,28 @@ sub loadCatalog()
         end for
     end if
 
+    ' Expose the Windows laptop library as its own row without copying or
+    ' publishing the administrator token to Roku. The published Supabase
+    ' video_url already contains the laptop's time-limited signed /media URL.
+    laptopRow = CreateObject("roSGNode", "ContentNode")
+    laptopRow.title = "Mi laptop"
+    for rowIndex = 0 to root.GetChildCount() - 1
+        sourceRow = root.GetChild(rowIndex)
+        for itemIndex = 0 to sourceRow.GetChildCount() - 1
+            sourceItem = sourceRow.GetChild(itemIndex)
+            if sourceItem.url <> invalid and isLaptopMediaUrl(sourceItem.url)
+                copy = laptopRow.CreateChild("ContentNode")
+                copy.title = sourceItem.title
+                copy.url = sourceItem.url
+                copy.hdPosterUrl = sourceItem.hdPosterUrl
+                copy.description = sourceItem.description
+                copy.addFields({contentId: sourceItem.contentId, contentType: sourceItem.contentType})
+                if sourceItem.seriesId <> invalid then copy.addFields({seriesId: sourceItem.seriesId})
+            end if
+        end for
+    end for
+    if laptopRow.GetChildCount() > 0 then root.AppendChild(laptopRow)
+
     loadPersonalSync(root)
     m.top.catalog = root
     if m.top.errorMessage = invalid or m.top.errorMessage = "" then m.top.errorMessage = "Catálogo actualizado"
@@ -169,3 +191,12 @@ sub loadPersonalSync(root as object)
     end for
     if favoritesRow.GetChildCount() > 0 then root.AppendChild(favoritesRow)
 end sub
+
+' Windows Media Server creates signed URLs under /media/. Keep this row
+' restricted to those URLs; do not expose unrelated external streams as laptop files.
+function isLaptopMediaUrl(value as dynamic) as boolean
+    if value = invalid or type(value) <> "String" or value = "" then return false
+    clean = LCase(Trim(value))
+    if Left(clean, 7) <> "http://" and Left(clean, 8) <> "https://" then return false
+    return Instr(1, clean, "/media/") > 0 and isDirectPlayableUrl(clean)
+end function
