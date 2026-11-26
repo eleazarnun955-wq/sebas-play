@@ -46,6 +46,8 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     end if
     section = CreateObject("roSGNode", "ContentNode")
     section.Title = "Películas de mi laptop"
+    playableCount = 0
+    unsupportedCount = 0
     for each entry in parsed.items
         fileName = LCase(safeString(entry.file))
         ' Roku local playback is restricted to MP4 containers; Android VLC handles the other formats.
@@ -56,10 +58,16 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
             item.Url = safeString(entry.stream_url)
             item.StreamFormat = "mp4"
             item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
+            playableCount = playableCount + 1
+        else
+            unsupportedCount = unsupportedCount + 1
         end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
-    m.top.errorMessage = "Biblioteca de laptop: " + parsed.items.Count().ToStr() + " videos."
+    m.top.errorMessage = "Laptop: " + parsed.items.Count().ToStr() + " archivos; " + playableCount.ToStr() + " MP4 disponibles en Roku."
+    if unsupportedCount > 0
+        m.top.errorMessage = m.top.errorMessage + " Otros " + unsupportedCount.ToStr() + " formatos se pueden abrir en Android con VLC."
+    end if
 end sub
 
 sub loadCollection(root as object, baseUrl as string, key as string, tableName as string, sectionTitle as string, fields as string, sortField as string)
