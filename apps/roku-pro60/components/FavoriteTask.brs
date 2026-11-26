@@ -11,6 +11,7 @@ sub updateFavorite()
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
+    request.SetTimeout(10)
     request.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
     request.SetRequest("POST")
     request.AddHeader("apikey", SebasPlayPublishableKey())
@@ -18,8 +19,9 @@ sub updateFavorite()
     request.AddHeader("Content-Type", "application/json")
     payload = { action: "favorite", content_type: m.top.contentType, content_id: m.top.contentId, operation: m.top.operation }
     response = request.PostFromString(FormatJson(payload))
-    if response = invalid or response = "" then
-        m.top.errorMessage = "No hubo respuesta del servicio de favoritos."
+    code = request.GetResponseCode()
+    if response = invalid or response = "" or code < 200 or code >= 300 then
+        m.top.errorMessage = "No se pudo actualizar Mi lista (HTTP " + code.ToStr() + ")."
         m.top.completed = true
         return
     end if
