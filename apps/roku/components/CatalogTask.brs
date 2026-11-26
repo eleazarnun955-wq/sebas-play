@@ -9,16 +9,20 @@ sub loadCatalog()
     laptopToken = safeString(m.top.laptopToken)
     url = SebasPlaySupabaseUrl()
     key = SebasPlayPublishableKey()
+    ' Prioritize the laptop connection so a slow optional catalog cannot hide its result.
+    if laptopUrl <> "" and laptopToken <> "" then
+        m.top.errorMessage = "Conectando con la laptop..."
+        loadLaptopCatalog(root, laptopUrl, laptopToken)
+        m.top.catalog = root
+    end if
     if key = "" or key = "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
-        m.top.errorMessage = "Configura Supabase o conecta tu laptop desde el botón superior."
+        if laptopUrl = "" or laptopToken = "" then m.top.errorMessage = "Configura Supabase o conecta tu laptop desde el botón superior."
     else
         loadCollection(root, url, key, "movies", "Películas", "id,title,synopsis,poster_url,release_year,age_rating,video_url", "title")
         loadCollection(root, url, key, "series", "Series", "id,title,synopsis,poster_url,release_year,age_rating", "title")
         loadSeriesEpisodes(root, url, key)
         loadCollection(root, url, key, "live_channels", "TV en vivo", "id,name,logo_url,category,country_code,stream_url", "name")
     end if
-    ' Laptop content is an additional row set, not a replacement for the shared catalog.
-    if laptopUrl <> "" and laptopToken <> "" then loadLaptopCatalog(root, laptopUrl, laptopToken)
     m.top.catalog = root
 end sub
 
@@ -92,6 +96,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
+    request.SetMinimumTransferRate(1, 12)
     request.SetUrl(baseUrl + "/api/catalog")
     request.AddHeader("Authorization", "Bearer " + token)
     request.AddHeader("Accept", "application/json")
