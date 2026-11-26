@@ -68,9 +68,12 @@ const activity = `package ${pkg};
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -87,7 +90,29 @@ public class VlcPlaybackActivity extends Activity {
     private MediaPlayer player;
     private VLCVideoLayout videoLayout;
     private Button playPause;
+    private SeekBar seekBar;
+    private TextView timeLabel;
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean released = false;
+    private final Runnable progressUpdate = new Runnable() {
+        @Override public void run() {
+            if (player != null && seekBar != null && timeLabel != null) {
+                long length = player.getLength();
+                long current = player.getTime();
+                if (length > 0) {
+                    seekBar.setMax(1000);
+                    seekBar.setProgress((int)Math.min(1000, Math.max(0, current * 1000 / length)));
+                }
+                timeLabel.setText(formatTime(current) + " / " + formatTime(length));
+                if (!released) handler.postDelayed(this, 1000);
+            }
+        }
+    };
+
+    private String formatTime(long millis) {
+        long seconds = Math.max(0, millis / 1000);
+        return String.format(java.util.Locale.US, "%02d:%02d", seconds / 60, seconds % 60);
+    }
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -126,6 +151,22 @@ public class VlcPlaybackActivity extends Activity {
         row.addView(back, new LinearLayout.LayoutParams(0, -2, 1));
         row.addView(playPause, new LinearLayout.LayoutParams(0, -2, 1));
         controls.addView(row);
+        seekBar = new SeekBar(this);
+        seekBar.setMax(1000);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                if (fromUser && player != null && player.getLength() > 0) {
+                    player.setTime(player.getLength() * progress / 1000);
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar bar) {}
+            @Override public void onStopTrackingTouch(SeekBar bar) {}
+        });
+        controls.addView(seekBar);
+        timeLabel = new TextView(this);
+        timeLabel.setTextColor(Color.WHITE);
+        timeLabel.setText("00:00 / 00:00");
+        controls.addView(timeLabel);
         root.addView(controls, cp);
         setContentView(root);
 
@@ -142,6 +183,7 @@ public class VlcPlaybackActivity extends Activity {
             player.setMedia(media);
             media.release();
             player.play();
+            handler.post(progressUpdate);
         } catch (Exception error) {
             android.widget.Toast.makeText(this, "VLC no pudo abrir este video: " + error.getMessage(), android.widget.Toast.LENGTH_LONG).show();
             finish();
@@ -156,6 +198,7 @@ public class VlcPlaybackActivity extends Activity {
     private void releasePlayer() {
         if (released) return;
         released = true;
+        handler.removeCallbacks(progressUpdate);
         if (player != null) { player.stop(); player.detachViews(); player.release(); player = null; }
         if (libVLC != null) { libVLC.release(); libVLC = null; }
     }
