@@ -1,9 +1,9 @@
-name: SEBAS PLAY 10.0 MI LAPTOP Roku channel
+name: SEBAS PLAY 11.0 MI LAPTOP Roku channel
 
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-100-mi-laptop-vlc-independent-20261125, fix/sebas-play-pro32-mi-laptop-independent-20261124, fix/sebas-play-connection-vlc-playback-20261125d, main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123]
+    branches: [sebas-play-100-mi-laptop-vlc-independent-20261125, sebas-play-110-mi-laptop-vlc-independent-20261125, fix/sebas-play-pro32-mi-laptop-independent-20261124, fix/sebas-play-connection-vlc-playback-20261125d, main, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, feature/sebas-play-remote-access-20261123]
     paths:
       - "apps/roku/**"
       - ".github/workflows/roku-package.yml"
@@ -20,7 +20,7 @@ jobs:
           test -f apps/roku/components/HomeScene.xml
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
-          grep -q "title=SEBAS PLAY" apps/roku/manifest
+          grep -q "title=SEBAS PLAY 11.0" apps/roku/manifest\n          grep -q "major_version=11" apps/roku/manifest
       - name: Generate branded Roku home screen icons
         run: |
           python3 -m pip install --quiet Pillow
@@ -34,6 +34,6 @@ jobs:
           zip -r ../../SEBAS-PLAY-Roku.zip . -x "*.DS_Store"
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-10-0-MI-LAPTOP-Roku-channel
+          name: SEBAS-PLAY-11-0-MI-LAPTOP-Roku-channel
           path: SEBAS-PLAY-Roku.zip
           retention-days: 14
