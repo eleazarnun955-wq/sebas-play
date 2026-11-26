@@ -61,6 +61,8 @@ export default function WindowsMediaManager() {
   const [epgGuide, setEpgGuide] = useState<XmltvGuide|null>(null);
   const [epgLoading, setEpgLoading] = useState(false);
   const [epgChannel, setEpgChannel] = useState("all");
+  const [transcoding, setTranscoding] = useState("");
+  const [transcodeMessage, setTranscodeMessage] = useState("");
 
   async function connect() {
     const base = normalizeServerBase(serverUrl);
@@ -164,6 +166,46 @@ export default function WindowsMediaManager() {
     } catch (error) {
       setEpgStatus(error instanceof Error ? error.message : "No se pudo importar la guía XMLTV.");
     } finally { setEpgImporting(false); }
+  }
+
+
+  async function transcodeMedia(item:MediaItem, profile:"roku"|"mobile") {
+    if (!connected || !capabilities?.ffmpeg.available) {
+      setTranscodeMessage("FFmpeg no está disponible en la laptop. Instálalo y reinicia el servidor.");
+      return;
+    }
+    setTranscoding(item.id);setTranscodeMessage("Preparando conversión…");
+    try {
+      const base=normalizeServerBase(serverUrl);
+      const response=await fetch(`${base}/api/transcode`,{
+        method:"POST",cache:"no-store",
+        headers:{Authorization:`Bearer ${token.trim()}`,"Content-Type":"application/json"},
+        body:JSON.stringify({file:item.file,profile}),
+      });
+      const payload=await response.json();
+      if(!response.ok)throw new Error(payload.error||`Error HTTP ${response.status}`);
+      const jobId=String(payload.job?.id||"");
+      if(!jobId)throw new Error("El servidor no devolvió el identificador de conversión.");
+      setTranscodeMessage("Convirtiendo video… Puedes dejar esta ventana abierta.");
+      for(let attempt=0;attempt<900;attempt++){
+        await new Promise(resolve=>window.setTimeout(resolve,4000));
+        const statusResponse=await fetch(`${base}/api/transcode/${encodeURIComponent(jobId)}`,{
+          cache:"no-store",headers:{Authorization:`Bearer ${token.trim()}`},
+        });
+        const statusPayload=await statusResponse.json();
+        if(!statusResponse.ok)throw new Error(statusPayload.error||`Error HTTP ${statusResponse.status}`);
+        const job=statusPayload.job;
+        if(job?.status==="completed"){
+          await connect();
+          setTranscodeMessage(`Conversión terminada: ${job.output}`);
+          return;
+        }
+        if(job?.status==="failed")throw new Error(job.error||"Falló la conversión FFmpeg.");
+      }
+      throw new Error("La conversión sigue en curso. Revisa el estado en la laptop y vuelve a conectar la biblioteca.");
+    }catch(error){
+      setTranscodeMessage(error instanceof Error?error.message:"No se pudo convertir el video.");
+    }finally{setTranscoding("")}
   }
 
   async function uploadFile(file: File) {
@@ -280,7 +322,7 @@ export default function WindowsMediaManager() {
           <small>{uploading ? "Subiendo video a la laptop…" : "El archivo se guarda directamente en la carpeta Peliculas de Windows y se agrega como borrador al catálogo."}</small>
         </div>
       </div>
-      {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
+      {transcodeMessage && <div className="wm-message ok"><CheckCircle2 size={17}/>{transcodeMessage}</div>}\n      {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
       {connected && capabilities && <div className="wm-capability">
         <div><b>Compatibilidad del servidor</b><span>Reproducción directa y transmisión por fragmentos (HTTP Range) disponibles.</span></div>
         <div className={capabilities.ffmpeg.available ? "wm-ffmpeg available" : "wm-ffmpeg unavailable"}>
@@ -290,7 +332,7 @@ export default function WindowsMediaManager() {
       </div>}
       <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop{lastScan ? ` · Último escaneo: ${lastScan}` : ""}</p></div><div className="wm-list-actions"><button className="secondary-btn" onClick={() => void scanNow()} disabled={loading || scanning || !connected}><RefreshCw size={15} className={scanning ? "spin" : ""} /> {scanning ? "Escaneando…" : "Escanear ahora"}</button><button className="secondary-btn" onClick={() => void connect()} disabled={loading || scanning || !connected}><RefreshCw size={15} /> Actualizar</button></div></div>
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
-        <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small>{(item.release_year || item.age_rating || item.genres?.length || item.duration_minutes) && <small>{[item.release_year, item.age_rating, item.duration_minutes ? `${item.duration_minutes} min` : null, ...(item.genres || [])].filter(Boolean).join(" · ")}</small>}{item.synopsis && <small>{item.synopsis}</small>}</div><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button></div>)}</div>}
+        <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small>{(item.release_year || item.age_rating || item.genres?.length || item.duration_minutes) && <small>{[item.release_year, item.age_rating, item.duration_minutes ? `${item.duration_minutes} min` : null, ...(item.genres || [])].filter(Boolean).join(" · ")}</small>}{item.synopsis && <small>{item.synopsis}</small>}</div><div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)||Boolean(transcoding)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button>{capabilities?.ffmpeg.available&&<><button className="secondary-btn" onClick={()=>void transcodeMedia(item,"roku")} disabled={Boolean(transcoding)||Boolean(importing)}>{transcoding===item.id?"Convirtiendo…":"MP4 Roku"}</button><button className="secondary-btn" onClick={()=>void transcodeMedia(item,"mobile")} disabled={Boolean(transcoding)||Boolean(importing)}>MP4 móvil</button></>}</div></div>)}</div>}
       <p className="wm-footnote">Los títulos se guardan como borradores. Revisa los derechos, la portada y la información de cada ficha antes de publicarla. Renueva los enlaces firmados desde aquí antes de que venzan.</p>
     </section>
   );
