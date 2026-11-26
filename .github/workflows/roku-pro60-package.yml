@@ -29,7 +29,9 @@ jobs:
           test -f apps/roku-pro60/components/ProgressTask.xml
           grep -q '^title=SEBAS PLAY PRO 6.0$' apps/roku-pro60/manifest
           grep -q '^major_version=6$' apps/roku-pro60/manifest
-          grep -q 'SEBASPLAYPRO50' apps/roku-pro60/components/PairingTask.brs
+          grep -q 'SEBASPLAYPRO60' apps/roku-pro60/components/PairingTask.brs
+          grep -q 'SEBASPLAYPRO60' apps/roku-pro60/components/CatalogTask.brs
+          grep -q 'SEBASPLAYPRO60' apps/roku-pro60/components/HomeScene.brs
           grep -q 'functions/v1/roku-device-sync?action=sync' apps/roku-pro60/components/CatalogTask.brs
       - name: Package Roku channel source
         run: |
