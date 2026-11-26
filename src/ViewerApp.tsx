@@ -163,7 +163,7 @@ export default function ViewerApp(){
   }catch(err){setError(err instanceof Error?err.message:"No se pudo guardar el PIN.")}
   finally{setProfileBusy(false)}
  }
-\n async function removeFamilyProfile(profileId:string){
+\nasync function removeFamilyProfile(profileId:string){
   if(!supabase||!window.confirm("¿Eliminar este perfil? Esta acción no se puede deshacer."))return;
   setProfileBusy(true);setError("");
   try{
