@@ -109,3 +109,12 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - Se añadió un helper PBKDF2-HMAC-SHA256 con sal aleatoria por PIN (310,000 iteraciones), comparación constante y validación de PIN de 4–8 dígitos; las pruebas están en `scripts/profile-pin-test.mjs`.
 - **No está listo para producción**: los clientes Android/Roku aún consultan favoritos y progreso directamente por `user_id`; las políticas RLS actuales permitirían ver los datos de todos los perfiles de la misma cuenta. Antes de habilitar perfiles infantiles, esas lecturas/escrituras deben pasar por el Edge Function con perfil activo verificado y límite de intentos atómico en servidor. El PIN nunca debe validarse solo en el dispositivo.
 - No se aplicó SQL ni se modificó el esquema de producción. El borrador debe revisarse y probarse en una rama/base de pruebas antes de generar una migración formal.
+
+
+## Integración XMLTV opcional (avance PRO 5.0)
+- El servidor Windows ahora expone `POST /api/epg/import` y `GET /api/epg`, ambos protegidos por el token administrativo en encabezado.
+- El importador acepta XMLTV de hasta 8 MB, valida y limita canales/programas mediante el parser ya probado, y conserva la guía anterior si un archivo nuevo es inválido.
+- La guía se guarda en `SEBAS_DATA_DIR/xmltv-guide.json` (por defecto `server/windows-media/data`), separada de los videos originales.
+- El panel de administración incorpora selector de archivo XMLTV opcional. Sin importar un archivo, el servidor y la aplicación siguen funcionando como antes.
+- El smoke test ahora valida autenticación, ausencia de EPG por defecto, importación, persistencia y rechazo de XML inválido.
+- Pendiente: conectar la guía importada con la pantalla de programación en Android/Roku y validar con una guía real de proveedor; no se ha activado ninguna fuente externa ni se requiere URL/API key.
