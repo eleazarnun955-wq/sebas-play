@@ -41,11 +41,20 @@ sub onUrlEntered()
         m.top.dialog = invalid
         return
     end if
-    m.laptopUrl = dialog.text
-    if Left(m.laptopUrl, 7) <> "http://" and Left(m.laptopUrl, 8) <> "https://" then
+    m.laptopUrl = Trim(dialog.text)
+    while Len(m.laptopUrl) > 0 and Right(m.laptopUrl, 1) = "/"
+        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 1)
+    end while
+    lowerUrl = LCase(m.laptopUrl)
+    if Left(lowerUrl, 7) <> "http://" and Left(lowerUrl, 8) <> "https://" then
         m.status.text = "Escribe la dirección completa, empezando con http:// o https://"
         m.top.dialog = invalid
         return
+    end if
+    if Right(lowerUrl, 12) = "/api/catalog" then
+        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 12)
+    else if Right(lowerUrl, 7) = "/health" then
+        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
     end if
     m.top.dialog = invalid
     askLaptopToken()
@@ -53,7 +62,7 @@ end sub
 
 sub askLaptopToken()
     dialog = CreateObject("roSGNode", "KeyboardDialog")
-    dialog.title = "Token privado de SEBAS PLAY"
+    dialog.title = "Pega el token privado (solo el código)"
     dialog.text = m.laptopToken
     dialog.buttons = ["Conectar", "Cancelar"]
     dialog.ObserveField("buttonSelected", "onTokenEntered")
@@ -66,7 +75,7 @@ sub onTokenEntered()
         m.top.dialog = invalid
         return
     end if
-    m.laptopToken = dialog.text
+    m.laptopToken = Trim(dialog.text)
     m.top.dialog = invalid
     m.registry.Write("laptopUrl", m.laptopUrl)
     m.registry.Write("laptopToken", m.laptopToken)
@@ -88,6 +97,7 @@ end sub
 sub onCatalogLoaded()
     catalog = m.task.catalog
     if catalog <> invalid then m.rows.content = catalog
+    if m.task.errorMessage <> invalid and m.task.errorMessage <> "" then m.status.text = m.task.errorMessage
 end sub
 
 sub onCatalogError()

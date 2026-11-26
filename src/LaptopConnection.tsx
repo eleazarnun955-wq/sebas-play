@@ -62,7 +62,7 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
      <input style={field} value={url} onChange={e=>setUrl(e.target.value)} placeholder="http://192.168.1.15:8787 o https://....trycloudflare.com" autoCapitalize="none" autoCorrect="off"/>
     </label>
     <label style={{display:"block",fontSize:13,color:"#c1cddd",marginTop:13}}>Token privado de la laptop
-     <input style={field} type="password" value={token} onChange={e=>setToken(e.target.value)} placeholder="Pégalo desde SEBAS-PLAY-ACCESS-TOKEN.txt" autoComplete="off"/>
+     <input style={field} type="password" value={token} onChange={e=>setToken(e.target.value)} placeholder="Pega el token privado de SEBAS-PLAY-ACCESS-TOKEN.txt" autoComplete="off"/>
     </label>
     <div style={{display:"flex",gap:9,flexWrap:"wrap",marginTop:16}}>
      <button style={action} onClick={()=>void connect()} disabled={busy}>{busy?<RefreshCw size={16}/>:<Link2 size={16}/>} {busy?"Conectando…":connected?"Actualizar biblioteca":"Conectar con laptop"}</button>

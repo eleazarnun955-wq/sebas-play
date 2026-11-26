@@ -35,31 +35,54 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     request.AddHeader("Authorization", "Bearer " + token)
     request.AddHeader("Accept", "application/json")
     response = request.GetToString()
+    responseCode = request.GetResponseCode()
+    if responseCode = 401
+        m.top.errorMessage = "TOKEN INCORRECTO: vuelve a conectar y pega el código privado de la laptop."
+        return
+    else if responseCode = 404
+        m.top.errorMessage = "No se encontró el servidor. Escribe la dirección base de la laptop, sin /health ni /api/catalog."
+        return
+    else if responseCode <> 200
+        m.top.errorMessage = "La laptop respondió con HTTP " + responseCode.ToStr() + ". Revisa la dirección y el servidor."
+        return
+    end if
     if response = invalid or response = ""
-        m.top.errorMessage = "No responde la laptop. Revisa Wi-Fi o el enlace remoto."
+        m.top.errorMessage = "La laptop respondió sin datos. Actualiza el servidor e inténtalo otra vez."
         return
     end if
     parsed = ParseJson(response)
-    if type(parsed) <> "roAssociativeArray" or parsed.items = invalid
-        m.top.errorMessage = "No se pudo leer el catálogo de la laptop."
+    if type(parsed) <> "roAssociativeArray" or type(parsed.items) <> "roArray"
+        m.top.errorMessage = "La respuesta de la laptop no contiene un catálogo válido."
         return
     end if
     section = CreateObject("roSGNode", "ContentNode")
     section.Title = "Películas de mi laptop"
+    playableCount = 0
+    unsupportedCount = 0
     for each entry in parsed.items
         fileName = LCase(safeString(entry.file))
         ' Roku local playback is restricted to MP4 containers; Android VLC handles the other formats.
-        if Right(fileName, 4) = ".mp4"
+        streamUrl = safeString(entry.stream_url)
+        if Right(fileName, 4) = ".mp4" and streamUrl <> ""
             item = section.CreateChild("ContentNode")
             item.Title = safeString(entry.title)
             item.Description = safeString(entry.file) + " · MP4 para Roku"
-            item.Url = safeString(entry.stream_url)
+            item.Url = streamUrl
             item.StreamFormat = "mp4"
             item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
+            playableCount = playableCount + 1
+        else
+            unsupportedCount = unsupportedCount + 1
         end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
-    m.top.errorMessage = "Biblioteca de laptop: " + parsed.items.Count().ToStr() + " videos."
+    m.top.errorMessage = "Laptop: " + parsed.items.Count().ToStr() + " archivos; " + playableCount.ToStr() + " MP4 disponibles en Roku."
+    if playableCount = 0
+        m.top.errorMessage = m.top.errorMessage + " No hay MP4 con enlace reproducible para Roku."
+    end if
+    if unsupportedCount > 0
+        m.top.errorMessage = m.top.errorMessage + " Otros " + unsupportedCount.ToStr() + " archivos se pueden abrir en Android con VLC."
+    end if
 end sub
 
 sub loadCollection(root as object, baseUrl as string, key as string, tableName as string, sectionTitle as string, fields as string, sortField as string)

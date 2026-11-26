@@ -1,11 +1,10 @@
-name: SEBAS PLAY 10.0 MI LAPTOP + VLC Android APK
-# A new package ID avoids replacing or colliding with every previous SEBAS PLAY build.
-# Verification matches the unique independent SEBAS PLAY 10.0 package ID.
+name: SEBAS PLAY 11.0 MI LAPTOP + VLC Android APK
+# Independent 11.0 package; keep 10.0 installed alongside it.
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/unique-package-install-20261124c, fix/pro30-vlc-package-unique-20261125g3, fix/sebas-play-connection-vlc-playback-20261125d, sebas-play-100-mi-laptop-vlc-independent-20261125]
+    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/unique-package-install-20261124c, fix/pro30-vlc-package-unique-20261125g3, fix/sebas-play-connection-vlc-playback-20261125d, sebas-play-100-mi-laptop-vlc-independent-20261125, sebas-play-110-mi-laptop-vlc-independent-20261125]
     paths:
       - "src/**"
       - "public/**"
@@ -74,25 +73,24 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Verify package ID is the new independent one
+      - name: Verify package ID is the new independent 11.0 one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.v10.miLaptopVlc20261125"
+          EXPECTED="com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.v10.miLaptopVlc20261125"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro30streaming20261120"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro22.adult20261120"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro21.independent20261120"
 
-      - name: Upload SEBAS PLAY 10.0 APK
+      - name: Upload SEBAS PLAY 11.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-10-0-MI-LAPTOP-VLC-INDEPENDIENTE-20261125
+          name: SEBAS-PLAY-11-0-MI-LAPTOP-VLC-INDEPENDIENTE-20261125
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
-
-# Trigger a fresh verification build for the independent 10.0 branch.

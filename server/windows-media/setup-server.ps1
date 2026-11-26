@@ -75,15 +75,14 @@ set "SEBAS_URL_TTL_SECONDS=2592000"
 set "SEBAS_MAX_UPLOAD_BYTES=21474836480"
 "@
   Set-Content -Path $configPath -Value $config -Encoding Default
-  $tokenText = "Token para el panel administrador de SEBAS PLAY:" + [Environment]::NewLine + $accessToken + [Environment]::NewLine + [Environment]::NewLine + "Guarda este archivo en privado. No lo publiques ni lo compartas."
-  Set-Content -Path $tokenPath -Value $tokenText -Encoding UTF8
+  # Keep the token file copy/paste-safe: it contains only the token, no explanatory text.
+  Set-Content -Path $tokenPath -Value $accessToken -Encoding ASCII
   Write-Host "Configuración privada creada." -ForegroundColor Green
 } elseif (-not (Test-Path $tokenPath)) {
   $configText = Get-Content -Path $configPath -Raw
   $match = [regex]::Match($configText, '(?m)^set "SEBAS_ACCESS_TOKEN=(.+)"$')
   if ($match.Success) {
-    $tokenText = "Token para el panel administrador de SEBAS PLAY:" + [Environment]::NewLine + $match.Groups[1].Value + [Environment]::NewLine + [Environment]::NewLine + "Guarda este archivo en privado. No lo publiques ni lo compartas."
-    Set-Content -Path $tokenPath -Value $tokenText -Encoding UTF8
+    Set-Content -Path $tokenPath -Value $match.Groups[1].Value -Encoding ASCII
   }
 }
 
