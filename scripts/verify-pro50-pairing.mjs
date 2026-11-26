@@ -39,6 +39,8 @@ assert.match(rokuProgressXml, /field id="errorMessage"/, "Roku progress task mus
 assert.match(rokuPlayer, /saveProgress\(true\)/, "Roku player must checkpoint progress on exit/error");
 assert.match(rokuPlayer, /saveProgress\(false\)/, "Roku player must checkpoint progress during playback and pause");
 assert.match(rokuPlayer, /saveError = m\.progressTask\.errorMessage/, "Roku player must surface progress-sync failures");
+assert.match(rokuPlayer, /savedContentId = m\.progressTask\.contentId/, "Roku player must associate sync results with their original content");
+assert.match(rokuPlayer, /savedContentId = m\.top\.contentId and not m\.top\.wasClosed/, "Roku player must not show stale sync errors over a different title");
 assert.match(rokuPlayer, /No se pudo guardar el progreso:/, "Roku player must show a useful sync error");
 assert.match(rokuPlayer, /m\.pendingPosition = invalid/, "Roku player must reset queued checkpoints for a new playback session");
 assert.match(rokuPlayer, /pendingPosition/, "Roku player must queue the newest checkpoint while a request is active");

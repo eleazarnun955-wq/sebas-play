@@ -110,12 +110,14 @@ end sub
 
 sub onProgressSaved()
     saveError = ""
+    savedContentId = ""
     if m.progressTask <> invalid
         saveError = m.progressTask.errorMessage
+        savedContentId = m.progressTask.contentId
         m.top.RemoveChild(m.progressTask)
         m.progressTask = invalid
     end if
-    if saveError <> invalid and saveError <> "" and not m.top.wasClosed
+    if saveError <> invalid and saveError <> "" and savedContentId = m.top.contentId and not m.top.wasClosed
         m.status.text = "No se pudo guardar el progreso: " + saveError
     end if
     if m.pendingPosition <> invalid
