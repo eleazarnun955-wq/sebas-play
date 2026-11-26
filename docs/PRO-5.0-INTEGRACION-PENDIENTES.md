@@ -57,3 +57,11 @@ Este documento es un registro de alcance y aceptación, no una afirmación de qu
 - Se agregó `scripts/verify-pro50-pairing.mjs` a CI para comprobar acciones de la función Edge, hash de tokens, vencimiento/uso único de códigos, revocación, RLS, y cableado de Android/Roku.
 - Las migraciones de pairing ya están registradas tanto en el proyecto Supabase como en `supabase/migrations/` del repositorio.
 - La alerta de Supabase que permanece activa es la protección de contraseñas filtradas deshabilitada; es una configuración global de Auth ajena al pairing y no se cambió automáticamente.
+
+
+## Mejora de checkpoints de reproducción Roku — 26-nov-2026
+
+- El reproductor ahora guarda un checkpoint al pausar, al salir y ante un error, además del guardado periódico.
+- Si ya hay una petición de progreso en curso, conserva el checkpoint más reciente y lo envía al terminar la petición anterior; así evita que una escritura antigua sobrescriba la posición final más reciente.
+- Se añadieron verificaciones de regresión estáticas en `scripts/verify-pro50-pairing.mjs` para proteger este comportamiento.
+- Pendiente: compilar/empaquetar Roku y probar pausa, salida, error y reanudación en hardware real. La prueba estática no sustituye la validación en un Roku físico.
