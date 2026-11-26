@@ -15,6 +15,7 @@ await fs.symlink(outsidePath, path.join(temp, "outside-link.mp4"));
 const env = {
   ...process.env,
   SEBAS_MEDIA_ROOT: temp,
+  SEBAS_DATA_DIR: path.join(temp, ".server-data"),
   SEBAS_HOST: "127.0.0.1",
   SEBAS_PORT: "18787",
   SEBAS_ACCESS_TOKEN: "test-access-token-that-is-long-enough-123456",
@@ -49,6 +50,47 @@ try {
   assert.ok(capabilities.capabilities.ffmpeg.available ? capabilities.capabilities.ffmpeg.version : capabilities.capabilities.ffmpeg.reason);
   const deniedCapabilities = await fetch("http://127.0.0.1:18787/api/capabilities");
   assert.equal(deniedCapabilities.status, 401, "capability discovery must not be public");
+
+  const epgDenied = await fetch("http://127.0.0.1:18787/api/epg");
+  assert.equal(epgDenied.status, 401, "EPG guide must require admin authentication");
+  const epgBefore = await fetch("http://127.0.0.1:18787/api/epg", {
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+  });
+  assert.equal(epgBefore.status, 200);
+  assert.equal((await epgBefore.json()).configured, false, "EPG must remain optional by default");
+  const xmltvSample = `<?xml version="1.0" encoding="UTF-8"?>
+  <tv>
+    <channel id="demo.channel"><display-name>Canal de prueba</display-name></channel>
+    <programme start="20261126090000 +0000" stop="20261126100000 +0000" channel="demo.channel">
+      <title><![CDATA[Noticiero &amp; prueba]]></title><desc>Programa de validación</desc><category>Noticias</category>
+    </programme>
+  </tv>`;
+  const epgImport = await fetch("http://127.0.0.1:18787/api/epg/import", {
+    method: "POST",
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "content-type": "application/xml" },
+    body: xmltvSample,
+  });
+  assert.equal(epgImport.status, 200, "valid XMLTV import should succeed");
+  const epgImported = await epgImport.json();
+  assert.equal(epgImported.channel_count, 1);
+  assert.equal(epgImported.programme_count, 1);
+  const epgAfter = await fetch("http://127.0.0.1:18787/api/epg", {
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+  });
+  const epgPayload = await epgAfter.json();
+  assert.equal(epgPayload.configured, true);
+  assert.equal(epgPayload.guide.channels[0].display_names[0], "Canal de prueba");
+  assert.equal(epgPayload.guide.programmes[0].title, "Noticiero & prueba");
+  const epgMalformed = await fetch("http://127.0.0.1:18787/api/epg/import", {
+    method: "POST",
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "content-type": "application/xml" },
+    body: "<not-xmltv/>",
+  });
+  assert.equal(epgMalformed.status, 400, "malformed XMLTV must be rejected without replacing the valid guide");
+  const epgStillValid = await (await fetch("http://127.0.0.1:18787/api/epg", {
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
+  })).json();
+  assert.equal(epgStillValid.guide.programmes.length, 1, "failed imports must preserve the previous guide");
   assert.equal(health.headers.get("access-control-allow-origin"), "*");
 
   const landing = await fetch("http://127.0.0.1:18787/");
