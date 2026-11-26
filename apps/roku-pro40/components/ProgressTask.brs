@@ -41,7 +41,14 @@ sub saveProgress()
         else
             m.top.errorMessage = "No se pudo sincronizar el progreso (HTTP " + code.ToStr() + ")."
         end if
-        if attempt = 1 then sleep(300)
+        ' Retry only transient transport/server failures; do not repeat rejected
+        ' requests (for example invalid or revoked device credentials).
+        retryAllowed = code = 0 or code = -1 or code = 429 or code >= 500
+        if attempt = 1 and retryAllowed then
+            sleep(300)
+        else
+            exit for
+        end if
     end for
     m.top.completed = true
 end sub

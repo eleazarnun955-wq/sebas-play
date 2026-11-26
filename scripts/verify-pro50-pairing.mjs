@@ -31,6 +31,8 @@ assert.match(rokuHome, /Agregar \/ quitar de Mi lista/);
 assert.match(rokuProgress, /Authorization/);
 assert.match(rokuProgress, /GetResponseCode\(\)/, "Roku progress must verify HTTP status");
 assert.match(rokuProgress, /for attempt = 1 to 2/, "Roku progress must retry one transient failure");
+assert.match(rokuProgress, /retryAllowed = code = 0 or code = -1 or code = 429 or code >= 500/, "Roku progress must retry only transient failures");
+assert.match(rokuProgress, /exit for/, "Roku progress must stop retrying permanent failures");
 assert.match(rokuProgress, /parsed\.ok = true/, "Roku progress must require explicit API acknowledgement");
 assert.match(rokuProgress, /errorMessage/, "Roku progress must expose a useful failure reason");
 assert.match(rokuProgressXml, /field id="errorMessage"/, "Roku progress task must declare its error field");
