@@ -8,6 +8,7 @@ import { Transform } from "node:stream";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { parseXmltv } from "./xmltv.mjs";
+import { buildTranscodeArgs, transcodeOutputPath } from "./ffmpeg-transcode.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -160,6 +161,8 @@ let libraryIndex = [];
 let scanState = { scanning:false, lastScanAt:null, lastError:null, count:0 };
 let scanPromise = null;
 const activeStreams = new Set();
+const transcodeJobs = new Map();
+let activeTranscodeJobId = null;
 let ffmpegCapabilityCache = null;
 async function getFfmpegCapability() {
   if (ffmpegCapabilityCache) return ffmpegCapabilityCache;
@@ -238,6 +241,62 @@ const server = http.createServer(async (req, res) => {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     await refreshLibraryIndex();
     return json(res, 200, { ok:true, library_count:libraryIndex.length, scan:scanState });
+  }
+  if (url.pathname === "/api/transcode" && req.method === "POST") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    let body;
+    try {
+      const chunks = [];
+      let size = 0;
+      for await (const chunk of req) {
+        size += chunk.length;
+        if (size > 16 * 1024) return sendError(res, 413, "La solicitud es demasiado grande.");
+        chunks.push(chunk);
+      }
+      body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    } catch { return sendError(res, 400, "Solicitud JSON inválida."); }
+    const source = libraryIndex.find(item => item.file === body?.file);
+    if (!source) return sendError(res, 404, "El archivo no existe en la biblioteca indexada.");
+    if (activeTranscodeJobId) return sendError(res, 409, "Ya hay una conversión en curso. Espera a que termine.");
+    const capability = await getFfmpegCapability();
+    if (!capability.available) return sendError(res, 503, "FFmpeg no está instalado. Instálalo en Windows y agrégalo al PATH; la reproducción directa seguirá disponible.");
+    const inputPath = safePath(source.file);
+    if (!inputPath) return sendError(res, 400, "Ruta de origen no permitida.");
+    const jobId = crypto.randomUUID();
+    const profile = body?.profile === "mobile" ? "mobile" : "roku";
+    const outputRelative = transcodeOutputPath(jobId);
+    const outputPath = safePath(outputRelative);
+    if (!outputPath) return sendError(res, 500, "No se pudo preparar la ruta de salida.");
+    const job = { id:jobId, status:"running", profile, source:source.file, output:null, error:null, created_at:new Date().toISOString(), completed_at:null };
+    transcodeJobs.set(jobId, job);
+    activeTranscodeJobId = jobId;
+    void (async () => {
+      try {
+        await fs.promises.mkdir(path.dirname(outputPath), { recursive:true });
+        await execFileAsync("ffmpeg", buildTranscodeArgs(inputPath, outputPath, profile), {
+          timeout: 6 * 60 * 60 * 1000, windowsHide:true, maxBuffer: 1024 * 1024,
+        });
+        job.status = "completed";
+        job.output = outputRelative.split(path.sep).join("/");
+        job.completed_at = new Date().toISOString();
+        await refreshLibraryIndex();
+      } catch (error) {
+        job.status = "failed";
+        job.error = error instanceof Error ? error.message.slice(0, 1200) : "Falló la conversión FFmpeg.";
+        job.completed_at = new Date().toISOString();
+        await fs.promises.unlink(outputPath).catch(() => {});
+      } finally {
+        if (activeTranscodeJobId === jobId) activeTranscodeJobId = null;
+        while (transcodeJobs.size > 30) transcodeJobs.delete(transcodeJobs.keys().next().value);
+      }
+    })();
+    return json(res, 202, { ok:true, job });
+  }
+  if (url.pathname.startsWith("/api/transcode/") && req.method === "GET") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    const jobId = url.pathname.slice("/api/transcode/".length);
+    const job = transcodeJobs.get(jobId);
+    return job ? json(res, 200, { ok:true, job }) : sendError(res, 404, "Trabajo de conversión no encontrado.");
   }
   if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
