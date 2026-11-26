@@ -72,16 +72,48 @@ export default function WindowsMediaManager() {
     }
     setLoading(true); setMessage(null);
     try {
-      // Check reachability without credentials; send the admin token only in a header.
-      const healthResponse = await fetch(`${base}/health`, { cache: "no-store" });
+      // 1) Confirm the laptop is reachable before sending credentials.
+      let healthResponse: Response;
+      try {
+        healthResponse = await fetch(`${base}/health`, { cache: "no-store" });
+      } catch {
+        throw new Error("No se pudo alcanzar la laptop. Comprueba que el servidor esté encendido, que el teléfono y la laptop estén en el mismo Wi-Fi y que Windows permita el puerto TCP 8787.");
+      }
       if (!healthResponse.ok) throw new Error(`La laptop respondió con HTTP ${healthResponse.status} en /health.`);
+
+      const authHeaders = { Authorization: `Bearer ${token.trim()}` };
+
+      // 2) Validate the token separately so a bad token is not confused with a
+      // network/firewall problem.
+      const statusResponse = await fetch(`${base}/api/status`, {
+        cache: "no-store",
+        headers: authHeaders,
+      });
+      const statusPayload = await statusResponse.json().catch(() => ({}));
+      if (statusResponse.status === 401) throw new Error("La laptop responde, pero el token no es correcto. Revisa SEBAS-PLAY-ACCESS-TOKEN.txt.");
+      if (!statusResponse.ok) throw new Error(statusPayload.error || `No se pudo validar el servidor (HTTP ${statusResponse.status}).`);
+
+      // 3) Force and await a complete library scan before reading the catalog.
+      // This prevents the first connection from showing only the first file or
+      // an incomplete index while the Windows startup scan is still running.
+      const scanResponse = await fetch(`${base}/api/scan`, {
+        method: "POST",
+        cache: "no-store",
+        headers: authHeaders,
+      });
+      const scanPayload = await scanResponse.json().catch(() => ({}));
+      if (!scanResponse.ok) throw new Error(scanPayload.error || `No se pudo escanear la biblioteca (HTTP ${scanResponse.status}).`);
+
+      // 4) Read the catalog only after the scan has completed.
       const response = await fetch(`${base}/api/catalog`, {
         cache: "no-store",
-        headers: { Authorization: `Bearer ${token.trim()}` },
+        headers: authHeaders,
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
-      setItems((payload.items || []) as MediaItem[]);
+      if (!Array.isArray(payload.items)) throw new Error("La laptop respondió, pero el catálogo llegó en un formato inesperado.");
+      setLastScan(new Date().toLocaleString());
+      setItems(payload.items as MediaItem[]);
       try {
         const capabilityResponse = await fetch(`${base}/api/capabilities`, {
           cache: "no-store",
