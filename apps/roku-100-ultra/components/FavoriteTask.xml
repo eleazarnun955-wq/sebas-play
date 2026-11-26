@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="FavoriteTask" extends="Task">
+  <interface>
+    <field id="deviceToken" type="string" />
+    <field id="contentId" type="string" />
+    <field id="contentType" type="string" />
+    <field id="operation" type="string" value="add" />
+    <field id="errorMessage" type="string" />
+    <field id="completed" type="boolean" value="false" />
+  </interface>
+  <script type="text/brightscript" uri="FavoriteTask.brs" />
+  <script type="text/brightscript" uri="pkg:/source/config.brs" />
+</component>
