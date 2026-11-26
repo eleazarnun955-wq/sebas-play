@@ -4,6 +4,10 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.SEBAS_MEDIA_ROOT || path.join(HERE, "Peliculas"));
@@ -104,6 +108,22 @@ let libraryIndex = [];
 let scanState = { scanning:false, lastScanAt:null, lastError:null, count:0 };
 let scanPromise = null;
 const activeStreams = new Set();
+let ffmpegCapabilityCache = null;
+async function getFfmpegCapability() {
+  if (ffmpegCapabilityCache) return ffmpegCapabilityCache;
+  ffmpegCapabilityCache = (async () => {
+    try {
+      const { stdout } = await execFileAsync("ffmpeg", ["-version"], {
+        timeout: 2500, windowsHide: true, maxBuffer: 64 * 1024,
+      });
+      const version = String(stdout || "").split(/\\r?\\n/, 1)[0].trim();
+      return { available: Boolean(version), version: version || null, reason: version ? null : "FFmpeg no devolvió información de versión." };
+    } catch {
+      return { available: false, version: null, reason: "FFmpeg no está instalado o no está disponible en PATH. La reproducción directa sigue funcionando." };
+    }
+  })();
+  return ffmpegCapabilityCache;
+}
 function refreshLibraryIndex() {
   if (scanPromise) return scanPromise;
   scanState.scanning = true;
@@ -155,9 +175,9 @@ const server = http.createServer(async (req, res) => {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     let storage = null;
     try { const stats = await fs.promises.statfs(ROOT); storage = { total_bytes:Number(stats.blocks) * Number(stats.bsize), free_bytes:Number(stats.bavail) * Number(stats.bsize) }; } catch {}
-    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage });
+    const ffmpeg = await getFfmpegCapability();\n    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage, capabilities:{ ffmpeg } });
   }
-  if (url.pathname === "/api/scan" && req.method === "POST") {
+  if (url.pathname === "/api/capabilities" && req.method === "GET") {\n    if (!authorized(req)) return sendError(res, 401, "No autorizado");\n    return json(res, 200, { ok:true, capabilities:{ ffmpeg:await getFfmpegCapability(), direct_play:true, http_range:true } });\n  }\n  if (url.pathname === "/api/scan" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     await refreshLibraryIndex();
     return json(res, 200, { ok:true, library_count:libraryIndex.length, scan:scanState });
