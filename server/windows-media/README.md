@@ -45,3 +45,15 @@ Aloja únicamente contenido propio, de dominio público o con autorización/lice
 ### Metadatos locales NFO
 
 El indexador busca un archivo NFO con el mismo nombre base que cada video. Si existe, lee de forma segura (máximo 256 KiB) título, sinopsis, año, clasificación, géneros y duración; los pasa al borrador del catálogo al importar. No necesita claves de API ni conexión con servicios externos. Los archivos NFO nunca se modifican y los cambios en el sidecar se detectan en el siguiente escaneo. Si no existe NFO, la reproducción y la importación básica siguen funcionando.
+### Conversión opcional con FFmpeg
+
+Si FFmpeg está instalado en Windows y disponible en PATH, el servidor permite crear una copia MP4 H.264/AAC compatible mediante la API administrativa autenticada:
+
+- `POST /api/transcode` con JSON `{"file":"ruta/relativa/al/video.mkv","profile":"roku"}` o `"mobile"`.
+- La respuesta entrega un identificador de trabajo; consulta `GET /api/transcode/{id}` para revisar el estado.
+- El perfil Roku limita el ancho a 1920 px; el perfil móvil a 1280 px. Ambos usan H.264, AAC y MP4 con fast-start.
+- El resultado se guarda en `Transcodificados` dentro de la biblioteca y aparece en el siguiente escaneo.
+- Solo se aceptan archivos que ya estén en el índice de la biblioteca; no se aceptan rutas arbitrarias. Solo se ejecuta una conversión a la vez.
+- Si FFmpeg no está instalado, el endpoint responde que no está disponible; la reproducción directa no se desactiva.
+
+El endpoint no descarga ni instala FFmpeg. Instálalo desde una distribución confiable, agrega su carpeta `bin` al PATH de Windows y reinicia el servidor para que lo detecte.

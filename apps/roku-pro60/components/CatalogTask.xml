@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="CatalogTask" extends="Task">
+  <interface>
+    <field id="catalog" type="node" />
+    <field id="errorMessage" type="string" />
+    <field id="personalSync" type="assocarray" />
+  </interface>
+  <script type="text/brightscript" uri="CatalogTask.brs" />
+  <script type="text/brightscript" uri="pkg:/source/config.brs" />
+</component>
