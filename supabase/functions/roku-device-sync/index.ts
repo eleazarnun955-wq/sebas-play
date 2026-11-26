@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import { hashProfilePin, verifyProfilePin } from "./profile-security.mjs";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -60,6 +61,87 @@ Deno.serve(async (req) => {
     try { body = await req.json(); } catch { return reply(400, { error: "JSON inválido" }); }
   }
   const requestedAction = typeof body.action === "string" ? body.action : action;
+
+
+  if (requestedAction === "list-profiles") {
+    const user = await userFromRequest(req);
+    if (!user) return reply(401, { error: "Inicia sesión para consultar tus perfiles" });
+    const { data, error } = await admin.from("family_profiles")
+      .select("id,display_name,avatar_url,created_at,pin_hash")
+      .eq("user_id", user.id).order("created_at", { ascending: true });
+    if (error) return reply(500, { error: "No se pudieron consultar los perfiles" });
+    return reply(200, { profiles: (data ?? []).map((item) => ({
+      id: item.id, display_name: item.display_name, avatar_url: item.avatar_url,
+      created_at: item.created_at, pin_enabled: Boolean(item.pin_hash),
+    })) });
+  }
+
+  if (requestedAction === "create-profile") {
+    const user = await userFromRequest(req);
+    if (!user) return reply(401, { error: "Inicia sesión para crear un perfil" });
+    const displayName = String(body.display_name ?? "").trim().slice(0, 40);
+    if (displayName.length < 1) return reply(400, { error: "El nombre debe tener entre 1 y 40 caracteres" });
+    let pinFields = { pin_hash: null, pin_salt: null, pin_iterations: null };
+    if (body.pin !== undefined && body.pin !== null && body.pin !== "") {
+      try { pinFields = await hashProfilePin(String(body.pin)); }
+      catch (error) { return reply(400, { error: error instanceof Error ? error.message : "PIN inválido" }); }
+    }
+    const { data, error } = await admin.from("family_profiles").insert({
+      user_id: user.id, display_name: displayName, ...pinFields,
+    }).select("id,display_name,avatar_url,created_at").single();
+    if (error || !data) return reply(500, { error: "No se pudo crear el perfil" });
+    return reply(201, { profile: { ...data, pin_enabled: Boolean(pinFields.pin_hash) } });
+  }
+
+  if (requestedAction === "verify-profile-pin") {
+    const user = await userFromRequest(req);
+    if (!user) return reply(401, { error: "Sesión no válida" });
+    if (!validUuid(body.profile_id)) return reply(400, { error: "Perfil inválido" });
+    const { data: profile, error } = await admin.from("family_profiles")
+      .select("id,pin_hash,pin_salt,pin_iterations,failed_attempts,locked_until")
+      .eq("id", body.profile_id).eq("user_id", user.id).maybeSingle();
+    if (error || !profile) return reply(404, { error: "No se encontró el perfil" });
+    if (profile.locked_until && new Date(profile.locked_until).getTime() > Date.now()) {
+      return reply(429, { error: "Perfil bloqueado temporalmente. Intenta más tarde.", locked_until: profile.locked_until });
+    }
+    if (!profile.pin_hash) return reply(200, { ok: true, unlocked: true });
+    const valid = await verifyProfilePin(String(body.pin ?? ""), profile);
+    if (!valid) {
+      const attempts = Number(profile.failed_attempts ?? 0) + 1;
+      const lockedUntil = attempts >= 5 ? new Date(Date.now() + 10 * 60 * 1000).toISOString() : null;
+      await admin.from("family_profiles").update({
+        failed_attempts: lockedUntil ? 0 : attempts, locked_until: lockedUntil,
+      }).eq("id", profile.id).eq("user_id", user.id);
+      return reply(401, { error: lockedUntil ? "Demasiados intentos. Perfil bloqueado durante 10 minutos." : "PIN incorrecto." });
+    }
+    await admin.from("family_profiles").update({ failed_attempts: 0, locked_until: null })
+      .eq("id", profile.id).eq("user_id", user.id);
+    return reply(200, { ok: true, unlocked: true });
+  }
+
+  if (requestedAction === "set-profile-pin") {
+    const user = await userFromRequest(req);
+    if (!user) return reply(401, { error: "Sesión no válida" });
+    if (!validUuid(body.profile_id)) return reply(400, { error: "Perfil inválido" });
+    let pinFields;
+    try { pinFields = await hashProfilePin(String(body.pin ?? "")); }
+    catch (error) { return reply(400, { error: error instanceof Error ? error.message : "PIN inválido" }); }
+    const { data, error } = await admin.from("family_profiles").update({
+      ...pinFields, failed_attempts: 0, locked_until: null,
+    }).eq("id", body.profile_id).eq("user_id", user.id).select("id").maybeSingle();
+    if (error) return reply(500, { error: "No se pudo actualizar el PIN" });
+    return data ? reply(200, { ok: true }) : reply(404, { error: "No se encontró el perfil" });
+  }
+
+  if (requestedAction === "delete-profile") {
+    const user = await userFromRequest(req);
+    if (!user) return reply(401, { error: "Sesión no válida" });
+    if (!validUuid(body.profile_id)) return reply(400, { error: "Perfil inválido" });
+    const { data, error } = await admin.from("family_profiles").delete()
+      .eq("id", body.profile_id).eq("user_id", user.id).select("id").maybeSingle();
+    if (error) return reply(500, { error: "No se pudo eliminar el perfil" });
+    return data ? reply(200, { ok: true }) : reply(404, { error: "No se encontró el perfil" });
+  }
 
   if (requestedAction === "pair-device") {
     const code = String(body.code ?? "").replace(/\s+/g, "").toUpperCase();
