@@ -7,6 +7,11 @@ on:
     paths:
       - "apps/roku/**"
       - ".github/workflows/roku-package.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/roku/**"
+      - ".github/workflows/roku-package.yml"
 
 jobs:
   package:
