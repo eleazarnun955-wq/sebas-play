@@ -8,7 +8,10 @@
   </interface>
   <script type="text/brightscript" uri="PlayerScene.brs" />
   <children>
-    <Video id="video" width="1920" height="1080" />
-    <Label id="errorLabel" visible="false" width="1500" translation="[210,780]" color="#FFFFFF" font="font:MediumSystemFont" />
+    <Video id="video" width="1920" height="1080" enableUI="true" />
+    <Rectangle width="1600" height="90" translation="[160,35]" color="0x00000099" />
+    <Label id="titleLabel" translation="[190,48]" width="1500" height="60" color="#FFFFFF" font="font:MediumSystemFont" />
+    <Label id="loadingLabel" translation="[210,780]" width="1500" height="65" color="#FFFFFF" font="font:LargeSystemFont" />
+    <Label id="errorLabel" visible="false" translation="[210,780]" width="1500" height="100" color="#FFB0B0" font="font:MediumSystemFont" />
   </children>
 </component>
