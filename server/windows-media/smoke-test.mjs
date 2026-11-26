@@ -51,6 +51,18 @@ try {
   assert.match(uploaded.file, /uploaded\.mp4$/);
   const denied = await fetch("http://127.0.0.1:18787/api/catalog");
   assert.equal(denied.status, 401, "catalog must require admin token");
+  const deniedUpload = await fetch("http://127.0.0.1:18787/api/upload?name=denied.mp4", {
+    method: "POST",
+    headers: { "content-type": "video/mp4" },
+    body: Buffer.from("NO"),
+  });
+  assert.equal(deniedUpload.status, 401, "uploads must require admin token");
+  const unsupportedUpload = await fetch("http://127.0.0.1:18787/api/upload?name=notes.txt", {
+    method: "POST",
+    headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "content-type": "text/plain" },
+    body: Buffer.from("NO"),
+  });
+  assert.equal(unsupportedUpload.status, 415, "uploads must reject unsupported file types");
 
   const catalogResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
     headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN }
@@ -70,6 +82,16 @@ try {
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
   assert.equal(await stream.text(), "SEBAS-");
+  const suffixStream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=-4" } });
+  assert.equal(suffixStream.status, 206, "video endpoint must support suffix byte ranges");
+  assert.equal(suffixStream.headers.get("content-range"), `bytes ${sample.length - 4}-${sample.length - 1}/${sample.length}`);
+  assert.equal(await suffixStream.text(), "TEST");
+  const headStream = await fetch(sampleItem.stream_url, { method: "HEAD" });
+  assert.equal(headStream.status, 200, "video endpoint must support HEAD requests");
+  assert.equal(headStream.headers.get("content-length"), String(sample.length));
+  assert.equal(await headStream.text(), "", "HEAD responses must not include a body");
+  const invalidRange = await fetch(sampleItem.stream_url, { headers: { range: "bytes=9999-" } });
+  assert.equal(invalidRange.status, 416, "out-of-range requests must be rejected");
   // LAN requests must create URLs pointing to the laptop, never localhost.
   const lanResponse = await fetch("http://127.0.0.1:18787/api/catalog", {
     headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN, "x-forwarded-host": "192.168.1.15:18787", "x-forwarded-proto": "http" }
