@@ -18,6 +18,11 @@ Android y Roku consultan los registros publicados en Supabase. El panel administ
 
 Roku usa el reproductor nativo y requiere que el contenedor, códec y URL sean compatibles. Se recomienda MP4 H.264/AAC. El servidor no transcodifica.
 
+### Fila «Mi laptop» en Roku 9.0 ULTRA
+
+Cuando importas desde Android una película o episodio de la laptop y publicas su ficha en el catálogo, Roku 9.0 ULTRA la muestra también en una fila independiente llamada **Mi laptop**. La aplicación identifica exclusivamente las URLs firmadas del servidor bajo `/media/`; no necesita ni recibe el token de administración de Windows. La reproducción sigue usando el enlace firmado con vencimiento y las solicitudes HTTP Range del servidor. Los favoritos y el progreso continúan sincronizándose mediante la vinculación segura de la cuenta. Para Roku, usa MP4 H.264/AAC; si un archivo no es compatible, conviértelo desde el panel con FFmpeg cuando esté instalado.
+
+
 ## Acceso remoto
 
 Fuera de casa se requiere un hostname HTTPS estable y un proxy/túnel configurado. El paquete no puede crear una cuenta ni aceptar los términos de un proveedor externo por el usuario. Configura Cloudflare Tunnel u otro proveedor para publicar `http://localhost:8787` bajo HTTPS y define `SEBAS_PUBLIC_BASE_URL=https://tu-hostname` en el archivo local `server-config.bat`. No abras el puerto 8787 directamente en el router.
