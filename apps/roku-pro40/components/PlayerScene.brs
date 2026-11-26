@@ -8,8 +8,9 @@ sub init()
     m.video.ObserveField("position", "onPositionChanged")
     m.lastSavedPosition = 0
     m.resumeApplied = false
-    ' Use Roku's native transport overlay for pause, seek, rewind/forward,
-    ' and device-supported caption/audio controls.
+    m.progressTask = invalid
+    m.pendingPosition = invalid
+    m.pendingDuration = 0
     m.video.enableUI = true
     m.top.SetFocus(true)
     m.status.text = "Preparando reproducción…"
@@ -17,6 +18,9 @@ end sub
 
 sub startPlayback()
     if m.top.videoUrl = invalid or m.top.videoUrl = "" then return
+    m.lastSavedPosition = 0
+    m.resumeApplied = false
+    m.top.wasClosed = false
     m.status.text = "Conectando con el servidor…"
     content = CreateObject("roSGNode", "ContentNode")
     content.url = m.top.videoUrl
@@ -55,39 +59,64 @@ sub onVideoState()
         m.status.text = ""
     else if state = "paused"
         m.status.text = "Pausado"
+        saveProgress(false)
     else if state = "error"
         m.status.text = "No se pudo reproducir este archivo. Comprueba el formato y la conexión. Presiona Atrás para volver al catálogo."
+        saveProgress(true)
     else if state = "finished"
         closePlayer()
     end if
 end sub
 
 sub onPositionChanged()
+    saveProgress(false)
+end sub
+
+' Save every 15 seconds and also checkpoint immediately on pause/exit.
+' If a network write is already running, retain the newest checkpoint and
+' send it after the current request completes so an older write cannot win.
+sub saveProgress(force as boolean)
     position = m.video.position
     if position = invalid or position < 5 then return
-    if position - m.lastSavedPosition < 15 then return
     if m.top.deviceToken = invalid or m.top.deviceToken = "" then return
     if m.top.contentType <> "movie" and m.top.contentType <> "episode" then return
-    if m.progressTask <> invalid then return
+    if not force and position - m.lastSavedPosition < 15 then return
 
     durationSeconds = 0
     if m.video.duration <> invalid and m.video.duration > 0 then durationSeconds = Int(m.video.duration)
+
+    if m.progressTask <> invalid
+        m.pendingPosition = Int(position)
+        m.pendingDuration = durationSeconds
+        return
+    end if
+    startProgressTask(Int(position), durationSeconds)
+end sub
+
+sub startProgressTask(positionSeconds as integer, durationSeconds as integer)
     m.progressTask = CreateObject("roSGNode", "ProgressTask")
     m.progressTask.deviceToken = m.top.deviceToken
     m.progressTask.contentId = m.top.contentId
     m.progressTask.contentType = m.top.contentType
-    m.progressTask.positionSeconds = Int(position)
+    m.progressTask.positionSeconds = positionSeconds
     m.progressTask.durationSeconds = durationSeconds
     m.progressTask.ObserveField("completed", "onProgressSaved")
     m.top.AppendChild(m.progressTask)
     m.progressTask.control = "RUN"
-    m.lastSavedPosition = position
+    m.lastSavedPosition = positionSeconds
 end sub
 
 sub onProgressSaved()
     if m.progressTask <> invalid
         m.top.RemoveChild(m.progressTask)
         m.progressTask = invalid
+    end if
+    if m.pendingPosition <> invalid
+        nextPosition = m.pendingPosition
+        nextDuration = m.pendingDuration
+        m.pendingPosition = invalid
+        m.pendingDuration = 0
+        startProgressTask(nextPosition, nextDuration)
     end if
 end sub
 
@@ -101,7 +130,8 @@ end function
 
 sub closePlayer()
     if m.top.wasClosed then return
-    m.video.control = "stop"
+    saveProgress(true)
     m.top.wasClosed = true
+    m.video.control = "stop"
     m.top.visible = false
 end sub
