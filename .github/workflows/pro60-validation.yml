@@ -28,6 +28,7 @@ jobs:
       - name: Verify Windows media server and XMLTV
         run: |
           node server/windows-media/xmltv.test.mjs
+          node server/windows-media/ffmpeg-transcode.test.mjs
           node scripts/profile-pin-test.mjs
           node scripts/verify-pro50-pairing.mjs
           node scripts/verify-pro60-isolation.mjs
