@@ -25,7 +25,7 @@ assert.match(pairing, /SEBASPLAY90ULTRA/);
 assert.match(favorites, /action: "favorite"/);
 assert.match(progress, /action: "progress"/);
 assert.match(player, /detectStreamFormat/);
-assert.match(player, /\.mp4/);
+assert.match(player, /return "mp4"/);
 assert.doesNotMatch([catalog, home, pairing, favorites, progress].join("\n"), /SEBASPLAY80ULTRA/);
 
 console.log("PASS: Roku 9.0 independent identity, Mi laptop row, signed laptop MP4 playback, pairing, favorites and progress contracts.");
