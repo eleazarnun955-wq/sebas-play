@@ -92,6 +92,7 @@ end sub
 sub onCatalogLoaded()
     catalog = m.task.catalog
     if catalog <> invalid then m.rows.content = catalog
+    if m.task.errorMessage <> invalid and m.task.errorMessage <> "" then m.status.text = m.task.errorMessage
 end sub
 
 sub onCatalogError()
