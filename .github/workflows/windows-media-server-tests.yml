@@ -1,0 +1,30 @@
+name: SEBAS PLAY 12.0 Windows media server tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sebas-play-120-independent-full-improvements-20261126]
+    paths:
+      - "server/windows-media/**"
+      - ".github/workflows/windows-media-server-tests.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "server/windows-media/**"
+      - ".github/workflows/windows-media-server-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  media-server-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify Windows media server security and playback endpoints
+        run: node server/windows-media/smoke-test.mjs
