@@ -1,6 +1,9 @@
 sub init()
     m.rows = m.top.FindNode("catalogRows")
     m.status = m.top.FindNode("status")
+    m.dialogTimer = m.top.FindNode("dialogTransitionTimer")
+    m.dialogTimer.ObserveField("fire", "onDialogTransitionTimer")
+    m.dialogTransition = ""
     m.actions = m.top.FindNode("topActions")
     m.rows.ObserveField("rowItemSelected", "onItemSelected")
     m.actions.ObserveField("buttonSelected", "onActionSelected")
@@ -57,7 +60,16 @@ sub onUrlEntered()
         m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
     end if
     m.top.dialog = invalid
-    askLaptopToken()
+    m.status.text = "Dirección aceptada. Preparando el campo del token..."
+    m.dialogTransition = "token"
+    m.dialogTimer.control = "start"
+end sub
+
+sub onDialogTransitionTimer()
+    if m.dialogTransition = "token"
+        m.dialogTransition = ""
+        askLaptopToken()
+    end if
 end sub
 
 sub askLaptopToken()
