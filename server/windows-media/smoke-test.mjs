@@ -148,7 +148,7 @@ try {
   assert.equal(nfoRefresh.status, 200);
   const refreshedNfoResponse = await fetch("http://127.0.0.1:18787/api/catalog", { headers:{ authorization:"Bearer " + env.SEBAS_ACCESS_TOKEN } });
   const refreshedNfoCatalog = await refreshedNfoResponse.json();
-  const refreshedNfoItem = refreshedNfoCatalog.items.find(item => item.title === "sample");
+  const refreshedNfoItem = refreshedNfoCatalog.items.find(item => item.file === "sample.mp4");
   assert.equal(refreshedNfoItem.release_year, 2025, "changed NFO sidecars should refresh metadata");
   assert.equal(refreshedNfoItem.synopsis, "Metadatos actualizados");
   assert.deepEqual(refreshedNfoItem.genres, ["Drama"]);
