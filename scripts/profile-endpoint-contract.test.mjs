@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const edge = await readFile(new URL("../supabase/functions/roku-device-sync/index.ts", import.meta.url), "utf8");
+const edge = await readFile(new URL("../supabase/functions/sebas-family-profiles/index.ts", import.meta.url), "utf8");
 const migration = await readFile(new URL("../supabase/migrations/20261126021600_add_family_profiles.sql", import.meta.url), "utf8");
 const ui = await readFile(new URL("../src/ViewerApp.tsx", import.meta.url), "utf8");
 
