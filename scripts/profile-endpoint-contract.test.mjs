@@ -7,7 +7,7 @@ const ui = await readFile(new URL("../src/ViewerApp.tsx", import.meta.url), "utf
 const denyMigration = await readFile(new URL("../supabase/migrations/20261126021845_deny_client_family_profile_access.sql", import.meta.url), "utf8");
 
 for (const action of ["list-profiles", "create-profile", "verify-profile-pin", "set-profile-pin", "delete-profile"]) {
-  assert.ok(edge.includes(`requestedAction === "${action}"`), `missing edge action: ${action}`);
+  assert.ok(edge.includes(`action === "${action}"`), `missing edge action: ${action}`);
 }
 assert.ok(edge.includes("hashProfilePin"), "PINs must be hashed before persistence");
 assert.ok(edge.includes("verifyProfilePin"), "PIN verification must use the secure verifier");
