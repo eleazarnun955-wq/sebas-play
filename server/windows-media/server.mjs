@@ -94,7 +94,7 @@ async function readNfoMetadata(mediaPath) {
     const yearText = value("year") || (value("premiered") || "").slice(0, 4);
     const year = Number.parseInt(yearText || "", 10);
     const runtime = Number.parseInt(value("runtime") || "", 10);
-    const genres = [...xml.matchAll(/<genre(?:\\s[^>]*)?>([\\s\\S]*?)<\\/genre>/gi)]
+    const genres = [...xml.matchAll(/<genre(?:\s[^>]*)?>([\s\S]*?)<\/genre>/gi)]
       .map(match => decodeXmlText(match[1])).filter(Boolean).slice(0, 12);
     return {
       modified_at:stat.mtimeMs,
