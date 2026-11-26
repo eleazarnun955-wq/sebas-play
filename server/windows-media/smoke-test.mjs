@@ -9,6 +9,7 @@ const temp = await fs.mkdtemp(path.join(os.tmpdir(), "sebas-play-media-"));
 const sample = Buffer.from("SEBAS-PLAY-TEST");
 const outsidePath = path.join(os.tmpdir(), "sebas-play-outside-" + process.pid + ".mp4");
 await fs.writeFile(path.join(temp, "sample.mp4"), sample);
+await fs.writeFile(path.join(temp, "sample.nfo"), `<movie><title>Película de prueba</title><year>2024</year><plot><![CDATA[Una historia &amp; una prueba.]]></plot><mpaa>PG-13</mpaa><genre>Acción</genre><genre>Ciencia ficción</genre><runtime>118</runtime></movie>`);
 await fs.writeFile(outsidePath, Buffer.from("OUTSIDE-LIBRARY"));
 await fs.symlink(outsidePath, path.join(temp, "outside-link.mp4"));
 const env = {
@@ -135,6 +136,21 @@ try {
 
   const sampleItem = catalog.items.find(item => item.title === "sample");
   assert.ok(sampleItem, "original test video should remain in the library");
+  assert.equal(sampleItem.synopsis, "Una historia & una prueba.");
+  assert.equal(sampleItem.release_year, 2024);
+  assert.equal(sampleItem.age_rating, "PG-13");
+  assert.deepEqual(sampleItem.genres, ["Acción", "Ciencia ficción"]);
+  assert.equal(sampleItem.duration_minutes, 118);
+  await wait(10);
+  await fs.writeFile(path.join(temp, "sample.nfo"), `<movie><title>Película de prueba</title><year>2025</year><plot>Metadatos actualizados</plot><genre>Drama</genre></movie>`);
+  const nfoRefresh = await fetch("http://127.0.0.1:18787/api/scan", { method:"POST", headers:{ authorization:"Bearer " + env.SEBAS_ACCESS_TOKEN } });
+  assert.equal(nfoRefresh.status, 200);
+  const refreshedNfoResponse = await fetch("http://127.0.0.1:18787/api/catalog", { headers:{ authorization:"Bearer " + env.SEBAS_ACCESS_TOKEN } });
+  const refreshedNfoCatalog = await refreshedNfoResponse.json();
+  const refreshedNfoItem = refreshedNfoCatalog.items.find(item => item.title === "sample");
+  assert.equal(refreshedNfoItem.release_year, 2025, "changed NFO sidecars should refresh metadata");
+  assert.equal(refreshedNfoItem.synopsis, "Metadatos actualizados");
+  assert.deepEqual(refreshedNfoItem.genres, ["Drama"]);
   const stream = await fetch(sampleItem.stream_url, { headers: { range: "bytes=0-5" } });
   assert.equal(stream.status, 206, "video endpoint must support HTTP Range");
   assert.equal(stream.headers.get("content-range"), `bytes 0-5/${sample.length}`);
