@@ -175,9 +175,14 @@ const server = http.createServer(async (req, res) => {
     if (!authorized(req)) return sendError(res, 401, "No autorizado");
     let storage = null;
     try { const stats = await fs.promises.statfs(ROOT); storage = { total_bytes:Number(stats.blocks) * Number(stats.bsize), free_bytes:Number(stats.bavail) * Number(stats.bsize) }; } catch {}
-    const ffmpeg = await getFfmpegCapability();\n    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage, capabilities:{ ffmpeg } });
+    const ffmpeg = await getFfmpegCapability();
+    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage, capabilities:{ ffmpeg } });
   }
-  if (url.pathname === "/api/capabilities" && req.method === "GET") {\n    if (!authorized(req)) return sendError(res, 401, "No autorizado");\n    return json(res, 200, { ok:true, capabilities:{ ffmpeg:await getFfmpegCapability(), direct_play:true, http_range:true } });\n  }\n  if (url.pathname === "/api/scan" && req.method === "POST") {
+  if (url.pathname === "/api/capabilities" && req.method === "GET") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    return json(res, 200, { ok:true, capabilities:{ ffmpeg:await getFfmpegCapability(), direct_play:true, http_range:true } });
+  }
+  if (url.pathname === "/api/scan" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     await refreshLibraryIndex();
     return json(res, 200, { ok:true, library_count:libraryIndex.length, scan:scanState });
