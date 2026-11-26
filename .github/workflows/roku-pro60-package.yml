@@ -1,0 +1,43 @@
+name: SEBAS PLAY PRO 6.0 — Roku independiente
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sebas-play-pro60-independent-20261126]
+    paths:
+      - "apps/roku-pro60/**"
+      - ".github/workflows/roku-pro60-package.yml"
+  pull_request:
+    branches: [sebas-play-pro50-independent-20261125]
+
+permissions:
+  contents: read
+
+jobs:
+  package-roku:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate independent PRO 6.0 channel
+        run: |
+          test -f apps/roku-pro60/manifest
+          test -f apps/roku-pro60/source/main.brs
+          test -f apps/roku-pro60/components/HomeScene.xml
+          test -f apps/roku-pro60/components/CatalogTask.brs
+          test -f apps/roku-pro60/components/PlayerScene.xml
+          test -f apps/roku-pro60/components/PairingTask.xml
+          test -f apps/roku-pro60/components/ProgressTask.xml
+          grep -q '^title=SEBAS PLAY PRO 6.0$' apps/roku-pro60/manifest
+          grep -q '^major_version=6$' apps/roku-pro60/manifest
+          grep -q 'SEBASPLAYPRO50' apps/roku-pro60/components/PairingTask.brs
+          grep -q 'functions/v1/roku-device-sync?action=sync' apps/roku-pro60/components/CatalogTask.brs
+      - name: Package Roku channel source
+        run: |
+          cd apps/roku-pro60
+          zip -r ../../SEBAS-PLAY-PRO-6.0-ROKU-SOURCE.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-PRO-6.0-ROKU-SOURCE
+          path: SEBAS-PLAY-PRO-6.0-ROKU-SOURCE.zip
+          if-no-files-found: error
+          retention-days: 30
