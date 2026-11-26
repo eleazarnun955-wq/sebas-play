@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { Activity, Clapperboard, Film, Radio, Search, Play, Tv2, X, LoaderCircle, AlertCircle, Heart, LogIn, LogOut, HardDrive } from "lucide-react";
+import { Activity, Clapperboard, Film, Radio, Search, Play, Tv2, X, LoaderCircle, AlertCircle, Heart, LogIn, LogOut, HardDrive, Users } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import { isDirectMediaUrl } from "./lib/direct-media-url";
 import { isNativeVlcAvailable, openNativeVlc } from "./lib/vlc-player";
