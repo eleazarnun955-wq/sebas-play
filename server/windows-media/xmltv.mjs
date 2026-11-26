@@ -14,8 +14,8 @@ function decodeXml(value) {
     .replace(/<[^>]*>/g, " ")
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
-    .replace(/&#(\d+);/g, (_m, n) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([\da-f]+);/gi, (_m, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&#(\d+);/g, (match, n) => decodeNumericEntity(n, 10) ?? match)
+    .replace(/&#x([\da-f]+);/gi, (match, n) => decodeNumericEntity(n, 16) ?? match)
     .replace(/\s+/g, " ").trim();
 }
 
