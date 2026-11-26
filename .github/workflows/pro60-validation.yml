@@ -1,0 +1,34 @@
+name: SEBAS PLAY PRO 6.0 validation
+
+on:
+  push:
+    branches: [sebas-play-pro60-independent-20261126]
+  pull_request:
+    branches: [sebas-play-pro50-independent-20261125]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Verify independent Android and Roku identities
+        run: |
+          grep -q 'com.eleazarcompany.sebasplay.pro60.independent20261126' capacitor.pro60.config.ts
+          grep -q '^title=SEBAS PLAY PRO 6.0$' apps/roku-pro60/manifest
+          grep -q '^major_version=6$' apps/roku-pro60/manifest
+          grep -q 'text="SEBAS PLAY PRO 6.0"' apps/roku-pro60/components/HomeScene.xml
+      - name: Verify Windows media server and XMLTV
+        run: |
+          node server/windows-media/xmltv.test.mjs
+          node scripts/profile-pin-test.mjs
+          node scripts/verify-pro50-pairing.mjs
+      - name: Build web interface
+        run: npm run build
