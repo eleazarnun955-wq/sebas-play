@@ -34,52 +34,57 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
     if seriesResponse = invalid or seriesResponse = "" then return
     shows = ParseJson(seriesResponse)
     if type(shows) <> "roArray" then return
+
     for each show in shows
         showId = safeString(show.id)
         showTitle = safeString(show.title)
-        if showId = "" then goto nextShow
-        seasonRequest = CreateObject("roUrlTransfer")
-        seasonRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
-        seasonRequest.InitClientCertificates()
-        seasonRequest.SetUrl(baseUrl + "/rest/v1/seasons?select=id,season_number,title&series_id=eq." + showId + "&order=season_number.asc")
-        seasonRequest.AddHeader("apikey", key)
-        seasonRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
-        seasonRequest.AddHeader("Accept", "application/json")
-        seasonResponse = seasonRequest.GetToString()
-        if seasonResponse = invalid or seasonResponse = "" then goto nextShow
-        seasons = ParseJson(seasonResponse)
-        if type(seasons) <> "roArray" then goto nextShow
-        for each season in seasons
-            seasonId = safeString(season.id)
-            if seasonId = "" then goto nextSeason
-            seasonNumber = safeString(season.season_number)
-            seasonTitle = safeString(season.title)
-            if seasonTitle = "" then seasonTitle = "Temporada " + seasonNumber
-            episodeRequest = CreateObject("roUrlTransfer")
-            episodeRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
-            episodeRequest.InitClientCertificates()
-            episodeRequest.SetUrl(baseUrl + "/rest/v1/episodes?select=id,title,episode_number,synopsis,duration_minutes,video_url&season_id=eq." + seasonId + "&is_published=eq.true&order=episode_number.asc")
-            episodeRequest.AddHeader("apikey", key)
-            episodeRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
-            episodeRequest.AddHeader("Accept", "application/json")
-            episodeResponse = episodeRequest.GetToString()
-            if episodeResponse = invalid or episodeResponse = "" then goto nextSeason
-            episodeList = ParseJson(episodeResponse)
-            if type(episodeList) <> "roArray" or episodeList.Count() = 0 then goto nextSeason
-            section = CreateObject("roSGNode", "ContentNode")
-            section.Title = showTitle + " · " + seasonTitle
-            for each episode in episodeList
-                item = section.CreateChild("ContentNode")
-                item.Title = safeString(episode.episode_number) + ". " + safeString(episode.title)
-                item.Description = safeString(episode.synopsis)
-                item.Url = safeString(episode.video_url)
-                item.StreamFormat = "auto"
-                item.AddFields({ contentType: "episode", contentId: safeString(episode.id), seriesId: showId, seasonId: seasonId })
-            end for
-            if section.GetChildCount() > 0 then root.AppendChild(section)
-            nextSeason:
-        end for
-        nextShow:
+        if showId <> ""
+            seasonRequest = CreateObject("roUrlTransfer")
+            seasonRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
+            seasonRequest.InitClientCertificates()
+            seasonRequest.SetUrl(baseUrl + "/rest/v1/seasons?select=id,season_number,title&series_id=eq." + showId + "&order=season_number.asc")
+            seasonRequest.AddHeader("apikey", key)
+            seasonRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
+            seasonRequest.AddHeader("Accept", "application/json")
+            seasonResponse = seasonRequest.GetToString()
+            if seasonResponse <> invalid and seasonResponse <> ""
+                seasons = ParseJson(seasonResponse)
+                if type(seasons) = "roArray"
+                    for each season in seasons
+                        seasonId = safeString(season.id)
+                        if seasonId <> ""
+                            seasonNumber = safeString(season.season_number)
+                            seasonTitle = safeString(season.title)
+                            if seasonTitle = "" then seasonTitle = "Temporada " + seasonNumber
+                            episodeRequest = CreateObject("roUrlTransfer")
+                            episodeRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
+                            episodeRequest.InitClientCertificates()
+                            episodeRequest.SetUrl(baseUrl + "/rest/v1/episodes?select=id,title,episode_number,synopsis,duration_minutes,video_url&season_id=eq." + seasonId + "&is_published=eq.true&order=episode_number.asc")
+                            episodeRequest.AddHeader("apikey", key)
+                            episodeRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
+                            episodeRequest.AddHeader("Accept", "application/json")
+                            episodeResponse = episodeRequest.GetToString()
+                            if episodeResponse <> invalid and episodeResponse <> ""
+                                episodeList = ParseJson(episodeResponse)
+                                if type(episodeList) = "roArray" and episodeList.Count() > 0
+                                    section = CreateObject("roSGNode", "ContentNode")
+                                    section.Title = showTitle + " · " + seasonTitle
+                                    for each episode in episodeList
+                                        item = section.CreateChild("ContentNode")
+                                        item.Title = safeString(episode.episode_number) + ". " + safeString(episode.title)
+                                        item.Description = safeString(episode.synopsis)
+                                        item.Url = safeString(episode.video_url)
+                                        item.StreamFormat = "auto"
+                                        item.AddFields({ contentType: "episode", contentId: safeString(episode.id), seriesId: showId, seasonId: seasonId })
+                                    end for
+                                    if section.GetChildCount() > 0 then root.AppendChild(section)
+                                end if
+                            end if
+                        end if
+                    end for
+                end if
+            end if
+        end if
     end for
 end sub
 
