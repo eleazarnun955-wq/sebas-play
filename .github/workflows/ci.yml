@@ -2,9 +2,9 @@ name: SEBAS PLAY CI
 
 on:
   push:
-    branches: [main, sebas-play-pro40-independent-20261125, sebas-play-pro50-independent-20261125]
+    branches: [main, sebas-play-pro40-independent-20261125, sebas-play-pro50-independent-20261125, sebas-play-pro60-independent-20261126]
   pull_request:
-    branches: [main]
+    branches: [main, sebas-play-pro50-independent-20261125]
 
 jobs:
   build:
@@ -27,7 +27,23 @@ jobs:
           grep -q 'm.video.enableUI = true' apps/roku-pro40/components/PlayerScene.brs
           grep -q 'else if state = "paused"' apps/roku-pro40/components/PlayerScene.brs
           grep -q 'else if state = "error"' apps/roku-pro40/components/PlayerScene.brs
-      - name: Verify XMLTV parser and time-zone handling
+      - name: Verify PRO 6.0 independent identities\n        run: |\n          grep -q 'com.eleazarcompany.sebasplay.pro60.independent20261126' capacitor.pro60.config.ts\n          grep -q '^title=SEBAS PLAY PRO 6.0
+        run: node server/windows-media/xmltv.test.mjs
+      - name: Verify family profile PIN hashing and verification
+        run: node scripts/profile-pin-test.mjs
+      - name: Verify secure Roku pairing implementation
+        run: node scripts/verify-pro50-pairing.mjs
+      - name: Build admin panel
+        run: npm run build
+ apps/roku-pro60/manifest\n          grep -q '^major_version=6
+        run: node server/windows-media/xmltv.test.mjs
+      - name: Verify family profile PIN hashing and verification
+        run: node scripts/profile-pin-test.mjs
+      - name: Verify secure Roku pairing implementation
+        run: node scripts/verify-pro50-pairing.mjs
+      - name: Build admin panel
+        run: npm run build
+ apps/roku-pro60/manifest\n      - name: Verify XMLTV parser and time-zone handling
         run: node server/windows-media/xmltv.test.mjs
       - name: Verify family profile PIN hashing and verification
         run: node scripts/profile-pin-test.mjs
