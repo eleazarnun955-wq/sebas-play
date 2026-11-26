@@ -2,7 +2,7 @@ name: SEBAS PLAY 9.0 ULTRA — Roku independiente
 
 on:
   push:
-    branches: [sebas-play-90-ultra-roku-independent-20261126]
+    branches: [sebas-play-90-ultra-roku-independent-20261126, sebas-play-90-ultra-laptop-roku-improvements-20261126]
     paths:
       - "apps/roku-90-ultra/**"
       - ".github/workflows/roku-90-ultra-package.yml"
