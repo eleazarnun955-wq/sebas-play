@@ -3,7 +3,7 @@ name: SEBAS PLAY 9.0 ULTRA — APK independiente
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-90-ultra-independent-20261126]
+    branches: [sebas-play-90-ultra-independent-20261126, sebas-play-90-ultra-laptop-roku-improvements-20261126]
     paths:
       - "src/**"
       - "public/**"

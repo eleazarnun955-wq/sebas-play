@@ -274,6 +274,57 @@ export default function WindowsMediaManager() {
     setMessage({ kind: "ok", text: existing ? `Enlace renovado para “${item.title}”.` : `“${item.title}” se agregó como borrador al catálogo compartido.` });
   }
 
+  async function importAllMovies() {
+    if (!supabase || !connected || !items.length) {
+      setMessage({ kind: "error", text: "Conecta la laptop y carga su biblioteca antes de sincronizar." });
+      return;
+    }
+    setImporting("__all__");
+    setMessage(null);
+    let added = 0, refreshed = 0;
+    const failures: string[] = [];
+    // Small concurrent batches avoid flooding Supabase while keeping large
+    // laptop libraries practical to import or renew in one operation.
+    for (let offset = 0; offset < items.length; offset += 5) {
+      const batch = items.slice(offset, offset + 5);
+      const results = await Promise.all(batch.map(async item => {
+        const rightsNote = `Servidor Windows SEBAS PLAY; archivo: ${item.file}; revisar derechos antes de publicar.`;
+        const { data: existing, error: lookupError } = await supabase!.from("movies")
+          .select("id").eq("rights_note", rightsNote).maybeSingle();
+        if (lookupError) return { item, kind: "error" as const, error: lookupError.message };
+        const record = {
+          title: item.title,
+          synopsis: item.synopsis || null,
+          release_year: item.release_year || null,
+          age_rating: item.age_rating || null,
+          genres: item.genres || [],
+          duration_minutes: item.duration_minutes || null,
+          video_url: item.stream_url,
+          source_type: "owned_upload",
+          rights_note: rightsNote,
+          is_published: false,
+        };
+        const result = existing
+          ? await supabase!.from("movies").update({ video_url: item.stream_url }).eq("id", existing.id)
+          : await supabase!.from("movies").insert(record);
+        return result.error
+          ? { item, kind: "error" as const, error: result.error.message }
+          : { item, kind: existing ? "refreshed" as const : "added" as const };
+      }));
+      for (const result of results) {
+        if (result.kind === "added") added++;
+        else if (result.kind === "refreshed") refreshed++;
+        else failures.push(`${result.item.title}: ${result.error}`);
+      }
+    }
+    setImporting("");
+    if (failures.length) {
+      setMessage({ kind: "error", text: `Sincronización parcial: ${added} borradores nuevos, ${refreshed} enlaces renovados y ${failures.length} errores. ${failures.slice(0, 2).join(" · ")}` });
+    } else {
+      setMessage({ kind: "ok", text: `Biblioteca sincronizada: ${added} borradores nuevos y ${refreshed} enlaces renovados. Revisa los derechos y publica las fichas para que aparezcan en Android y Roku.` });
+    }
+  }
+
   return (
     <section className="windows-media">
       <div className="windows-media-hero">
@@ -333,7 +384,7 @@ export default function WindowsMediaManager() {
           <span>{capabilities.ffmpeg.available ? capabilities.ffmpeg.version : "La reproducción directa sigue disponible. No se instaló ni activó ninguna transcodificación."}</span>
         </div>
       </div>}
-      <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop{lastScan ? ` · Último escaneo: ${lastScan}` : ""}</p></div><div className="wm-list-actions"><button className="secondary-btn" onClick={() => void scanNow()} disabled={loading || scanning || !connected}><RefreshCw size={15} className={scanning ? "spin" : ""} /> {scanning ? "Escaneando…" : "Escanear ahora"}</button><button className="secondary-btn" onClick={() => void connect()} disabled={loading || scanning || !connected}><RefreshCw size={15} /> Actualizar</button></div></div>
+      <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop{lastScan ? ` · Último escaneo: ${lastScan}` : ""}</p></div><div className="wm-list-actions"><button className="primary-btn" onClick={() => void importAllMovies()} disabled={!connected || loading || scanning || Boolean(importing) || !items.length}>{importing === "__all__" ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />} {importing === "__all__" ? "Sincronizando todo…" : "Sincronizar todo al catálogo"}</button><button className="secondary-btn" onClick={() => void scanNow()} disabled={loading || scanning || Boolean(importing) || !connected}><RefreshCw size={15} className={scanning ? "spin" : ""} /> {scanning ? "Escaneando…" : "Escanear ahora"}</button><button className="secondary-btn" onClick={() => void connect()} disabled={loading || scanning || Boolean(importing) || !connected}><RefreshCw size={15} /> Actualizar</button></div></div>
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
         <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small>{(item.release_year || item.age_rating || item.genres?.length || item.duration_minutes) && <small>{[item.release_year, item.age_rating, item.duration_minutes ? `${item.duration_minutes} min` : null, ...(item.genres || [])].filter(Boolean).join(" · ")}</small>}{item.synopsis && <small>{item.synopsis}</small>}</div><div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)||Boolean(transcoding)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button>{capabilities?.ffmpeg.available&&<><button className="secondary-btn" onClick={()=>void transcodeMedia(item,"roku")} disabled={Boolean(transcoding)||Boolean(importing)}>{transcoding===item.id?"Convirtiendo…":"MP4 Roku"}</button><button className="secondary-btn" onClick={()=>void transcodeMedia(item,"mobile")} disabled={Boolean(transcoding)||Boolean(importing)}>MP4 móvil</button></>}</div></div>)}</div>}
       <p className="wm-footnote">Los títulos se guardan como borradores. Revisa los derechos, la portada y la información de cada ficha antes de publicarla. Renueva los enlaces firmados desde aquí antes de que venzan.</p>
