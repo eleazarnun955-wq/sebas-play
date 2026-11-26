@@ -1,10 +1,10 @@
-name: SEBAS PLAY 12.0 independiente Android APK
-# Independent package: preserve 11.0 and all previous installs.
+name: SEBAS PLAY 13.0 independiente Android APK
+# Independent package: preserve 12.0, 11.0 and all previous installs.
 
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-120-independent-full-improvements-20261126]
+    branches: [sebas-play-13-0-independent-full-improvements-20261126]
     paths:
       - "src/**"
       - "public/**"
@@ -62,20 +62,21 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-      - name: Verify package ID is the new independent 12.0 one
+      - name: Verify package ID is the new independent 13.0 one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.v12.independiente20261126"
+          EXPECTED="com.eleazarcompany.sebasplay.v13.independiente20261126"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.v12.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
-      - name: Upload SEBAS PLAY 12.0 APK
+      - name: Upload SEBAS PLAY 13.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-12-0-ANDROID-INDEPENDIENTE
+          name: SEBAS-PLAY-13-0-ANDROID-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
