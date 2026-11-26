@@ -145,6 +145,7 @@ sub onItemSelected()
         return
     end if
     player = CreateObject("roSGNode", "PlayerScene")
+    m.activePlayer = player
     player.videoUrl = mediaUrl
     player.videoTitle = item.Title
     m.top.AppendChild(player)
@@ -157,8 +158,7 @@ sub onPlayerClosed()
 end sub
 
 sub onPlayerError()
-    player = m.top.FindNode("PlayerScene")
-    if player <> invalid and player.errorMessage <> invalid and player.errorMessage <> ""
-        m.status.text = player.errorMessage
+    if m.activePlayer <> invalid and m.activePlayer.errorMessage <> invalid and m.activePlayer.errorMessage <> ""
+        m.status.text = m.activePlayer.errorMessage
     end if
 end sub
