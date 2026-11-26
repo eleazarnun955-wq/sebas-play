@@ -22,16 +22,9 @@ create index if not exists family_profiles_user_created_idx
 alter table public.family_profiles enable row level security;
 
 revoke all on table public.family_profiles from anon, authenticated;
-grant select, insert, update, delete on table public.family_profiles to authenticated;
 grant all on table public.family_profiles to service_role;
 
-drop policy if exists "Users manage their own family profiles" on public.family_profiles;
-create policy "Users manage their own family profiles"
-  on public.family_profiles
-  for all
-  to authenticated
-  using ((select auth.uid()) = user_id)
-  with check ((select auth.uid()) = user_id);
-
+-- No client role receives table access. The authenticated Edge Function uses service_role
+-- only after validating the user's access token and scoping every operation by user_id.
 comment on table public.family_profiles is
   'Private household profiles. PIN hashes are PBKDF2-SHA256 with per-profile random salts; raw PINs are never stored.';
