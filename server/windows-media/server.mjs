@@ -80,11 +80,30 @@ async function walk(dir, prefix = "", req) {
     if (ent.isDirectory()) out.push(...await walk(abs, rel, req));
     else if (ent.isFile() && ALLOWED.has(path.extname(ent.name).toLowerCase())) {
       const st = await fs.promises.stat(abs);
-      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:path.basename(ent.name, path.extname(ent.name)), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], stream_url:signedUrl(rel, req) });
+      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:cleanMediaTitle(path.basename(ent.name, path.extname(ent.name))), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], ...classifyMedia(rel, ent.name), stream_url:signedUrl(rel, req) });
     }
   }
   return out;
 }
+
+function cleanMediaTitle(value) {
+  return value.replace(/[._]+/g, " ").replace(/\s+/g, " ").replace(/\s*[-–—]\s*/g, " ").trim();
+}
+function classifyMedia(rel, filename) {
+  const base = path.basename(filename, path.extname(filename));
+  const normalized = cleanMediaTitle(base);
+  const episodeMatch = normalized.match(/^(.*?)\s*(?:S(\d{1,2})\s*E(\d{1,3})|Season\s*(\d{1,2})\s*Episode\s*(\d{1,3})|T(\d{1,2})\s*E(\d{1,3}))/i);
+  if (episodeMatch) {
+    const season = Number(episodeMatch[2] || episodeMatch[4] || episodeMatch[6] || 1);
+    const episode = Number(episodeMatch[3] || episodeMatch[5] || episodeMatch[7]);
+    const folder = path.basename(path.dirname(rel));
+    const seriesTitle = cleanMediaTitle(episodeMatch[1]) || cleanMediaTitle(folder);
+    return { media_type:"episode", series_title:seriesTitle, season_number:season, episode_number:episode, year:null };
+  }
+  const yearMatch = normalized.match(/(?:^|\s)((?:19|20)\d{2})(?:\s|$)/);
+  return { media_type:"movie", series_title:null, season_number:null, episode_number:null, year:yearMatch ? Number(yearMatch[1]) : null };
+}
+
 function sendError(res, status, message) { json(res, status, { error:message }); }
 
 const server = http.createServer(async (req, res) => {
@@ -123,7 +142,7 @@ const server = http.createServer(async (req, res) => {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     try {
       const items = await walk(ROOT, "", req);
-      return json(res, 200, { items, count:items.length, generated_at:new Date().toISOString(), note:"Archivos locales compatibles con VLC Android. Roku reproduce los formatos que admite su reproductor nativo. Publica únicamente contenido con derechos." });
+      return json(res, 200, { items, count:items.length, counts:{ movies:items.filter(x=>x.media_type==="movie").length, episodes:items.filter(x=>x.media_type==="episode").length }, generated_at:new Date().toISOString(), note:"Archivos locales compatibles con VLC Android. Roku reproduce los formatos que admite su reproductor nativo. Publica únicamente contenido con derechos." });
     } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
   }
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/media/")) {
