@@ -8,10 +8,14 @@ import { spawn } from "node:child_process";
 const temp = await fs.mkdtemp(path.join(os.tmpdir(), "sebas-play-media-"));
 const sample = Buffer.from("SEBAS-PLAY-TEST");
 const outsidePath = path.join(os.tmpdir(), "sebas-play-outside-" + process.pid + ".mp4");
+const outsideDir = path.join(os.tmpdir(), "sebas-play-outside-dir-" + process.pid);
 await fs.writeFile(path.join(temp, "sample.mp4"), sample);
 await fs.writeFile(path.join(temp, "sample.nfo"), `<movie><title>Película de prueba</title><year>2024</year><plot><![CDATA[Una historia &amp; una prueba.]]></plot><mpaa>PG-13</mpaa><genre>Acción</genre><genre>Ciencia ficción</genre><runtime>118</runtime></movie>`);
 await fs.writeFile(outsidePath, Buffer.from("OUTSIDE-LIBRARY"));
+await fs.mkdir(outsideDir);
+await fs.writeFile(path.join(outsideDir, "hidden.mp4"), Buffer.from("OUTSIDE-DIRECTORY"));
 await fs.symlink(outsidePath, path.join(temp, "outside-link.mp4"));
+await fs.symlink(outsideDir, path.join(temp, "outside-folder"), "dir");
 const env = {
   ...process.env,
   SEBAS_MEDIA_ROOT: temp,
@@ -122,7 +126,8 @@ try {
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
   assert.equal(catalog.count, 2);
-  assert.ok(!catalog.items.some(item => item.file === "outside-link.mp4"), "symbolic links must never enter the media catalog");
+  assert.ok(!catalog.items.some(item => item.file === "outside-link.mp4"), "symbolic file links must never enter the media catalog");
+  assert.ok(!catalog.items.some(item => item.file.startsWith("outside-folder/")), "symbolic directory links must never expose files outside the library");
   assert.equal(catalog.scan.count, 2, "automatic scanner should index original and uploaded media");
   const scanDenied = await fetch("http://127.0.0.1:18787/api/scan", { method:"POST" });
   assert.equal(scanDenied.status, 401, "manual library scan must require admin token");
@@ -281,4 +286,5 @@ try {
   assert.ok(logs.includes("apagado ordenado (SIGTERM)"), "server should log its graceful shutdown path");
   await fs.rm(temp, { recursive: true, force: true });
   await fs.rm(outsidePath, { force: true });
+  await fs.rm(outsideDir, { recursive: true, force: true });
 }
