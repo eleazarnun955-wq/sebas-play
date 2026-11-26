@@ -27,6 +27,8 @@ jobs:
           grep -q 'm.video.enableUI = true' apps/roku-pro40/components/PlayerScene.brs
           grep -q 'else if state = "paused"' apps/roku-pro40/components/PlayerScene.brs
           grep -q 'else if state = "error"' apps/roku-pro40/components/PlayerScene.brs
+      - name: Verify XMLTV parser and time-zone handling
+        run: node server/windows-media/xmltv.test.mjs
       - name: Verify secure Roku pairing implementation
         run: node scripts/verify-pro50-pairing.mjs
       - name: Build admin panel
