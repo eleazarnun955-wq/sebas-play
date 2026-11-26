@@ -3,6 +3,7 @@
   <interface>
     <field id="catalog" type="node" />
     <field id="errorMessage" type="string" />
+    <field id="personalSync" type="assocarray" />
   </interface>
   <script type="text/brightscript" uri="CatalogTask.brs" />
   <script type="text/brightscript" uri="pkg:/source/config.brs" />

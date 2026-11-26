@@ -4,9 +4,17 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
+import { Transform } from "node:stream";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { parseXmltv } from "./xmltv.mjs";
+
+const execFileAsync = promisify(execFile);
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.SEBAS_MEDIA_ROOT || path.join(HERE, "Peliculas"));
+const DATA_DIR = path.resolve(process.env.SEBAS_DATA_DIR || path.join(HERE, "data"));
+const EPG_FILE = path.join(DATA_DIR, "xmltv-guide.json");
 const HOST = process.env.SEBAS_HOST || "0.0.0.0";
 const PORT = Number(process.env.SEBAS_PORT || 8787);
 const ACCESS_TOKEN = process.env.SEBAS_ACCESS_TOKEN || "";
@@ -26,6 +34,9 @@ if (!SIGNING_SECRET || SIGNING_SECRET.length < 32) {
   process.exit(1);
 }
 fs.mkdirSync(ROOT, { recursive: true });
+fs.mkdirSync(DATA_DIR, { recursive: true });
+let epgGuide = null;
+try { epgGuide = JSON.parse(fs.readFileSync(EPG_FILE, "utf8")); } catch { epgGuide = null; }
 
 function json(res, status, value) {
   res.writeHead(status, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff", "access-control-allow-origin":"*", "access-control-allow-headers":"Authorization,Content-Type,Range", "access-control-expose-headers":"Content-Length,Content-Range,Accept-Ranges" });
@@ -68,6 +79,44 @@ function safePath(rel) {
   if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
   return full;
 }
+function decodeXmlText(value) {
+  return String(value || "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (_match, code) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/\s+/g, " ").trim();
+}
+async function readNfoMetadata(mediaPath) {
+  const nfoPath = path.join(path.dirname(mediaPath), path.basename(mediaPath, path.extname(mediaPath)) + ".nfo");
+  try {
+    const stat = await fs.promises.stat(nfoPath);
+    if (!stat.isFile() || stat.size > 256 * 1024) return { modified_at:null, title:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
+    const xml = await fs.promises.readFile(nfoPath, "utf8");
+    const value = (tag) => {
+      const match = xml.match(new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i"));
+      return match ? decodeXmlText(match[1]) : null;
+    };
+    const yearText = value("year") || (value("premiered") || "").slice(0, 4);
+    const year = Number.parseInt(yearText || "", 10);
+    const runtime = Number.parseInt(value("runtime") || "", 10);
+    const genres = [...xml.matchAll(/<genre(?:\s[^>]*)?>([\s\S]*?)<\/genre>/gi)]
+      .map(match => decodeXmlText(match[1])).filter(Boolean).slice(0, 12);
+    return {
+      modified_at:stat.mtimeMs,
+      title:value("title") || null,
+      synopsis:value("plot") || value("outline") || null,
+      release_year:Number.isInteger(year) && year >= 1888 && year <= 2200 ? year : null,
+      age_rating:value("mpaa") || null,
+      genres:[...new Set(genres)],
+      duration_minutes:Number.isInteger(runtime) && runtime > 0 && runtime <= 1000 ? runtime : null,
+    };
+  } catch {
+    return { modified_at:null, title:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
+  }
+}
+
 async function scanLibrary(previousItems = []) {
   // Iterative traversal avoids recursive spread limits on large libraries.
   // Reuse unchanged catalog records when size and modification time match.
@@ -89,11 +138,18 @@ async function scanLibrary(previousItems = []) {
       if (!ent.isFile() || !ALLOWED.has(ext)) continue;
       const file = rel.split(path.sep).join("/");
       const st = await fs.promises.stat(abs);
+      const nfo = await readNfoMetadata(abs);
       const cached = previous.get(file);
-      if (cached && cached.size_bytes === st.size && Date.parse(cached.modified_at) === st.mtimeMs) {
+      if (cached && cached.size_bytes === st.size && Date.parse(cached.modified_at) === st.mtimeMs && cached.nfo_modified_at === nfo.modified_at) {
         out.push(cached);
       } else {
-        out.push({ id:crypto.createHash("sha1").update(file).digest("hex"), title:path.basename(ent.name, ext), file, size_bytes:st.size, modified_at:st.mtime.toISOString(), mime_type:MIME[ext] });
+        out.push({
+          id:crypto.createHash("sha1").update(file).digest("hex"),
+          title:nfo.title || path.basename(ent.name, ext), file, size_bytes:st.size,
+          modified_at:st.mtime.toISOString(), mime_type:MIME[ext],
+          synopsis:nfo.synopsis, release_year:nfo.release_year, age_rating:nfo.age_rating,
+          genres:nfo.genres, duration_minutes:nfo.duration_minutes, nfo_modified_at:nfo.modified_at,
+        });
       }
     }
   }
@@ -104,6 +160,22 @@ let libraryIndex = [];
 let scanState = { scanning:false, lastScanAt:null, lastError:null, count:0 };
 let scanPromise = null;
 const activeStreams = new Set();
+let ffmpegCapabilityCache = null;
+async function getFfmpegCapability() {
+  if (ffmpegCapabilityCache) return ffmpegCapabilityCache;
+  ffmpegCapabilityCache = (async () => {
+    try {
+      const { stdout } = await execFileAsync("ffmpeg", ["-version"], {
+        timeout: 2500, windowsHide: true, maxBuffer: 64 * 1024,
+      });
+      const version = String(stdout || "").split(/\r?\n/, 1)[0].trim();
+      return { available: Boolean(version), version: version || null, reason: version ? null : "FFmpeg no devolvió información de versión." };
+    } catch {
+      return { available: false, version: null, reason: "FFmpeg no está instalado o no está disponible en PATH. La reproducción directa sigue funcionando." };
+    }
+  })();
+  return ffmpegCapabilityCache;
+}
 function refreshLibraryIndex() {
   if (scanPromise) return scanPromise;
   scanState.scanning = true;
@@ -113,6 +185,27 @@ function refreshLibraryIndex() {
     finally { scanPromise = null; }
   })();
   return scanPromise;
+}
+
+// Watch the library for near-real-time changes on Windows. The periodic scan remains
+// enabled as a reconciliation fallback (including filesystems without recursive watch).
+let libraryWatcher = null;
+let watchDebounce = null;
+function startLibraryWatcher() {
+  try {
+    libraryWatcher = fs.watch(ROOT, { recursive:true }, (_eventType, filename) => {
+      if (!filename) return;
+      if (watchDebounce) clearTimeout(watchDebounce);
+      watchDebounce = setTimeout(() => { watchDebounce = null; void refreshLibraryIndex(); }, Math.max(250, Number(process.env.SEBAS_WATCH_DEBOUNCE_MS || 1200)));
+    });
+    libraryWatcher.on("error", error => {
+      console.warn("Vigilancia de biblioteca no disponible; continúa el escaneo periódico:", error.message);
+      libraryWatcher?.close();
+      libraryWatcher = null;
+    });
+  } catch (error) {
+    console.warn("Vigilancia recursiva no disponible; continúa el escaneo periódico:", error instanceof Error ? error.message : String(error));
+  }
 }
 
 function sendError(res, status, message) { json(res, status, { error:message }); }
@@ -131,10 +224,15 @@ const server = http.createServer(async (req, res) => {
   }
   if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
   if (url.pathname === "/api/status" && req.method === "GET") {
-    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
     let storage = null;
     try { const stats = await fs.promises.statfs(ROOT); storage = { total_bytes:Number(stats.blocks) * Number(stats.bsize), free_bytes:Number(stats.bavail) * Number(stats.bsize) }; } catch {}
-    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage });
+    const ffmpeg = await getFfmpegCapability();
+    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage, capabilities:{ ffmpeg } });
+  }
+  if (url.pathname === "/api/capabilities" && req.method === "GET") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    return json(res, 200, { ok:true, capabilities:{ ffmpeg:await getFfmpegCapability(), direct_play:true, http_range:true } });
   }
   if (url.pathname === "/api/scan" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
@@ -152,13 +250,59 @@ const server = http.createServer(async (req, res) => {
     if (!cleanName || !ALLOWED.has(ext)) return sendError(res, 415, "Formato no admitido. Usa MP4, M4V, MOV o WebM.");
     const fileName = `${Date.now()}-${cleanName}`;
     const destination = safePath(fileName);
+    let receivedBytes = 0;
+    const uploadGuard = new Transform({
+      transform(chunk, _encoding, callback) {
+        receivedBytes += chunk.length;
+        if (receivedBytes > MAX_UPLOAD_BYTES || receivedBytes > length) {
+          callback(new Error("El cuerpo de la carga supera el tamaño declarado o el límite configurado."));
+          return;
+        }
+        callback(null, chunk);
+      },
+      flush(callback) {
+        if (receivedBytes !== length) {
+          callback(new Error("La carga terminó antes del tamaño declarado."));
+          return;
+        }
+        callback();
+      },
+    });
     try {
-      await pipeline(req, fs.createWriteStream(destination, { flags: "wx" }));
+      await pipeline(req, uploadGuard, fs.createWriteStream(destination, { flags: "wx" }));
       await refreshLibraryIndex();
-      return json(res, 201, { ok:true, file:fileName, size_bytes:length, mime_type:MIME[ext] });
+      return json(res, 201, { ok:true, file:fileName, size_bytes:receivedBytes, mime_type:MIME[ext] });
     } catch (error) {
       await fs.promises.unlink(destination).catch(() => {});
       return sendError(res, 400, error instanceof Error ? error.message : "No se pudo guardar el archivo");
+    }
+  }
+  if (url.pathname === "/api/epg" && req.method === "GET") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    return json(res, 200, { ok:true, configured:Boolean(epgGuide), guide:epgGuide });
+  }
+  if (url.pathname === "/api/epg/import" && req.method === "POST") {
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
+    const chunks = [];
+    let total = 0;
+    try {
+      for await (const chunk of req) {
+        total += chunk.length;
+        if (total > 8 * 1024 * 1024) {
+          res.writeHead(413, { "content-type":"application/json; charset=utf-8", "cache-control":"no-store" });
+          return res.end(JSON.stringify({ error:"El archivo XMLTV supera el límite de 8 MB." }));
+        }
+        chunks.push(chunk);
+      }
+      const parsed = parseXmltv(Buffer.concat(chunks).toString("utf8"));
+      if (!parsed.channels.length && !parsed.programmes.length) return sendError(res, 422, "El XMLTV no contiene canales ni programas válidos.");
+      const temporary = EPG_FILE + ".tmp";
+      await fs.promises.writeFile(temporary, JSON.stringify(parsed), { encoding:"utf8", flag:"w" });
+      await fs.promises.rename(temporary, EPG_FILE);
+      epgGuide = parsed;
+      return json(res, 200, { ok:true, channel_count:parsed.channels.length, programme_count:parsed.programmes.length, imported_at:parsed.imported_at });
+    } catch (error) {
+      return sendError(res, 400, error instanceof Error ? error.message : "No se pudo importar la guía XMLTV.");
     }
   }
   if (url.pathname === "/api/catalog" && req.method === "GET") {
@@ -212,6 +356,25 @@ const server = http.createServer(async (req, res) => {
   }
   return sendError(res, 404, "Ruta no encontrada");
 });
-server.listen(PORT, HOST, () => { console.log("SEBAS PLAY Media Server activo en " + HOST + ":" + PORT); void refreshLibraryIndex(); setInterval(() => { void refreshLibraryIndex(); }, Math.max(15000, Number(process.env.SEBAS_SCAN_INTERVAL_MS || 30000))).unref(); });
-process.on("SIGINT", () => server.close(() => process.exit(0)));
-process.on("SIGTERM", () => server.close(() => process.exit(0)));
+let reconciliationTimer = null;
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log("SEBAS PLAY Media Server: apagado ordenado (" + signal + ").");
+  if (watchDebounce) { clearTimeout(watchDebounce); watchDebounce = null; }
+  if (reconciliationTimer) { clearInterval(reconciliationTimer); reconciliationTimer = null; }
+  if (libraryWatcher) { libraryWatcher.close(); libraryWatcher = null; }
+  // Stop accepting requests and close keep-alive connections for clean Windows restarts.
+  server.close(() => process.exit(0));
+  if (typeof server.closeAllConnections === "function") server.closeAllConnections();
+}
+server.listen(PORT, HOST, () => {
+  console.log("SEBAS PLAY Media Server activo en " + HOST + ":" + PORT);
+  void refreshLibraryIndex();
+  startLibraryWatcher();
+  reconciliationTimer = setInterval(() => { void refreshLibraryIndex(); }, Math.max(15000, Number(process.env.SEBAS_SCAN_INTERVAL_MS || 30000)));
+  reconciliationTimer.unref();
+});
+process.once("SIGINT", () => shutdown("SIGINT"));
+process.once("SIGTERM", () => shutdown("SIGTERM"));

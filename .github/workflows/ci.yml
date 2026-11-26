@@ -2,7 +2,7 @@ name: SEBAS PLAY CI
 
 on:
   push:
-    branches: [main, sebas-play-pro40-independent-20261125]
+    branches: [main, sebas-play-pro40-independent-20261125, sebas-play-pro50-independent-20261125]
   pull_request:
     branches: [main]
 
@@ -18,5 +18,20 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Verify PRO 5.0 platform identity and Roku playback controls
+        run: |
+          grep -q 'text="SEBAS PLAY PRO 5.0"' apps/roku-pro40/components/HomeScene.xml
+          grep -q '^title=SEBAS PLAY PRO 5.0$' apps/roku-pro40/manifest
+          grep -q '^major_version=5$' apps/roku-pro40/manifest
+          grep -q 'com.eleazarcompany.sebasplay.pro50.independent20261125' capacitor.pro40.config.ts
+          grep -q 'm.video.enableUI = true' apps/roku-pro40/components/PlayerScene.brs
+          grep -q 'else if state = "paused"' apps/roku-pro40/components/PlayerScene.brs
+          grep -q 'else if state = "error"' apps/roku-pro40/components/PlayerScene.brs
+      - name: Verify XMLTV parser and time-zone handling
+        run: node server/windows-media/xmltv.test.mjs
+      - name: Verify family profile PIN hashing and verification
+        run: node scripts/profile-pin-test.mjs
+      - name: Verify secure Roku pairing implementation
+        run: node scripts/verify-pro50-pairing.mjs
       - name: Build admin panel
         run: npm run build

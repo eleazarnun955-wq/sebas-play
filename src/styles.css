@@ -93,3 +93,11 @@
 
 /* Native Android VLC playback entry */
 .viewer-vlc-launch{width:100%;min-height:190px;border:1px solid #a8f05a66;border-radius:14px;background:radial-gradient(ellipse at 50% 30%,#263b2b,#101722 72%);color:#d1ff86;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:12px;padding:24px;cursor:pointer;box-shadow:0 12px 36px #0005}.viewer-vlc-launch:hover{border-color:#a8f05a;background:radial-gradient(ellipse at 50% 30%,#304b32,#101722 72%)}
+
+.viewer-pairing-card{max-width:520px}
+.viewer-pairing-code{margin:22px 0;padding:18px 12px;border:1px solid #a8f05a66;border-radius:16px;background:#a8f05a12;color:#d1ff86;text-align:center;font:800 clamp(26px,7vw,40px)/1.2 ui-monospace,SFMono-Regular,monospace;letter-spacing:.16em;overflow-wrap:anywhere}
+.viewer-pairing-card h3{margin:24px 0 10px;font-size:15px}
+.viewer-paired-device{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.viewer-paired-device span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.viewer-paired-device small{color:var(--muted);font-size:12px}
+.viewer-paired-device button{flex:none}

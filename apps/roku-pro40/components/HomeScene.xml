@@ -3,8 +3,9 @@
   <script type="text/brightscript" uri="HomeScene.brs" />
   <children>
     <Rectangle width="1920" height="1080" color="0x080D1AFF" />
-    <Label id="brand" text="SEBAS PLAY PRO 4.0" translation="[90,45]" width="1500" height="90" color="0xFFFFFFFF" />
+    <Label id="brand" text="SEBAS PLAY PRO 5.0" translation="[90,45]" width="1500" height="90" color="0xFFFFFFFF" />
     <Label id="status" text="Conectando al catálogo..." translation="[95,150]" width="1700" height="60" color="0xC8D5E8FF" />
-    <RowList id="catalogRows" translation="[75,245]" itemSize="[1760,360]" rowItemSize="[[300,300]]" numRows="3" rowFocusAnimationStyle="fixedFocus" showRowLabel="true" />
+    <ButtonGroup id="actions" translation="[90,215]" />
+    <RowList id="catalogRows" translation="[75,310]" itemSize="[1760,340]" rowItemSize="[[300,300]]" numRows="3" rowFocusAnimationStyle="fixedFocus" showRowLabel="true" />
   </children>
 </component>

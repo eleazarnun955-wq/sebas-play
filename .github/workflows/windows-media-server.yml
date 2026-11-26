@@ -3,7 +3,7 @@ name: SEBAS PLAY Windows media server checks
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/windows-media-server-android-roku, fix/windows-server-first-run, fix/windows-media-network-autostart, sebas-play-pro40-independent-20261125]
+    branches: [main, feature/windows-media-server-android-roku, fix/windows-server-first-run, fix/windows-media-network-autostart, sebas-play-pro40-independent-20261125, sebas-play-pro50-independent-20261125]
     paths:
       - "server/windows-media/**"
       - ".github/workflows/windows-media-server.yml"
@@ -24,8 +24,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check JavaScript syntax
-        run: node --check server/windows-media/server.mjs
+      - name: Check JavaScript syntax and installer consent contract
+        run: |
+          node --check server/windows-media/server.mjs
+          node server/windows-media/installer-contract-test.mjs
+      - name: Verify XMLTV parser and time-zone handling
+        run: node server/windows-media/xmltv.test.mjs
       - name: Smoke test landing page, health, protected catalog and HTTP Range streaming
         run: node server/windows-media/smoke-test.mjs
       - uses: actions/upload-artifact@v4

@@ -1,0 +1,50 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const fn = fs.readFileSync("supabase/functions/roku-device-sync/index.ts", "utf8");
+const schema = fs.readFileSync("supabase/migrations/20261125235247_roku_device_pairing.sql", "utf8");
+const deny = fs.readFileSync("supabase/migrations/20261125235559_roku_pairing_deny_client_policies.sql", "utf8");
+const rokuPair = fs.readFileSync("apps/roku-pro40/components/PairingTask.brs", "utf8");
+const rokuFavorite = fs.readFileSync("apps/roku-pro40/components/FavoriteTask.brs", "utf8");
+const rokuHome = fs.readFileSync("apps/roku-pro40/components/HomeScene.brs", "utf8");
+const rokuProgress = fs.readFileSync("apps/roku-pro40/components/ProgressTask.brs", "utf8");
+const rokuProgressXml = fs.readFileSync("apps/roku-pro40/components/ProgressTask.xml", "utf8");
+const rokuPlayer = fs.readFileSync("apps/roku-pro40/components/PlayerScene.brs", "utf8");
+const android = fs.readFileSync("src/ViewerApp.tsx", "utf8");
+
+for (const action of ["pair-code", "pair-device", "devices", "revoke-device", "sync", "favorite", "progress"]) {
+  assert.ok(fn.includes('"'+action+'"'), "missing Edge Function action: " + action);
+}
+assert.match(fn, /crypto\.subtle\.digest\("SHA-256"/);
+assert.match(fn, /expires_at/);
+assert.match(fn, /redeemed_at/);
+assert.match(fn, /revoked_at/);
+assert.match(fn, /auth\.getUser\(token\)/);
+assert.match(schema, /enable row level security/);
+assert.match(schema, /revoke all on table public\.paired_devices from anon, authenticated/);
+assert.match(deny, /using \(false\) with check \(false\)/);
+assert.match(rokuPair, /device_token/);
+assert.match(rokuFavorite, /Authorization/);
+assert.match(rokuFavorite, /operation/);
+assert.match(rokuHome, /toggleFocusedFavorite/);
+assert.match(rokuHome, /Agregar \/ quitar de Mi lista/);
+assert.match(rokuProgress, /Authorization/);
+assert.match(rokuProgress, /GetResponseCode\(\)/, "Roku progress must verify HTTP status");
+assert.match(rokuProgress, /for attempt = 1 to 2/, "Roku progress must retry one transient failure");
+assert.match(rokuProgress, /retryAllowed = code = 0 or code = -1 or code = 429 or code >= 500/, "Roku progress must retry only transient failures");
+assert.match(rokuProgress, /exit for/, "Roku progress must stop retrying permanent failures");
+assert.match(rokuProgress, /parsed\.ok = true/, "Roku progress must require explicit API acknowledgement");
+assert.match(rokuProgress, /errorMessage/, "Roku progress must expose a useful failure reason");
+assert.match(rokuProgressXml, /field id="errorMessage"/, "Roku progress task must declare its error field");
+assert.match(rokuPlayer, /saveProgress\(true\)/, "Roku player must checkpoint progress on exit/error");
+assert.match(rokuPlayer, /saveProgress\(false\)/, "Roku player must checkpoint progress during playback and pause");
+assert.match(rokuPlayer, /saveError = m\.progressTask\.errorMessage/, "Roku player must surface progress-sync failures");
+assert.match(rokuPlayer, /savedContentId = m\.progressTask\.contentId/, "Roku player must associate sync results with their original content");
+assert.match(rokuPlayer, /savedContentId = m\.top\.contentId and not m\.top\.wasClosed/, "Roku player must not show stale sync errors over a different title");
+assert.match(rokuPlayer, /No se pudo guardar el progreso:/, "Roku player must show a useful sync error");
+assert.match(rokuPlayer, /m\.pendingPosition = invalid/, "Roku player must reset queued checkpoints for a new playback session");
+assert.match(rokuPlayer, /pendingPosition/, "Roku player must queue the newest checkpoint while a request is active");
+assert.match(rokuPlayer, /startProgressTask\(nextPosition, nextDuration\)/, "Roku player must flush the latest queued checkpoint after the previous request");
+assert.match(android, /Vincular Roku/);
+assert.match(android, /revoke-device/);
+console.log("PASS: PRO 5.0 secure Roku pairing, token revocation, private RLS and Android/Roku client wiring.");

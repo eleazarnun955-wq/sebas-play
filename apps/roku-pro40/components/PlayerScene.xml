@@ -3,9 +3,14 @@
   <interface>
     <field id="videoUrl" type="string" />
     <field id="videoTitle" type="string" />
+    <field id="contentId" type="string" />
+    <field id="contentType" type="string" />
+    <field id="deviceToken" type="string" />
+    <field id="resumePosition" type="integer" value="0" />
     <field id="wasClosed" type="boolean" value="false" />
   </interface>
   <script type="text/brightscript" uri="PlayerScene.brs" />
+  <script type="text/brightscript" uri="pkg:/source/config.brs" />
   <children>
     <Video id="video" width="1920" height="1080" />
     <Label id="title" translation="[80,40]" width="1500" height="70" color="0xFFFFFFFF" />

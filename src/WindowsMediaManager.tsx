@@ -3,6 +3,8 @@ import { HardDrive, RefreshCw, Film, CheckCircle2, AlertCircle, Server, ShieldCh
 import { supabase } from "./lib/supabase";
 import "./windows-media.css";
 
+type ServerCapabilities = { ffmpeg:{available:boolean;version:string|null;reason:string|null};direct_play:boolean;http_range:boolean };
+
 type MediaItem = {
   id: string;
   title: string;
@@ -10,6 +12,11 @@ type MediaItem = {
   size_bytes: number;
   mime_type: string;
   stream_url: string;
+  synopsis?: string | null;
+  release_year?: number | null;
+  age_rating?: string | null;
+  genres?: string[];
+  duration_minutes?: number | null;
 };
 
 function normalizeServerBase(value: string) {
@@ -45,6 +52,9 @@ export default function WindowsMediaManager() {
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [lastScan, setLastScan] = useState<string>("");
+  const [capabilities, setCapabilities] = useState<ServerCapabilities | null>(null);
+  const [epgImporting, setEpgImporting] = useState(false);
+  const [epgStatus, setEpgStatus] = useState<string>("");
 
   async function connect() {
     const base = normalizeServerBase(serverUrl);
@@ -64,6 +74,16 @@ export default function WindowsMediaManager() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
       setItems((payload.items || []) as MediaItem[]);
+      try {
+        const capabilityResponse = await fetch(`${base}/api/capabilities`, {
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${token.trim()}` },
+        });
+        const capabilityPayload = await capabilityResponse.json();
+        if (capabilityResponse.ok && capabilityPayload.capabilities) {
+          setCapabilities(capabilityPayload.capabilities as ServerCapabilities);
+        } else setCapabilities(null);
+      } catch { setCapabilities(null); }
       setConnected(true);
       setMessage({ kind: "ok", text: `Conectado. Se encontraron ${payload.count || 0} videos compatibles.` });
     } catch (error) {
@@ -93,6 +113,32 @@ export default function WindowsMediaManager() {
     } catch (error) {
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo completar el escaneo de la laptop." });
     } finally { setScanning(false); }
+  }
+
+  async function importXmltv(file: File) {
+    if (!connected || !serverUrl.trim() || !token.trim()) {
+      setEpgStatus("Conecta primero la laptop para importar la guía.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setEpgStatus("El archivo XMLTV no debe superar 8 MB.");
+      return;
+    }
+    setEpgImporting(true); setEpgStatus("");
+    try {
+      const base = normalizeServerBase(serverUrl);
+      const response = await fetch(`${base}/api/epg/import`, {
+        method: "POST",
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token.trim()}`, "Content-Type": "application/xml; charset=utf-8" },
+        body: await file.text(),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
+      setEpgStatus(`Guía importada: ${result.channel_count} canales y ${result.programme_count} programas.`);
+    } catch (error) {
+      setEpgStatus(error instanceof Error ? error.message : "No se pudo importar la guía XMLTV.");
+    } finally { setEpgImporting(false); }
   }
 
   async function uploadFile(file: File) {
@@ -143,6 +189,11 @@ export default function WindowsMediaManager() {
     }
     const record = {
       title: item.title,
+      synopsis: item.synopsis || null,
+      release_year: item.release_year || null,
+      age_rating: item.age_rating || null,
+      genres: item.genres || [],
+      duration_minutes: item.duration_minutes || null,
       video_url: item.stream_url,
       source_type: "owned_upload",
       rights_note: rightsNote,
@@ -173,15 +224,28 @@ export default function WindowsMediaManager() {
           {loading ? <RefreshCw size={16} className="spin" /> : <Server size={16} />} {loading ? "Conectando…" : connected ? "Actualizar biblioteca" : "Conectar con laptop"}
         </button>
         <div className="wm-upload-card">
+          <label>Guía de programación XMLTV (opcional)</label>
+          <input type="file" accept=".xml,.xmltv,application/xml,text/xml" disabled={!connected || epgImporting} onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void importXmltv(file); event.currentTarget.value = ""; }} />
+          <small>{epgImporting ? "Importando guía…" : "Importa un archivo XMLTV de hasta 8 MB. No es obligatorio: SEBAS PLAY funciona normalmente si no agregas una guía."}</small>
+          {epgStatus && <small role="status">{epgStatus}</small>}
+        </div>
+        <div className="wm-upload-card">
           <label>Subir película desde este dispositivo</label>
           <input type="file" accept=".mp4,.m4v,.mov,.webm,video/mp4,video/x-m4v,video/quicktime,video/webm" disabled={!connected || uploading} onChange={event => { const file = event.currentTarget.files?.[0]; if (file) void uploadFile(file); event.currentTarget.value = ""; }} />
           <small>{uploading ? "Subiendo video a la laptop…" : "El archivo se guarda directamente en la carpeta Peliculas de Windows y se agrega como borrador al catálogo."}</small>
         </div>
       </div>
       {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
+      {connected && capabilities && <div className="wm-capability">
+        <div><b>Compatibilidad del servidor</b><span>Reproducción directa y transmisión por fragmentos (HTTP Range) disponibles.</span></div>
+        <div className={capabilities.ffmpeg.available ? "wm-ffmpeg available" : "wm-ffmpeg unavailable"}>
+          <b>FFmpeg: {capabilities.ffmpeg.available ? "Detectado" : "No detectado"}</b>
+          <span>{capabilities.ffmpeg.available ? capabilities.ffmpeg.version : "La reproducción directa sigue disponible. No se instaló ni activó ninguna transcodificación."}</span>
+        </div>
+      </div>}
       <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop{lastScan ? ` · Último escaneo: ${lastScan}` : ""}</p></div><div className="wm-list-actions"><button className="secondary-btn" onClick={() => void scanNow()} disabled={loading || scanning || !connected}><RefreshCw size={15} className={scanning ? "spin" : ""} /> {scanning ? "Escaneando…" : "Escanear ahora"}</button><button className="secondary-btn" onClick={() => void connect()} disabled={loading || scanning || !connected}><RefreshCw size={15} /> Actualizar</button></div></div>
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
-        <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small></div><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button></div>)}</div>}
+        <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small>{(item.release_year || item.age_rating || item.genres?.length || item.duration_minutes) && <small>{[item.release_year, item.age_rating, item.duration_minutes ? `${item.duration_minutes} min` : null, ...(item.genres || [])].filter(Boolean).join(" · ")}</small>}{item.synopsis && <small>{item.synopsis}</small>}</div><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button></div>)}</div>}
       <p className="wm-footnote">Los títulos se guardan como borradores. Revisa los derechos, la portada y la información de cada ficha antes de publicarla. Renueva los enlaces firmados desde aquí antes de que venzan.</p>
     </section>
   );

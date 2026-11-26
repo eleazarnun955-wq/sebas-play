@@ -66,6 +66,7 @@ sub loadCatalog()
         end for
     end if
 
+    loadPersonalSync(root)
     m.top.catalog = root
     if m.top.errorMessage = invalid or m.top.errorMessage = "" then m.top.errorMessage = "Catálogo actualizado"
 end sub
@@ -121,3 +122,48 @@ function isDirectPlayableUrl(value as dynamic) as boolean
     if hashAt > 0 then clean = Left(clean, hashAt - 1)
     return Right(clean, 4) = ".mp4" or Right(clean, 4) = ".m4v" or Right(clean, 4) = ".mov" or Right(clean, 5) = ".m3u8"
 end function
+
+sub loadPersonalSync(root as object)
+    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO50")
+    token = registry.Read("device_token", "")
+    if token = "" then return
+
+    request = CreateObject("roUrlTransfer")
+    request.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    request.InitClientCertificates()
+    request.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync?action=sync")
+    request.AddHeader("apikey", SebasPlayPublishableKey())
+    request.AddHeader("Authorization", "Bearer " + token)
+    request.AddHeader("Accept", "application/json")
+    response = request.GetToString()
+    if response = invalid or response = "" then return
+    parsed = ParseJson(response)
+    if parsed = invalid or parsed.favorites = invalid or parsed.watch_progress = invalid then return
+
+    m.top.personalSync = parsed
+    favorites = parsed.favorites
+    if type(favorites) <> "roArray" or favorites.Count() = 0 then return
+
+    favoritesRow = CreateObject("roSGNode", "ContentNode")
+    favoritesRow.title = "Mi lista"
+    for each favorite in favorites
+        if favorite.content_id <> invalid
+            for rowIndex = 0 to root.GetChildCount() - 1
+                sourceRow = root.GetChild(rowIndex)
+                for itemIndex = 0 to sourceRow.GetChildCount() - 1
+                    sourceItem = sourceRow.GetChild(itemIndex)
+                    if (sourceItem.contentId = favorite.content_id and sourceItem.contentType = favorite.content_type) or (favorite.content_type = "series" and sourceItem.seriesId = favorite.content_id)
+                        copy = favoritesRow.CreateChild("ContentNode")
+                        copy.title = sourceItem.title
+                        copy.url = sourceItem.url
+                        copy.hdPosterUrl = sourceItem.hdPosterUrl
+                        copy.description = sourceItem.description
+                        copy.addFields({contentId: sourceItem.contentId, contentType: sourceItem.contentType})
+                        exit for
+                    end if
+                end for
+            end for
+        end if
+    end for
+    if favoritesRow.GetChildCount() > 0 then root.AppendChild(favoritesRow)
+end sub
