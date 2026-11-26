@@ -42,8 +42,7 @@ jobs:
           cd ../..
           unzip -Z1 dist/roku/SEBAS-PLAY-Roku-12-0.zip > dist/roku/package-files.txt
           grep -qx "manifest" dist/roku/package-files.txt
-          ! grep -qE '(^|/)SEBAS-PLAY-Roku-12-0\.zip
- dist/roku/package-files.txt
+          ! grep -q "SEBAS-PLAY-Roku-12-0.zip" dist/roku/package-files.txt
           grep -qx "source/main.brs" dist/roku/package-files.txt
           grep -qx "components/HomeScene.xml" dist/roku/package-files.txt
           echo "Verified: manifest is at ZIP root and no nested ZIP is present."
