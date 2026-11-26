@@ -57,7 +57,7 @@ end sub
 
 sub askLaptopToken()
     dialog = CreateObject("roSGNode", "KeyboardDialog")
-    dialog.title = "Token privado de SEBAS PLAY"
+    dialog.title = "Pega el token privado (solo el código)"
     dialog.text = m.laptopToken
     dialog.buttons = ["Conectar", "Cancelar"]
     dialog.ObserveField("buttonSelected", "onTokenEntered")
