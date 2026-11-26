@@ -12,6 +12,7 @@ type MediaItem = {
   size_bytes: number;
   mime_type: string;
   stream_url: string;
+  title?: string;
   synopsis?: string | null;
   release_year?: number | null;
   age_rating?: string | null;
@@ -211,7 +212,7 @@ export default function WindowsMediaManager() {
       </div>}
       <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos en la biblioteca de la laptop{lastScan ? ` · Último escaneo: ${lastScan}` : ""}</p></div><div className="wm-list-actions"><button className="secondary-btn" onClick={() => void scanNow()} disabled={loading || scanning || !connected}><RefreshCw size={15} className={scanning ? "spin" : ""} /> {scanning ? "Escaneando…" : "Escanear ahora"}</button><button className="secondary-btn" onClick={() => void connect()} disabled={loading || scanning || !connected}><RefreshCw size={15} /> Actualizar</button></div></div>
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
-        <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small></div><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button></div>)}</div>}
+        <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type}</small>{(item.release_year || item.age_rating || item.genres?.length || item.duration_minutes) && <small>{[item.release_year, item.age_rating, item.duration_minutes ? `${item.duration_minutes} min` : null, ...(item.genres || [])].filter(Boolean).join(" · ")}</small>}{item.synopsis && <small>{item.synopsis}</small>}</div><button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button></div>)}</div>}
       <p className="wm-footnote">Los títulos se guardan como borradores. Revisa los derechos, la portada y la información de cada ficha antes de publicarla. Renueva los enlaces firmados desde aquí antes de que venzan.</p>
     </section>
   );
