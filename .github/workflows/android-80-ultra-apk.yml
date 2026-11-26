@@ -1,0 +1,80 @@
+name: SEBAS PLAY 8.0 ULTRA — APK independiente
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sebas-play-80-ultra-independent-20261126]
+
+permissions:
+  contents: read
+
+jobs:
+  android-80-ultra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install dependencies
+        run: npm install
+      - name: Build interface with accounts service configured
+        run: npm run build
+        env:
+          # Supabase URL and publishable key are public client credentials.
+          # Never place a service_role or secret key in an Android app.
+          VITE_SUPABASE_URL: https://ououwdzxywmjpppzqxqy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_y3FtFQtvnYVcmy2VTJaYDQ_QhZlj4tx
+          VITE_SEBAS_PRO50: "true"
+      - name: Verify account service is embedded in app
+        run: |
+          test -d dist/assets
+          grep -R -F "https://ououwdzxywmjpppzqxqy.supabase.co" dist/assets
+          grep -R -F "sb_publishable_y3FtFQtvnYVcmy2VTJaYDQ_QhZlj4tx" dist/assets
+      - name: Set exclusive 8.0 ULTRA identity
+        run: cp capacitor.80-ultra.config.ts capacitor.config.ts
+      - name: Generate Android project
+        run: npx cap add android
+      - name: Sync Capacitor
+        run: npx cap sync android
+      - name: Configure VLC playback
+        run: node scripts/install-vlc-android.mjs
+      - name: Allow local laptop HTTP media
+        run: node scripts/enable-android-local-http.mjs
+      - name: Generate launcher icons
+        run: node scripts/generate-android-icons.mjs
+      - name: Configure Maven mirror
+        run: |
+          cat > android/ci-maven-mirror.init.gradle <<'EOF'
+          settingsEvaluated { settings ->
+              settings.pluginManagement.repositories.maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2") }
+              settings.dependencyResolutionManagement.repositories.maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2") }
+          }
+          allprojects { repositories { maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2") } } }
+          EOF
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew --init-script ci-maven-mirror.init.gradle --no-daemon --max-workers=2 assembleDebug
+      - name: Verify exclusive package identity
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
+          ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
+          EXPECTED=com.eleazarcompany.sebasplay.ultra80.independent20261126
+          echo "Detected package: $ACTUAL"
+          test "$ACTUAL" = "$EXPECTED"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.ultra70.independent"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro60.independent20261126"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro50.independent20261125"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-8.0-ULTRA-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
