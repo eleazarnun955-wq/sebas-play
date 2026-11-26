@@ -134,8 +134,9 @@ try {
   assert.ok(!deletedCatalog.items.some(item => item.title === "new-arrival"), "deleted files should disappear from the catalog automatically");
   assert.equal(deletedCatalog.count, 2);
 
-  const sampleItem = catalog.items.find(item => item.title === "sample");
+  const sampleItem = catalog.items.find(item => item.file === "sample.mp4");
   assert.ok(sampleItem, "original test video should remain in the library");
+  assert.equal(sampleItem.title, "Película de prueba", "NFO title should override the file-name fallback");
   assert.equal(sampleItem.synopsis, "Una historia & una prueba.");
   assert.equal(sampleItem.release_year, 2024);
   assert.equal(sampleItem.age_rating, "PG-13");
