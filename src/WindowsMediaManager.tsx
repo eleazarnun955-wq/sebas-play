@@ -12,7 +12,6 @@ type MediaItem = {
   size_bytes: number;
   mime_type: string;
   stream_url: string;
-  title?: string;
   synopsis?: string | null;
   release_year?: number | null;
   age_rating?: string | null;
