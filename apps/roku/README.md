@@ -1,24 +1,17 @@
-# SEBAS PLAY para Roku
+# SEBAS PLAY para Roku 12.0
 
-Canal Roku SceneGraph independiente del APK Android.
+Canal Roku SceneGraph independiente del APK Android y de SEBAS PLAY 11.0.
 
-## Configuración
-1. En `source/config.brs`, configura la URL de Supabase y la clave pública publishable/anon del proyecto.
-2. Nunca uses `service_role`, claves secretas ni credenciales de administrador.
-3. Las tablas consultadas son `movies`, `series` y `live_channels`; solo se solicitan registros con `is_published=true`.
-4. Las políticas RLS deben permitir SELECT público únicamente a los registros publicados.
-5. Publica únicamente URLs HTTPS de contenido propio o con autorización/licencia para distribución en Roku.
+## Catálogo y laptop
+- El canal consulta películas, series y canales publicados en Supabase.
+- Cuando hay una laptop configurada, agrega sus archivos MP4 como una fila adicional; no reemplaza el catálogo compartido.
+- Las series publicadas muestran filas separadas por temporada y sus episodios publicados.
+- El acceso a la laptop usa la URL y el token guardados localmente en el registro Roku. El token no se incluye en el catálogo público.
 
-## Empaquetado
-El workflow `.github/workflows/roku-package.yml` crea un ZIP del canal para instalarlo en modo desarrollador en un dispositivo Roku. Para validación real se necesita Roku Device Emulator o un Roku físico. La certificación y publicación en Roku Channel Store son pasos separados.
+## Reproducción
+La reproducción usa el reproductor SceneGraph nativo. Roku depende del contenedor, códec, DRM y URL; se recomienda MP4 H.264/AAC. Los demás formatos de la laptop se pueden reproducir en Android con VLC. El servidor Windows admite solicitudes HTTP Range y enlaces firmados; no transcodifica.
 
-## Limitaciones de esta primera base
-- El canal muestra películas, series y canales que devuelvan las consultas públicas.
-- La reproducción usa el reproductor SceneGraph nativo con formato automático; el formato, códec, contenedor, DRM y disponibilidad deben ser compatibles con Roku.
-- El catálogo de series se muestra, pero la navegación de temporadas/episodios y el inicio de sesión se completarán en la siguiente iteración.
-- El contenido sin URL reproducible no se puede iniciar desde Roku.
+## Empaquetado y pruebas
+El workflow de .github/workflows/roku-package.yml crea un ZIP para modo desarrollador. Antes de distribuir, validar navegación, reproducción, conexión local/remota y regreso al catálogo en un Roku físico o emulador. La certificación y publicación en Channel Store son pasos separados.
 
-
-## Reproducción directa PRO 3.0
-
-El canal usa el reproductor nativo de Roku para URLs directas HTTPS compatibles. Las fichas sin video autorizado muestran un aviso; no se deben usar enlaces de búsqueda ni páginas de catálogo como URL de reproducción. Para películas, episodios y canales se requieren URLs de streaming propias o licenciadas y compatibles con los códecs/DRM de Roku. El ZIP es un paquete para modo desarrollador; no es un APK ni una publicación certificada en Channel Store.
+Publica únicamente contenido propio o con autorización/licencia para distribuirlo.
