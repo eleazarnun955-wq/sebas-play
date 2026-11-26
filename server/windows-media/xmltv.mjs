@@ -13,8 +13,8 @@ function decodeXml(value) {
 }
 
 function attr(tag, name) {
-  const match = new RegExp("\\b" + name + "\\s*=\\s*(['"])(.*?)\\1", "i").exec(tag);
-  return match?.[2] ?? null;
+  const match = new RegExp("\\b" + name + "\\s*=\\s*(?:"([^"]*)"|'([^']*)')", "i").exec(tag);
+  return match?.[1] ?? match?.[2] ?? null;
 }
 
 export function parseXmltv(xml, now = new Date()) {
