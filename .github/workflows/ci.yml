@@ -2,9 +2,9 @@ name: SEBAS PLAY CI
 
 on:
   push:
-    branches: [main, sebas-play-pro40-independent-20261125, sebas-play-pro50-independent-20261125, sebas-play-pro60-independent-20261126]
+    branches: [main, sebas-play-pro40-independent-20261125, sebas-play-pro50-independent-20261125]
   pull_request:
-    branches: [main, sebas-play-pro50-independent-20261125]
+    branches: [main]
 
 jobs:
   build:
@@ -27,12 +27,6 @@ jobs:
           grep -q 'm.video.enableUI = true' apps/roku-pro40/components/PlayerScene.brs
           grep -q 'else if state = "paused"' apps/roku-pro40/components/PlayerScene.brs
           grep -q 'else if state = "error"' apps/roku-pro40/components/PlayerScene.brs
-      - name: Verify PRO 6.0 independent identities
-        run: |
-          grep -q 'com.eleazarcompany.sebasplay.pro60.independent20261126' capacitor.pro60.config.ts
-          grep -q '^title=SEBAS PLAY PRO 6.0$' apps/roku-pro60/manifest
-          grep -q '^major_version=6$' apps/roku-pro60/manifest
-          grep -q 'text="SEBAS PLAY PRO 6.0"' apps/roku-pro60/components/HomeScene.xml
       - name: Verify XMLTV parser and time-zone handling
         run: node server/windows-media/xmltv.test.mjs
       - name: Verify family profile PIN hashing and verification
