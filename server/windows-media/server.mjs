@@ -4,6 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
+import { Transform } from "node:stream";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { parseXmltv } from "./xmltv.mjs";
@@ -249,10 +250,28 @@ const server = http.createServer(async (req, res) => {
     if (!cleanName || !ALLOWED.has(ext)) return sendError(res, 415, "Formato no admitido. Usa MP4, M4V, MOV o WebM.");
     const fileName = `${Date.now()}-${cleanName}`;
     const destination = safePath(fileName);
+    let receivedBytes = 0;
+    const uploadGuard = new Transform({
+      transform(chunk, _encoding, callback) {
+        receivedBytes += chunk.length;
+        if (receivedBytes > MAX_UPLOAD_BYTES || receivedBytes > length) {
+          callback(new Error("El cuerpo de la carga supera el tamaño declarado o el límite configurado."));
+          return;
+        }
+        callback(null, chunk);
+      },
+      flush(callback) {
+        if (receivedBytes !== length) {
+          callback(new Error("La carga terminó antes del tamaño declarado."));
+          return;
+        }
+        callback();
+      },
+    });
     try {
-      await pipeline(req, fs.createWriteStream(destination, { flags: "wx" }));
+      await pipeline(req, uploadGuard, fs.createWriteStream(destination, { flags: "wx" }));
       await refreshLibraryIndex();
-      return json(res, 201, { ok:true, file:fileName, size_bytes:length, mime_type:MIME[ext] });
+      return json(res, 201, { ok:true, file:fileName, size_bytes:receivedBytes, mime_type:MIME[ext] });
     } catch (error) {
       await fs.promises.unlink(destination).catch(() => {});
       return sendError(res, 400, error instanceof Error ? error.message : "No se pudo guardar el archivo");
