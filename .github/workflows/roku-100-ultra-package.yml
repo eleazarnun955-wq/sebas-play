@@ -1,0 +1,47 @@
+name: SEBAS PLAY 10.0 ULTRA — Roku independiente
+
+on:
+  push:
+    branches: [sebas-play-100-ultra-independent-20261125]
+    paths:
+      - "apps/roku-100-ultra/**"
+      - ".github/workflows/roku-100-ultra-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-roku:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate independent 10.0 ULTRA channel
+        run: |
+          test -f apps/roku-100-ultra/manifest
+          test -f apps/roku-100-ultra/source/main.brs
+          test -f apps/roku-100-ultra/components/HomeScene.xml
+          test -f apps/roku-100-ultra/components/CatalogTask.brs
+          test -f apps/roku-100-ultra/components/PlayerScene.xml
+          test -f apps/roku-100-ultra/components/PairingTask.xml
+          test -f apps/roku-100-ultra/components/ProgressTask.xml
+          grep -q '^title=SEBAS PLAY 10.0 ULTRA$' apps/roku-100-ultra/manifest
+          grep -q '^major_version=10$' apps/roku-100-ultra/manifest
+          grep -q 'SEBASPLAY100ULTRA' apps/roku-100-ultra/components/PairingTask.brs
+          grep -q 'SEBASPLAY100ULTRA' apps/roku-100-ultra/components/CatalogTask.brs
+          grep -q 'SEBASPLAY100ULTRA' apps/roku-100-ultra/components/HomeScene.brs
+          grep -q 'functions/v1/roku-device-sync?action=sync' apps/roku-100-ultra/components/CatalogTask.brs
+          ! grep -R 'SEBASPLAY90ULTRA' apps/roku-100-ultra/components apps/roku-100-ultra/source
+      - name: Run Roku 10.0 integration contract tests
+        run: node apps/roku-100-ultra/tests/contract.test.mjs
+      - name: Package Roku channel for developer installation
+        run: |
+          cd apps/roku-100-ultra
+          zip -r ../../SEBAS-PLAY-10.0-ULTRA-ROKU.zip . -x "*.DS_Store" "tests/*"
+          unzip -l ../../SEBAS-PLAY-10.0-ULTRA-ROKU.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-10.0-ULTRA-ROKU
+          path: SEBAS-PLAY-10.0-ULTRA-ROKU.zip
+          if-no-files-found: error
+          retention-days: 30
