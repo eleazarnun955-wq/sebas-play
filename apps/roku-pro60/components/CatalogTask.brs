@@ -131,12 +131,14 @@ sub loadPersonalSync(root as object)
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
+    request.SetTimeout(10)
     request.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync?action=sync")
     request.AddHeader("apikey", SebasPlayPublishableKey())
     request.AddHeader("Authorization", "Bearer " + token)
     request.AddHeader("Accept", "application/json")
     response = request.GetToString()
-    if response = invalid or response = "" then return
+    code = request.GetResponseCode()
+    if response = invalid or response = "" or code < 200 or code >= 300 then return
     parsed = ParseJson(response)
     if parsed = invalid or parsed.favorites = invalid or parsed.watch_progress = invalid then return
 
