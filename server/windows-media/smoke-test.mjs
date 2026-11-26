@@ -38,7 +38,16 @@ try {
   assert.ok(health?.ok, "health endpoint did not become ready: " + logs);
   assert.equal((await health.json()).ok, true);
 
-  const capabilitiesResponse = await fetch("http://127.0.0.1:18787/api/capabilities", { headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN } });\n  assert.equal(capabilitiesResponse.status, 200, "capability discovery must require and accept the admin token");\n  const capabilities = await capabilitiesResponse.json();\n  assert.equal(capabilities.ok, true);\n  assert.equal(capabilities.capabilities.direct_play, true);\n  assert.equal(capabilities.capabilities.http_range, true);\n  assert.equal(typeof capabilities.capabilities.ffmpeg.available, "boolean");\n  assert.ok(capabilities.capabilities.ffmpeg.available ? capabilities.capabilities.ffmpeg.version : capabilities.capabilities.ffmpeg.reason);\n  const deniedCapabilities = await fetch("http://127.0.0.1:18787/api/capabilities");\n  assert.equal(deniedCapabilities.status, 401, "capability discovery must not be public");
+  const capabilitiesResponse = await fetch("http://127.0.0.1:18787/api/capabilities", { headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN } });
+  assert.equal(capabilitiesResponse.status, 200, "capability discovery must require and accept the admin token");
+  const capabilities = await capabilitiesResponse.json();
+  assert.equal(capabilities.ok, true);
+  assert.equal(capabilities.capabilities.direct_play, true);
+  assert.equal(capabilities.capabilities.http_range, true);
+  assert.equal(typeof capabilities.capabilities.ffmpeg.available, "boolean");
+  assert.ok(capabilities.capabilities.ffmpeg.available ? capabilities.capabilities.ffmpeg.version : capabilities.capabilities.ffmpeg.reason);
+  const deniedCapabilities = await fetch("http://127.0.0.1:18787/api/capabilities");
+  assert.equal(deniedCapabilities.status, 401, "capability discovery must not be public");
   assert.equal(health.headers.get("access-control-allow-origin"), "*");
 
   const landing = await fetch("http://127.0.0.1:18787/");
