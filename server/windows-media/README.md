@@ -40,3 +40,8 @@ La primera instalación configura la red local. Para reproducir desde fuera de c
 - Para detener el servidor en ejecución, cierra la ventana minimizada SEBAS PLAY Media Server o reinicia Windows.
 
 Aloja únicamente contenido propio, de dominio público o con autorización/licencia para distribuirlo.
+
+
+### Metadatos locales NFO
+
+El indexador busca un archivo NFO con el mismo nombre base que cada video. Si existe, lee de forma segura (máximo 256 KiB) título, sinopsis, año, clasificación, géneros y duración; los pasa al borrador del catálogo al importar. No necesita claves de API ni conexión con servicios externos. Los archivos NFO nunca se modifican y los cambios en el sidecar se detectan en el siguiente escaneo. Si no existe NFO, la reproducción y la importación básica siguen funcionando.
