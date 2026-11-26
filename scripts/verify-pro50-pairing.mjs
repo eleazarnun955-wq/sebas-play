@@ -8,6 +8,7 @@ const rokuPair = fs.readFileSync("apps/roku-pro40/components/PairingTask.brs", "
 const rokuFavorite = fs.readFileSync("apps/roku-pro40/components/FavoriteTask.brs", "utf8");
 const rokuHome = fs.readFileSync("apps/roku-pro40/components/HomeScene.brs", "utf8");
 const rokuProgress = fs.readFileSync("apps/roku-pro40/components/ProgressTask.brs", "utf8");
+const rokuProgressXml = fs.readFileSync("apps/roku-pro40/components/ProgressTask.xml", "utf8");
 const rokuPlayer = fs.readFileSync("apps/roku-pro40/components/PlayerScene.brs", "utf8");
 const android = fs.readFileSync("src/ViewerApp.tsx", "utf8");
 
@@ -28,6 +29,11 @@ assert.match(rokuFavorite, /operation/);
 assert.match(rokuHome, /toggleFocusedFavorite/);
 assert.match(rokuHome, /Agregar \/ quitar de Mi lista/);
 assert.match(rokuProgress, /Authorization/);
+assert.match(rokuProgress, /GetResponseCode\(\)/, "Roku progress must verify HTTP status");
+assert.match(rokuProgress, /for attempt = 1 to 2/, "Roku progress must retry one transient failure");
+assert.match(rokuProgress, /parsed\.ok = true/, "Roku progress must require explicit API acknowledgement");
+assert.match(rokuProgress, /errorMessage/, "Roku progress must expose a useful failure reason");
+assert.match(rokuProgressXml, /field id="errorMessage"/, "Roku progress task must declare its error field");
 assert.match(rokuPlayer, /saveProgress\(true\)/, "Roku player must checkpoint progress on exit/error");
 assert.match(rokuPlayer, /saveProgress\(false\)/, "Roku player must checkpoint progress during playback and pause");
 assert.match(rokuPlayer, /pendingPosition/, "Roku player must queue the newest checkpoint while a request is active");
