@@ -1,10 +1,10 @@
-name: SEBAS PLAY 11.0 MI LAPTOP + VLC Android APK
-# Independent 11.0 package; keep 10.0 installed alongside it.
+name: SEBAS PLAY 12.0 independiente Android APK
+# Independent package: preserve 11.0 and all previous installs.
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, sebas-play-netflix-icon-pro21, sebas-play-pro22-adultos-independent, sebas-play-pro30-streaming-android-roku, feature/windows-media-server-android-roku, fix/android-local-http-video-playback, fix/unique-package-install-20261124c, fix/pro30-vlc-package-unique-20261125g3, fix/sebas-play-connection-vlc-playback-20261125d, sebas-play-100-mi-laptop-vlc-independent-20261125, sebas-play-110-mi-laptop-vlc-independent-20261125]
+    branches: [sebas-play-120-independent-full-improvements-20261126]
     paths:
       - "src/**"
       - "public/**"
@@ -31,66 +31,51 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
-
       - name: Install dependencies
         run: npm install
-
       - name: Build web app
         run: npm run build
         env:
           VITE_SUPABASE_URL: https://ououwdzxywmjpppzqxqy.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_y3FtFQtvnYVcmy2VTJaYDQ_QhZlj4tx
-
       - name: Generate Android project
         run: npx cap add android
-
       - name: Sync Capacitor
         run: npx cap sync android
-
       - name: Allow signed HTTP media from Windows laptop
         run: node scripts/enable-android-local-http.mjs
-
       - name: Integrate native VLC media engine for Android
         run: node scripts/install-vlc-android.mjs
-
       - name: Generate SEBAS PLAY Android launcher icons
         run: node scripts/generate-android-icons.mjs
-
       - name: Build APK for separate installation
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
-
-      - name: Verify package ID is the new independent 11.0 one
+      - name: Verify package ID is the new independent 12.0 one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
+          EXPECTED="com.eleazarcompany.sebasplay.v12.independiente20261126"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
-          test "$ACTUAL" != "com.eleazarcompany.sebasplay.v10.miLaptopVlc20261125"
-          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro30streaming20261120"
-          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro22.adult20261120"
-          test "$ACTUAL" != "com.eleazarcompany.sebasplay.pro21.independent20261120"
-
-      - name: Upload SEBAS PLAY 11.0 APK
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
+      - name: Upload SEBAS PLAY 12.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-11-0-MI-LAPTOP-VLC-INDEPENDIENTE-20261125
+          name: SEBAS-PLAY-12-0-ANDROID-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
