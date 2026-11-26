@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="HomeScene" extends="Scene">
+  <script type="text/brightscript" uri="HomeScene.brs" />
+  <children>
+    <Rectangle width="1920" height="1080" color="0x080D1AFF" />
+    <Label id="brand" text="SEBAS PLAY 9.0 ULTRA" translation="[90,45]" width="1500" height="90" color="0xFFFFFFFF" />
+    <Label id="status" text="Conectando al catálogo..." translation="[95,150]" width="1700" height="60" color="0xC8D5E8FF" />
+    <ButtonGroup id="actions" translation="[90,215]" />
+    <RowList id="catalogRows" translation="[75,310]" itemSize="[1760,340]" rowItemSize="[[300,300]]" numRows="3" rowFocusAnimationStyle="fixedFocus" showRowLabel="true" />
+  </children>
+</component>
