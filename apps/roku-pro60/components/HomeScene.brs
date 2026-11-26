@@ -20,7 +20,7 @@ sub onActionSelected()
     end if
     if m.actions.buttonSelected <> 0 then return
     m.pairDialog = CreateObject("roSGNode", "KeyboardDialog")
-    m.pairDialog.title = "Vincular SEBAS PLAY PRO 5.0"
+    m.pairDialog.title = "Vincular SEBAS PLAY PRO 6.0"
     m.pairDialog.message = "En Android, genera un código desde Vincular Roku e introdúcelo aquí. Vence en cinco minutos."
     m.pairDialog.buttons = ["Vincular", "Cancelar"]
     m.pairDialog.ObserveField("buttonSelected", "onPairDialogButton")
@@ -106,7 +106,7 @@ sub toggleFocusedFavorite()
         m.actions.SetFocus(true)
         return
     end if
-    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO50")
+    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO60")
     token = registry.Read("device_token", "")
     if token = ""
         m.status.text = "Vincula primero tu Roku desde Android."
@@ -162,7 +162,7 @@ sub onItemSelected()
     player.videoTitle = item.title
     player.contentId = item.contentId
     player.contentType = item.contentType
-    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO50")
+    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO60")
     player.deviceToken = registry.Read("device_token", "")
     player.resumePosition = 0
     if m.personalSync <> invalid and m.personalSync.watch_progress <> invalid
