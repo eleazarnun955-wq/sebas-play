@@ -51,6 +51,11 @@ sub onUrlEntered()
         m.top.dialog = invalid
         return
     end if
+    if Right(lowerUrl, 13) = "/api/catalog" then
+        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 12)
+    else if Right(lowerUrl, 7) = "/health" then
+        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
+    end if
     m.top.dialog = invalid
     askLaptopToken()
 end sub
@@ -70,7 +75,7 @@ sub onTokenEntered()
         m.top.dialog = invalid
         return
     end if
-    m.laptopToken = dialog.text
+    m.laptopToken = Trim(dialog.text)
     m.top.dialog = invalid
     m.registry.Write("laptopUrl", m.laptopUrl)
     m.registry.Write("laptopToken", m.laptopToken)
