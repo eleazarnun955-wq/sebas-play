@@ -77,6 +77,12 @@ sub onTokenEntered()
     end if
     m.laptopToken = Trim(dialog.text)
     m.top.dialog = invalid
+    if m.laptopToken = ""
+        m.status.text = "Falta el token privado. Pulsa Conectar laptop y pega el código de acceso."
+        m.actions.SetFocus(true)
+        return
+    end if
+    m.status.text = "Verificando dirección y token de la laptop..."
     m.registry.Write("laptopUrl", m.laptopUrl)
     m.registry.Write("laptopToken", m.laptopToken)
     m.registry.Flush()
@@ -84,7 +90,7 @@ sub onTokenEntered()
 end sub
 
 sub loadCatalog()
-    m.status.text = "Conectando con tu biblioteca..."
+    m.status.text = "Conectando con tu biblioteca. Espera la respuesta del servidor..."
     if m.task <> invalid then m.task.control = "STOP"
     m.task = CreateObject("roSGNode", "CatalogTask")
     m.task.laptopUrl = m.laptopUrl
