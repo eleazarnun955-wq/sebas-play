@@ -3,7 +3,7 @@ name: SEBAS PLAY Windows media server checks
 on:
   workflow_dispatch:
   push:
-    branches: [main, feature/windows-media-server-android-roku, fix/windows-server-first-run, fix/windows-media-network-autostart, fix/sebas-play-connection-vlc-playback-20261125d]
+    branches: [main, feature/windows-media-server-android-roku, fix/windows-server-first-run, fix/windows-media-network-autostart, fix/sebas-play-connection-vlc-playback-20261125d, sebas-play-110-mi-laptop-vlc-independent-20261125]
     paths:
       - "server/windows-media/**"
       - ".github/workflows/windows-media-server.yml"
