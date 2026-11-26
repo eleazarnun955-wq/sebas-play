@@ -116,7 +116,7 @@ async function getFfmpegCapability() {
       const { stdout } = await execFileAsync("ffmpeg", ["-version"], {
         timeout: 2500, windowsHide: true, maxBuffer: 64 * 1024,
       });
-      const version = String(stdout || "").split(/\\r?\\n/, 1)[0].trim();
+      const version = String(stdout || "").split(/\r?\n/, 1)[0].trim();
       return { available: Boolean(version), version: version || null, reason: version ? null : "FFmpeg no devolvió información de versión." };
     } catch {
       return { available: false, version: null, reason: "FFmpeg no está instalado o no está disponible en PATH. La reproducción directa sigue funcionando." };
@@ -172,7 +172,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
   if (url.pathname === "/api/status" && req.method === "GET") {
-    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
     let storage = null;
     try { const stats = await fs.promises.statfs(ROOT); storage = { total_bytes:Number(stats.blocks) * Number(stats.bsize), free_bytes:Number(stats.bavail) * Number(stats.bsize) }; } catch {}
     const ffmpeg = await getFfmpegCapability();\n    return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, library_count:libraryIndex.length, active_streams:activeStreams.size, scan:scanState, storage, capabilities:{ ffmpeg } });
