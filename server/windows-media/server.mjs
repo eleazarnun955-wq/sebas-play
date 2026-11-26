@@ -85,7 +85,7 @@ async function readNfoMetadata(mediaPath) {
   const nfoPath = path.join(path.dirname(mediaPath), path.basename(mediaPath, path.extname(mediaPath)) + ".nfo");
   try {
     const stat = await fs.promises.stat(nfoPath);
-    if (!stat.isFile() || stat.size > 256 * 1024) return { modified_at:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
+    if (!stat.isFile() || stat.size > 256 * 1024) return { modified_at:null, title:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
     const xml = await fs.promises.readFile(nfoPath, "utf8");
     const value = (tag) => {
       const match = xml.match(new RegExp("<" + tag + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + tag + ">", "i"));
@@ -98,6 +98,7 @@ async function readNfoMetadata(mediaPath) {
       .map(match => decodeXmlText(match[1])).filter(Boolean).slice(0, 12);
     return {
       modified_at:stat.mtimeMs,
+      title:value("title") || null,
       synopsis:value("plot") || value("outline") || null,
       release_year:Number.isInteger(year) && year >= 1888 && year <= 2200 ? year : null,
       age_rating:value("mpaa") || null,
@@ -105,7 +106,7 @@ async function readNfoMetadata(mediaPath) {
       duration_minutes:Number.isInteger(runtime) && runtime > 0 && runtime <= 1000 ? runtime : null,
     };
   } catch {
-    return { modified_at:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
+    return { modified_at:null, title:null, synopsis:null, release_year:null, age_rating:null, genres:[], duration_minutes:null };
   }
 }
 
@@ -137,7 +138,7 @@ async function scanLibrary(previousItems = []) {
       } else {
         out.push({
           id:crypto.createHash("sha1").update(file).digest("hex"),
-          title:path.basename(ent.name, ext), file, size_bytes:st.size,
+          title:nfo.title || path.basename(ent.name, ext), file, size_bytes:st.size,
           modified_at:st.mtime.toISOString(), mime_type:MIME[ext],
           synopsis:nfo.synopsis, release_year:nfo.release_year, age_rating:nfo.age_rating,
           genres:nfo.genres, duration_minutes:nfo.duration_minutes, nfo_modified_at:nfo.modified_at,
