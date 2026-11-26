@@ -12,13 +12,15 @@ sub pairDevice()
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
+    request.SetTimeout(10)
     request.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
     request.SetRequest("POST")
     request.AddHeader("apikey", SebasPlayPublishableKey())
     request.AddHeader("Content-Type", "application/json")
     response = request.PostFromString(FormatJson(payload))
-    if response = invalid or response = "" then
-        m.top.errorMessage = "No se pudo conectar con el servicio de vinculación."
+    code = request.GetResponseCode()
+    if response = invalid or response = "" or code < 200 or code >= 300 then
+        m.top.errorMessage = "No se pudo conectar con el servicio de vinculación (HTTP " + code.ToStr() + ")."
         m.top.completed = true
         return
     end if
