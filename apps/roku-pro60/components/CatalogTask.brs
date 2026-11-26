@@ -124,7 +124,7 @@ function isDirectPlayableUrl(value as dynamic) as boolean
 end function
 
 sub loadPersonalSync(root as object)
-    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO50")
+    registry = CreateObject("roRegistrySection", "SEBASPLAYPRO60")
     token = registry.Read("device_token", "")
     if token = "" then return
 
