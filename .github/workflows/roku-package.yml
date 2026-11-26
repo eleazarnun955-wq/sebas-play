@@ -34,12 +34,22 @@ jobs:
           python3 generate-icons.py
           test -s images/icon_focus_hd.png
           test -s images/icon_side_hd.png
-      - name: Package Roku channel
+      - name: Package and verify Roku channel ZIP root
         run: |
+          mkdir -p dist/roku
           cd apps/roku
-          zip -r ../../SEBAS-PLAY-Roku-12-0.zip . -x "*.DS_Store"
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-12-0.zip . -x "*.DS_Store" "*.zip"
+          cd ../..
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-12-0.zip > dist/roku/package-files.txt
+          grep -qx "manifest" dist/roku/package-files.txt
+          ! grep -qE '(^|/)SEBAS-PLAY-Roku-12-0\.zip
+ dist/roku/package-files.txt
+          grep -qx "source/main.brs" dist/roku/package-files.txt
+          grep -qx "components/HomeScene.xml" dist/roku/package-files.txt
+          echo "Verified: manifest is at ZIP root and no nested ZIP is present."
       - uses: actions/upload-artifact@v4
         with:
           name: SEBAS-PLAY-12-0-ROKU-INDEPENDIENTE
-          path: SEBAS-PLAY-Roku-12-0.zip
+          path: dist/roku/SEBAS-PLAY-Roku-12-0.zip
+          if-no-files-found: error
           retention-days: 14
