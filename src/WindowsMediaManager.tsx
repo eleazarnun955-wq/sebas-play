@@ -43,7 +43,7 @@ export default function WindowsMediaManager() {
   const [serverUrl, setServerUrl] = useState("");
   const [token, setToken] = useState("");
   const [items, setItems] = useState<MediaItem[]>([]);
-  const [scanCounts, setScanCounts] = useState({ movies: 0, episodes: 0 });
+  const [scanCounts, setScanCounts] = useState({ movies: 0, episodes: 0, series: 0, seasons: 0 });
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState("");
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
@@ -62,7 +62,7 @@ export default function WindowsMediaManager() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
       setItems((payload.items || []) as MediaItem[]);
-      setScanCounts(payload.counts || { movies: payload.count || 0, episodes: 0 });
+      setScanCounts(payload.counts || { movies: payload.count || 0, episodes: 0, series: 0, seasons: 0 });
       setConnected(true);
       setMessage({ kind: "ok", text: `Conectado. Se encontraron ${payload.count || 0} videos compatibles.` });
     } catch (error) {
@@ -95,7 +95,7 @@ export default function WindowsMediaManager() {
       if (!catalogResponse.ok) throw new Error(catalog.error || "No se pudo actualizar el catálogo del servidor.");
       const nextItems = (catalog.items || []) as MediaItem[];
       setItems(nextItems);
-      setScanCounts(catalog.counts || { movies: catalog.count || 0, episodes: 0 });
+      setScanCounts(catalog.counts || { movies: catalog.count || 0, episodes: 0, series: 0, seasons: 0 });
       const uploaded = nextItems.find(item => item.file === result.file);
       if (uploaded) await importMovie(uploaded);
       else setMessage({ kind: "ok", text: `${file.name} se guardó en la laptop. Actualiza la biblioteca para agregarlo al catálogo.` });
@@ -150,7 +150,7 @@ export default function WindowsMediaManager() {
         </div>
       </div>
       {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
-      <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos · {scanCounts.movies} películas · {scanCounts.episodes} episodios detectados</p></div><button className="secondary-btn" onClick={() => void connect()} disabled={loading || !connected}><RefreshCw size={15} /> Actualizar</button></div>
+      <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos · {scanCounts.movies} películas · {scanCounts.series} series · {scanCounts.seasons} temporadas · {scanCounts.episodes} episodios</p></div><button className="secondary-btn" onClick={() => void connect()} disabled={loading || !connected}><RefreshCw size={15} /> Actualizar</button></div>
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
         <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type} · {item.media_type === "episode" ? `Episodio T${item.season_number} E${item.episode_number}` : `Película${item.year ? ` · ${item.year}` : ""}`}</small></div>{item.media_type === "episode" ? <span className="wm-episode-tag">Episodio detectado</span> : <button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button>}</div>)}</div>}
       <p className="wm-footnote">Los títulos se guardan como borradores. Revisa los derechos, la portada y la información de cada ficha antes de publicarla. Renueva los enlaces firmados desde aquí antes de que venzan.</p>
