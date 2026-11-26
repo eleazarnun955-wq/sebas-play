@@ -72,6 +72,11 @@ try {
   const catalog = await catalogResponse.json();
   assert.equal(catalog.count, 6, "catalog must include MP4, MKV, AVI, recursively found WebM, an episode and the uploaded MP4");
   assert.equal(catalog.counts.episodes, 1, "automatic scan must identify SxxExx episode names");
+  assert.equal(catalog.counts.series, 1, "episodes must be grouped into series");
+  assert.equal(catalog.counts.seasons, 1, "episodes must be grouped into seasons");
+  assert.equal(catalog.series[0].title, "The Office");
+  assert.equal(catalog.series[0].seasons[0].season_number, 2);
+  assert.equal(catalog.series[0].seasons[0].episodes[0].episode_number, 3);
   assert.ok(catalog.items.some(item => item.media_type === "episode" && item.series_title === "The Office" && item.season_number === 2 && item.episode_number === 3));
   assert.ok(catalog.items.some(item => item.media_type === "movie" && item.year === null));
   assert.ok(catalog.items.some(item => item.file === "sample.mkv" && item.mime_type === "video/x-matroska"));
