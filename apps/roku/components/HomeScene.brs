@@ -51,7 +51,7 @@ sub onUrlEntered()
         m.top.dialog = invalid
         return
     end if
-    if Right(lowerUrl, 13) = "/api/catalog" then
+    if Right(lowerUrl, 12) = "/api/catalog" then
         m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 12)
     else if Right(lowerUrl, 7) = "/health" then
         m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
