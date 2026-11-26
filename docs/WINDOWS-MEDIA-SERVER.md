@@ -14,7 +14,7 @@ Al consultar el catálogo, el servidor construye cada URL de video usando el hos
 
 ## Integración Android y Roku
 
-Android y Roku consultan los registros publicados en Supabase. El panel administrador consulta el catálogo local de la laptop, permite cargar videos y guarda cada ficha como borrador en Supabase. Revisa los derechos y los datos de la ficha antes de publicarla. Las URLs firmadas duran 30 días por defecto; al vencer, vuelve a importar/renovar el enlace desde el panel.
+Android y Roku consultan los registros publicados en Supabase. El panel administrador consulta el catálogo local de la laptop, permite cargar videos y guarda cada ficha como borrador en Supabase. Revisa los derechos y los datos de la ficha antes de publicarla. Desde Android, **Sincronizar todo al catálogo** agrega en lotes los archivos nuevos como borradores y renueva los enlaces firmados de los que ya existen; no publica automáticamente ningún contenido. Las URLs firmadas duran 30 días por defecto; al vencer, vuelve a importar/renovar el enlace desde el panel.
 
 Roku usa el reproductor nativo y requiere que el contenedor, códec y URL sean compatibles. Se recomienda MP4 H.264/AAC. El servidor no transcodifica.
 
