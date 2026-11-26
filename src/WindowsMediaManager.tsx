@@ -12,6 +12,11 @@ type MediaItem = {
   size_bytes: number;
   mime_type: string;
   stream_url: string;
+  synopsis?: string | null;
+  release_year?: number | null;
+  age_rating?: string | null;
+  genres?: string[];
+  duration_minutes?: number | null;
 };
 
 function normalizeServerBase(value: string) {
@@ -156,6 +161,11 @@ export default function WindowsMediaManager() {
     }
     const record = {
       title: item.title,
+      synopsis: item.synopsis || null,
+      release_year: item.release_year || null,
+      age_rating: item.age_rating || null,
+      genres: item.genres || [],
+      duration_minutes: item.duration_minutes || null,
       video_url: item.stream_url,
       source_type: "owned_upload",
       rights_note: rightsNote,
