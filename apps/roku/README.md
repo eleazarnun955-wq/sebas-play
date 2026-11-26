@@ -1,6 +1,6 @@
-# SEBAS PLAY para Roku 12.0
+# SEBAS PLAY para Roku 13.0
 
-Canal Roku SceneGraph independiente del APK Android y de SEBAS PLAY 11.0.
+Canal Roku SceneGraph independiente de SEBAS PLAY 12.0, 11.0 y del APK Android.
 
 ## Catálogo y laptop
 - El canal consulta películas, series y canales publicados en Supabase.
