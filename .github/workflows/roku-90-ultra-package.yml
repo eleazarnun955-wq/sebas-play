@@ -1,0 +1,45 @@
+name: SEBAS PLAY 9.0 ULTRA — Roku independiente
+
+on:
+  push:
+    branches: [sebas-play-90-ultra-roku-independent-20261126]
+    paths:
+      - "apps/roku-90-ultra/**"
+      - ".github/workflows/roku-90-ultra-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-roku:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate independent 9.0 ULTRA channel
+        run: |
+          test -f apps/roku-90-ultra/manifest
+          test -f apps/roku-90-ultra/source/main.brs
+          test -f apps/roku-90-ultra/components/HomeScene.xml
+          test -f apps/roku-90-ultra/components/CatalogTask.brs
+          test -f apps/roku-90-ultra/components/PlayerScene.xml
+          test -f apps/roku-90-ultra/components/PairingTask.xml
+          test -f apps/roku-90-ultra/components/ProgressTask.xml
+          grep -q '^title=SEBAS PLAY 9.0 ULTRA$' apps/roku-90-ultra/manifest
+          grep -q '^major_version=9$' apps/roku-90-ultra/manifest
+          grep -q 'SEBASPLAY90ULTRA' apps/roku-90-ultra/components/PairingTask.brs
+          grep -q 'SEBASPLAY90ULTRA' apps/roku-90-ultra/components/CatalogTask.brs
+          grep -q 'SEBASPLAY90ULTRA' apps/roku-90-ultra/components/HomeScene.brs
+          grep -q 'functions/v1/roku-device-sync?action=sync' apps/roku-90-ultra/components/CatalogTask.brs
+          ! grep -R 'SEBASPLAY80ULTRA' apps/roku-90-ultra
+      - name: Package Roku channel for developer installation
+        run: |
+          cd apps/roku-90-ultra
+          zip -r ../../SEBAS-PLAY-9.0-ULTRA-ROKU.zip . -x "*.DS_Store"
+          unzip -l ../../SEBAS-PLAY-9.0-ULTRA-ROKU.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-9.0-ULTRA-ROKU
+          path: SEBAS-PLAY-9.0-ULTRA-ROKU.zip
+          if-no-files-found: error
+          retention-days: 30
