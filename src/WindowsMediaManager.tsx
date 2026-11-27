@@ -52,13 +52,7 @@ export default function WindowsMediaManager() {
     }
     setLoading(true); setMessage(null);
     try {
-      // Check reachability first, without credentials or a custom header. This avoids
-      // Android WebView cross-origin preflight failures on the laptop's local HTTP server.
-      const healthResponse = await fetch(`${base}/health`, { cache: "no-store" });
-      if (!healthResponse.ok) throw new Error(`La laptop respondió con HTTP ${healthResponse.status} en /health.`);
-      const catalogUrl = new URL(`${base}/api/catalog`);
-      catalogUrl.searchParams.set("access_token", token.trim());
-      const response = await fetch(catalogUrl.toString(), { cache: "no-store" });
+      const response = await fetch(`${base}/api/catalog`, { headers: { Authorization: `Bearer ${token.trim()}` } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
       setItems((payload.items || []) as MediaItem[]);
@@ -82,21 +76,14 @@ export default function WindowsMediaManager() {
     setUploading(true); setMessage(null);
     try {
     const base = normalizeServerBase(serverUrl);
-      const uploadUrl = new URL(`${base}/api/upload`);
-      uploadUrl.searchParams.set("name", file.name);
-      uploadUrl.searchParams.set("access_token", token.trim());
-      const response = await fetch(uploadUrl.toString(), {
+      const response = await fetch(`${base}/api/upload?name=${encodeURIComponent(file.name)}`, {
         method: "POST",
-        // The server detects the video format from its filename. text/plain is a
-        // CORS-safelisted content type, avoiding an OPTIONS preflight in Android WebView.
-        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        headers: { Authorization: `Bearer ${token.trim()}`, "Content-Type": file.type || "application/octet-stream" },
         body: file,
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || `Error HTTP ${response.status}`);
-      const catalogUrl = new URL(`${base}/api/catalog`);
-      catalogUrl.searchParams.set("access_token", token.trim());
-      const catalogResponse = await fetch(catalogUrl.toString(), { cache: "no-store" });
+      const catalogResponse = await fetch(`${base}/api/catalog`, { headers: { Authorization: `Bearer ${token.trim()}` } });
       const catalog = await catalogResponse.json();
       if (!catalogResponse.ok) throw new Error(catalog.error || "No se pudo actualizar el catálogo del servidor.");
       const nextItems = (catalog.items || []) as MediaItem[];
