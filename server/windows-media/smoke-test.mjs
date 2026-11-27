@@ -43,6 +43,9 @@ try {
 
   const deniedCapabilities = await fetch("http://127.0.0.1:18787/api/capabilities");
   assert.equal(deniedCapabilities.status, 401, "capabilities must require admin token");
+
+  const queryTokenCapabilities = await fetch("http://127.0.0.1:18787/api/capabilities?access_token=" + encodeURIComponent(env.SEBAS_ACCESS_TOKEN));
+  assert.equal(queryTokenCapabilities.status, 401, "admin credentials in query strings must be rejected to prevent URL/log leakage");
   const capabilitiesResponse = await fetch("http://127.0.0.1:18787/api/capabilities", { headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN } });
   assert.equal(capabilitiesResponse.status, 200, "authorized clients must be able to inspect server capabilities");
   const capabilities = await capabilitiesResponse.json();
