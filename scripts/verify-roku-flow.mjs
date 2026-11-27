@@ -9,11 +9,13 @@ const catalogXml = read("apps/roku/components/CatalogTask.xml");
 const player = read("apps/roku/components/PlayerScene.brs");
 const playerXml = read("apps/roku/components/PlayerScene.xml");
 
-assert.match(homeXml, /<Timer id="dialogTransitionTimer" duration="0\.2" repeat="false"/, "Roku dialog transition timer must exist in the scene");
+assert.match(homeXml, /<Timer id="dialogTransitionTimer" duration="0\.8" repeat="false"/, "Roku dialog transition timer must exist in the scene");
 assert.match(home, /FindNode\("dialogTransitionTimer"\)/, "HomeScene must bind the transition timer");
 assert.match(home, /ObserveField\("fire", "onDialogTransitionTimer"\)/, "HomeScene must observe timer completion");
 assert.match(home, /dialog\.ObserveField\("buttonSelected", "onUrlEntered"\)/, "URL dialog must route its selection to onUrlEntered");
-assert.match(home, /m\.dialogTransition = "token"[\s\S]*m\.dialogTimer\.control = "start"/, "URL acceptance must schedule the token dialog");
+assert.match(home, /m\.dialogTransition = "token"[\s\S]*m\.dialogTimer\.control = "stop"[\s\S]*m\.dialogTimer\.control = "start"/, "URL acceptance must restart a clean token-dialog timer");
+assert.match(home, /m\.urlDialogPending = true[\s\S]*m\.top\.dialog = invalid/, "URL handoff must lock repeated dialog callbacks before closing the URL dialog");
+assert.match(home, /m\.dialogTransition = ""[\s\S]*m\.urlDialogPending = false[\s\S]*askLaptopToken\(\)/, "Token dialog must open only after the pending handoff completes");
 assert.match(home, /sub onDialogTransitionTimer\(\)[\s\S]*askLaptopToken\(\)/, "Timer completion must open the token dialog");
 assert.match(home, /dialog\.ObserveField\("buttonSelected", "onTokenEntered"\)/, "Token dialog must route its selection to onTokenEntered");
 assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Successful token entry must persist URL and token in the isolated registry");
