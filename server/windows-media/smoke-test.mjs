@@ -49,6 +49,9 @@ try {
   assert.equal(typeof capabilities.ffmpeg.installed, "boolean");
   assert.equal(capabilities.ffmpeg.transcodingEndpoint, capabilities.ffmpeg.installed, "the signed Roku conversion endpoint must be enabled exactly when FFmpeg is detected");
 
+  const unsignedTranscode = await fetch("http://127.0.0.1:18787/transcode/sample.mkv");
+  assert.equal(unsignedTranscode.status, 401, "transcoding must reject unsigned requests before exposing FFmpeg status or capacity");
+
   const landing = await fetch("http://127.0.0.1:18787/");
   assert.equal(landing.status, 200, "server home page must load");
   assert.match(await landing.text(), /SEBAS PLAY/);
