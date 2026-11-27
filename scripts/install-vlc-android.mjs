@@ -97,6 +97,7 @@ import java.net.URL;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class VlcPlaybackActivity extends Activity {
     private LibVLC libVLC;
@@ -112,6 +113,7 @@ public class VlcPlaybackActivity extends Activity {
     private boolean resumeApplied = false;
     private boolean finishedProgressCleared = false;
     private long lastRemoteSyncSeconds = -10;
+    private final AtomicBoolean syncInFlight = new AtomicBoolean(false);
     private String supabaseUrl = "";
     private String anonKey = "";
     private String accessToken = "";
@@ -262,6 +264,7 @@ public class VlcPlaybackActivity extends Activity {
             accessToken == null || accessToken.isEmpty() || userId == null || userId.isEmpty() ||
             contentId == null || contentId.isEmpty() ||
             !("movie".equals(contentType) || "episode".equals(contentType))) return;
+        if (!syncInFlight.compareAndSet(false, true)) return;
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
@@ -291,8 +294,9 @@ public class VlcPlaybackActivity extends Activity {
             } catch (Exception ignored) {
             } finally {
                 if (connection != null) connection.disconnect();
+                syncInFlight.set(false);
             }
-        }).start();
+        }, "SebasPlayProgressSync").start();
     }
 
     private void releasePlayer() {
