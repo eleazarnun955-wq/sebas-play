@@ -228,6 +228,22 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     if response = invalid or response = "" then return
     parsed = ParseJson(response)
     if type(parsed) <> "roArray" then return
+    epgPrograms = []
+    currentIso = CreateObject("roDateTime").ToISOString()
+    if tableName = "live_channels"
+        epgRequest = CreateObject("roUrlTransfer")
+        epgRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
+        epgRequest.InitClientCertificates()
+        epgRequest.SetUrl(baseUrl + "/rest/v1/epg_programs?select=channel_id,title,starts_at,ends_at&is_published=eq.true&ends_at=gt." + currentIso + "&order=starts_at.asc&limit=200")
+        epgRequest.AddHeader("apikey", key)
+        epgRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
+        epgRequest.AddHeader("Accept", "application/json")
+        epgResponse = epgRequest.GetToString()
+        if epgResponse <> invalid and epgResponse <> ""
+            parsedEpg = ParseJson(epgResponse)
+            if type(parsedEpg) = "roArray" then epgPrograms = parsedEpg
+        end if
+    end if
     section = CreateObject("roSGNode", "ContentNode")
     section.Title = sectionTitle
     for each entry in parsed
@@ -235,6 +251,19 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
         if tableName = "live_channels"
             item.Title = safeString(entry.name)
             item.Description = safeString(entry.category)
+            for each program in epgPrograms
+                if safeString(program.channel_id) = safeString(entry.id)
+                    programTitle = safeString(program.title)
+                    programStart = safeString(program.starts_at)
+                    programEnd = safeString(program.ends_at)
+                    if programStart <= currentIso and programEnd > currentIso
+                        item.Description = "EN VIVO: " + programTitle
+                    else if programStart > currentIso and programTitle <> ""
+                        item.Description = "PRÓXIMO: " + programTitle
+                    end if
+                    if item.Description <> "" then exit for
+                end if
+            end for
             item.Url = safeString(entry.stream_url)
             item.HDPosterUrl = safeString(entry.logo_url)
             item.AddFields({ contentType: "channel", contentId: safeString(entry.id) })
