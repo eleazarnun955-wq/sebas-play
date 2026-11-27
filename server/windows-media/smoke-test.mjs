@@ -9,6 +9,7 @@ const sample = Buffer.from("SEBAS-PLAY-TEST");
 await fs.writeFile(path.join(temp, "sample.mp4"), sample);
 await fs.writeFile(path.join(temp, "sample.mkv"), Buffer.from("MKV-TEST"));
 await fs.writeFile(path.join(temp, "sample.avi"), Buffer.from("AVI-TEST"));
+for (let i = 0; i < 40; i++) await fs.writeFile(path.join(temp, `bulk-${String(i).padStart(3, "0")}.mp4`), Buffer.from("BULK-TEST"));
 await fs.writeFile(path.join(temp, "The Office S02E03 - Office Olympics.mp4"), Buffer.from("EPISODE-TEST"));
 await fs.writeFile(path.join(temp, "The Office 1x02 - Diversity Day.mp4"), Buffer.from("EPISODE-TEST-2"));
 await fs.mkdir(path.join(temp, "The Bear", "Season 01"), { recursive: true });
@@ -93,7 +94,8 @@ try {
   });
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
-  assert.equal(catalog.count, 8, "catalog must include MP4, MKV, AVI, recursively found WebM, three episodes and the uploaded MP4");
+  assert.equal(catalog.count, 48, "catalog must include MP4, MKV, AVI, recursively found WebM, three episodes, uploaded MP4 and 40 bulk-scanned files");
+  assert.equal(catalog.items.filter(item => item.file.startsWith("bulk-") && item.mime_type === "video/mp4").length, 40, "bounded parallel scanning must include every file in a large folder");
   assert.equal(catalog.counts.episodes, 3, "automatic scan must identify filename patterns and episode numbers inside season folders");
   assert.equal(catalog.counts.series, 2, "episodes must be grouped into series using filename or parent folders");
   assert.equal(catalog.counts.seasons, 3, "episodes must be grouped into seasons, including Season folders");
