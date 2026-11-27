@@ -131,7 +131,11 @@ const server = http.createServer(async (req, res) => {
     return res.end(html);
   }
   if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
-  if (url.pathname === "/api/capabilities" && req.method === "GET") {\n    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");\n    return json(res, 200, { ok:true, server:"SEBAS PLAY 13.0", formats:Object.keys(MIME).map(ext => ext.slice(1)), rangePlayback:true, automaticLibraryScan:true, ffmpeg:getFfmpegStatus() });\n  }\n  if (url.pathname === "/api/upload" && req.method === "POST") {
+  if (url.pathname === "/api/capabilities" && req.method === "GET") {
+    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    return json(res, 200, { ok:true, server:"SEBAS PLAY 13.0", formats:Object.keys(MIME).map(ext => ext.slice(1)), rangePlayback:true, automaticLibraryScan:true, ffmpeg:getFfmpegStatus() });
+  }
+  if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
     if (!Number.isSafeInteger(length) || length <= 0) return sendError(res, 411, "Se requiere Content-Length");
