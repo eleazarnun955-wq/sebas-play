@@ -133,50 +133,60 @@ export default function StorageManager() {
   }
 
   async function uploadToCloud() {
-    if (!supabase || !selectedFile) return;
-    if (!selectedFile.name.toLowerCase().endsWith(".mp4") || selectedFile.type !== "" && selectedFile.type !== "video/mp4") {
+    if (!supabase || !selectedFile || busy) return;
+    const file = selectedFile;
+    const title = cloudTitle.trim() || file.name.replace(/\\.[^.]+$/, "");
+    const rights = rightsNote.trim();
+    if (!file.name.toLowerCase().endsWith(".mp4") || file.type !== "" && file.type !== "video/mp4") {
       setNotice({ type: "error", text: "Para la nube y Roku utiliza MP4 (H.264/AAC) para mayor compatibilidad." });
       return;
     }
-    if (selectedFile.size > MAX_CLOUD_BYTES) {
+    if (file.size > MAX_CLOUD_BYTES) {
       setNotice({ type: "error", text: "El plan gratuito de Supabase limita cada archivo a 50 MB. Comprime el video o guárdalo localmente." });
       return;
     }
-    if (!rightsNote.trim()) {
+    if (!rights) {
       setNotice({ type: "error", text: "Confirma el origen o autorización del contenido antes de subirlo." });
       return;
     }
     setBusy(true);
     setNotice(null);
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) {
-      setBusy(false);
-      setNotice({ type: "error", text: "La sesión expiró. Vuelve a iniciar sesión." });
-      return;
-    }
-    const objectPath = auth.user.id + "/" + crypto.randomUUID() + ".mp4";
+    let objectPath: string | null = null;
+    let uploaded = false;
     try {
-      const { error: uploadError } = await supabase.storage.from(CLOUD_BUCKET).upload(objectPath, selectedFile, {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!auth.user) throw new Error("La sesión expiró. Vuelve a iniciar sesión.");
+      objectPath = auth.user.id + "/" + crypto.randomUUID() + ".mp4";
+      const { error: uploadError } = await supabase.storage.from(CLOUD_BUCKET).upload(objectPath, file, {
         cacheControl: "3600", contentType: "video/mp4", upsert: false,
       });
       if (uploadError) throw uploadError;
+      uploaded = true;
       const { data: publicData } = supabase.storage.from(CLOUD_BUCKET).getPublicUrl(objectPath);
       const { error: insertError } = await supabase.from("movies").insert({
-        title: cloudTitle.trim() || selectedFile.name.replace(/\.[^.]+$/, ""),
+        title,
         video_url: publicData.publicUrl,
         source_type: "owned_upload",
-        rights_note: rightsNote.trim(),
+        rights_note: rights,
         is_published: false,
       });
-      if (insertError) {
-        await supabase.storage.from(CLOUD_BUCKET).remove([objectPath]);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
+      uploaded = false;
       setNotice({ type: "ok", text: "Video subido y registrado como borrador. Revísalo y publícalo desde Películas para que aparezca en Android y Roku." });
-      setSelectedFile(null);
+      setSelectedFile(current => current === file ? null : current);
       setRightsNote("");
     } catch (error) {
-      setNotice({ type: "error", text: error instanceof Error ? error.message : "No se pudo subir el video. Verifica el bucket y sus políticas." });
+      if (uploaded && objectPath) {
+        const { error: cleanupError } = await supabase.storage.from(CLOUD_BUCKET).remove([objectPath]);
+        if (cleanupError) {
+          setNotice({ type: "error", text: "No se pudo registrar el video y tampoco confirmar la limpieza del archivo subido. Revisa Storage antes de volver a intentarlo. " + cleanupError.message });
+        } else {
+          setNotice({ type: "error", text: error instanceof Error ? error.message : "No se pudo subir el video. Verifica el bucket y sus políticas." });
+        }
+      } else {
+        setNotice({ type: "error", text: error instanceof Error ? error.message : "No se pudo subir el video. Verifica el bucket y sus políticas." });
+      }
     } finally { setBusy(false); }
   }
 
