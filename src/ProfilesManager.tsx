@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Users, Plus, ShieldCheck, Trash2, RefreshCw, LockKeyhole } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import "./profiles-manager.css";
@@ -19,6 +19,7 @@ export default function ProfilesManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const loadSequence = useRef(0);
 
   const call = useCallback(async (body: Record<string, unknown>) => {
     if (!supabase) throw new Error("Supabase no está configurado.");
@@ -29,16 +30,18 @@ export default function ProfilesManager() {
   }, []);
 
   const load = useCallback(async () => {
+    const request = ++loadSequence.current;
     setLoading(true);
     try {
       const data = await call({ action: "list-profiles" });
+      if (request !== loadSequence.current) return;
       setProfiles((data.profiles || []) as FamilyProfile[]);
     } catch (error) {
-      setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudieron cargar los perfiles." });
-    } finally { setLoading(false); }
+      if (request === loadSequence.current) setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudieron cargar los perfiles." });
+    } finally { if (request === loadSequence.current) setLoading(false); }
   }, [call]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); return () => { loadSequence.current++; }; }, [load]);
 
   async function createProfile(event: React.FormEvent) {
     event.preventDefault();
