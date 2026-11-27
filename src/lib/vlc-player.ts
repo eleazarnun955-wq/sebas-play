@@ -7,6 +7,7 @@ type VlcProgressContext = {
   userId: string;
   contentType: "movie" | "episode";
   contentId: string;
+  profileId?: string | null;
 };
 
 type VlcPlayerPlugin = {
