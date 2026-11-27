@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link2, RefreshCw, Smartphone, Tv, Unplug, Copy, Clock3 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import "./device-sync-manager.css";
@@ -12,6 +12,7 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
   const [loading,setLoading]=useState(false);
   const [notice,setNotice]=useState("");
   const [error,setError]=useState("");
+  const refreshSequence=useRef(0);
 
   const call=useCallback(async(body:Record<string,unknown>)=>{
     if(!supabase) throw new Error("Supabase no está conectado.");
@@ -22,14 +23,18 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
   },[]);
 
   const refresh=useCallback(async(showLoading=true)=>{
+    const requestId=++refreshSequence.current;
     if(showLoading)setLoading(true);
     setError("");
-    try { const data=await call({action:"devices",profile_id:profileId});setDevices((data.devices||[]) as PairedDevice[]); }
-    catch(e){setError(e instanceof Error?e.message:"No se pudieron consultar los dispositivos.");}
-    finally{if(showLoading)setLoading(false);}
+    try {
+      const data=await call({action:"devices",profile_id:profileId});
+      if(requestId===refreshSequence.current)setDevices((data.devices||[]) as PairedDevice[]);
+    }
+    catch(e){if(requestId===refreshSequence.current)setError(e instanceof Error?e.message:"No se pudieron consultar los dispositivos.");}
+    finally{if(showLoading&&requestId===refreshSequence.current)setLoading(false);}
   },[call,profileId]);
 
-  useEffect(()=>{setDevices([]);setCode(null);setNotice("");setError("");void refresh();},[profileId,refresh]);
+  useEffect(()=>{refreshSequence.current++;setDevices([]);setCode(null);setNotice("");setError("");void refresh();},[profileId,refresh]);
   useEffect(()=>{
     if(!code)return;
     const remaining=Math.max(0,new Date(code.expires_at).getTime()-Date.now());
