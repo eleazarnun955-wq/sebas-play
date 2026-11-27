@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CloudUpload, HardDrive, Play, Trash2, Film, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import "./storage-manager.css";
@@ -66,23 +66,27 @@ export default function StorageManager() {
   const [quota, setQuota] = useState<{ usage: number; quota: number } | null>(null);
   const [playing, setPlaying] = useState<LocalMovie | null>(null);
   const [playUrl, setPlayUrl] = useState("");
+  const refreshSequence = useRef(0);
 
   const localTotal = useMemo(() => localMovies.reduce((sum, movie) => sum + movie.size, 0), [localMovies]);
 
   async function refresh() {
+    const request = ++refreshSequence.current;
     try {
       const items = await listLocalMovies();
+      if (request !== refreshSequence.current) return;
       setLocalMovies(items.sort((a, b) => b.createdAt - a.createdAt));
       if (navigator.storage?.estimate) {
         const estimate = await navigator.storage.estimate();
+        if (request !== refreshSequence.current) return;
         setQuota({ usage: estimate.usage ?? 0, quota: estimate.quota ?? 0 });
       }
     } catch (error) {
-      setNotice({ type: "error", text: error instanceof Error ? error.message : "No se pudo leer la biblioteca local." });
+      if (request === refreshSequence.current) setNotice({ type: "error", text: error instanceof Error ? error.message : "No se pudo leer la biblioteca local." });
     }
   }
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => { void refresh(); return () => { refreshSequence.current++; }; }, []);
   useEffect(() => {
     if (!playing) { setPlayUrl(""); return; }
     const url = URL.createObjectURL(playing.file);
