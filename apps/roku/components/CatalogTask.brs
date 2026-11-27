@@ -158,7 +158,10 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     for each entry in parsed.items
         fileName = LCase(safeString(entry.file))
         streamUrl = safeString(entry.stream_url)
-        if Right(fileName, 4) = ".mp4" and streamUrl <> ""
+        mediaType = safeString(entry.media_type)
+        if mediaType = "episode"
+            if Right(fileName, 4) <> ".mp4" then unsupportedCount = unsupportedCount + 1
+        else if Right(fileName, 4) = ".mp4" and streamUrl <> ""
             item = section.CreateChild("ContentNode")
             item.Title = safeString(entry.title)
             item.Description = safeString(entry.file) + " · MP4 para Roku"
@@ -209,7 +212,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     end if
 
     m.top.errorMessage = "Laptop conectada: " + parsed.items.Count().ToStr() + " archivos; " + playableCount.ToStr() + " películas MP4 y " + episodeCount.ToStr() + " episodios MP4 en " + seriesCount.ToStr() + " temporadas disponibles en Roku."
-    if playableCount = 0 then m.top.errorMessage = m.top.errorMessage + " No hay MP4 con enlace reproducible para Roku."
+    if playableCount = 0 and episodeCount = 0 then m.top.errorMessage = m.top.errorMessage + " No hay MP4 con enlace reproducible para Roku."
     if unsupportedCount > 0 then m.top.errorMessage = m.top.errorMessage + " Otros " + unsupportedCount.ToStr() + " archivos se pueden abrir en Android con VLC."
 end sub
 
