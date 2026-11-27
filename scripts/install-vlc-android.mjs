@@ -163,8 +163,14 @@ public class VlcPlaybackActivity extends Activity {
             if (player.isPlaying()) { player.pause(); playPause.setText("Reproducir"); }
             else { player.play(); playPause.setText("Pausar"); }
         });
+        Button skipBack = new Button(this); skipBack.setText("−10 s");
+        skipBack.setOnClickListener(v -> { if (player != null) player.setTime(Math.max(0, player.getTime() - 10000)); });
+        Button skipForward = new Button(this); skipForward.setText("+10 s");
+        skipForward.setOnClickListener(v -> { if (player != null && player.getLength() > 0) player.setTime(Math.min(player.getLength(), player.getTime() + 10000)); });
         row.addView(back, new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(skipBack, new LinearLayout.LayoutParams(0, -2, 1));
         row.addView(playPause, new LinearLayout.LayoutParams(0, -2, 1));
+        row.addView(skipForward, new LinearLayout.LayoutParams(0, -2, 1));
         controls.addView(row);
         seekBar = new SeekBar(this);
         seekBar.setMax(1000);
