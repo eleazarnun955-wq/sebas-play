@@ -232,7 +232,7 @@ const server = http.createServer(async (req, res) => {
       if (code !== 0 && !res.headersSent) sendError(res, 500, "FFmpeg no pudo convertir este archivo.");
       else if (!res.writableEnded) res.end();
     });
-    req.on("close", () => { if (!res.writableEnded && !ff.killed) ff.kill("SIGKILL"); finish(); });
+    res.on("close", () => { if (!res.writableEnded && !ff.killed) ff.kill("SIGKILL"); finish(); });
     return;
   }
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/media/")) {
