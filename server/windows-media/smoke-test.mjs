@@ -10,6 +10,7 @@ await fs.writeFile(path.join(temp, "sample.mp4"), sample);
 await fs.writeFile(path.join(temp, "sample.mkv"), Buffer.from("MKV-TEST"));
 await fs.writeFile(path.join(temp, "sample.avi"), Buffer.from("AVI-TEST"));
 await fs.writeFile(path.join(temp, "The Office S02E03 - Office Olympics.mp4"), Buffer.from("EPISODE-TEST"));
+await fs.writeFile(path.join(temp, "The Office 1x02 - Diversity Day.mp4"), Buffer.from("EPISODE-TEST-2"));
 await fs.mkdir(path.join(temp, "Subcarpeta"), { recursive: true });
 await fs.writeFile(path.join(temp, "Subcarpeta", "episode.webm"), Buffer.from("WEBM-TEST"));
 const env = {
@@ -70,12 +71,14 @@ try {
   });
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
-  assert.equal(catalog.count, 6, "catalog must include MP4, MKV, AVI, recursively found WebM, an episode and the uploaded MP4");
-  assert.equal(catalog.counts.episodes, 1, "automatic scan must identify SxxExx episode names");
+  assert.equal(catalog.count, 7, "catalog must include MP4, MKV, AVI, recursively found WebM, two episodes and the uploaded MP4");
+  assert.equal(catalog.counts.episodes, 2, "automatic scan must identify SxxExx and NxNN episode names");
   assert.equal(catalog.counts.series, 1, "episodes must be grouped into series");
-  assert.equal(catalog.counts.seasons, 1, "episodes must be grouped into seasons");
+  assert.equal(catalog.counts.seasons, 2, "episodes must be grouped into seasons");
   assert.equal(catalog.series[0].title, "The Office");
-  assert.equal(catalog.series[0].seasons[0].season_number, 2);
+  assert.equal(catalog.series[0].seasons[0].season_number, 1);
+  assert.equal(catalog.series[0].seasons[0].episodes[0].episode_number, 2);
+  assert.equal(catalog.series[0].seasons[1].season_number, 2);
   assert.equal(catalog.series[0].seasons[0].episodes[0].episode_number, 3);
   assert.ok(catalog.items.some(item => item.media_type === "episode" && item.series_title === "The Office" && item.season_number === 2 && item.episode_number === 3));
   assert.ok(catalog.items.some(item => item.media_type === "movie" && item.year === null));
