@@ -32,7 +32,7 @@ sub onActionSelected()
     if index = 0
         askLaptopUrl()
     else if index = 1
-        loadCatalog()
+        if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
     else if index = 2
         askRokuPairCode()
     end if
