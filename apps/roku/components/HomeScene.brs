@@ -22,8 +22,7 @@ sub init()
     m.syncedFavorites = []
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
-    if m.deviceToken <> "" then syncRokuAccount()
-    loadCatalog()
+    if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
     m.actions.SetFocus(true)
 end sub
 
