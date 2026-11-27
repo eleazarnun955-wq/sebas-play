@@ -1,0 +1,78 @@
+name: SEBAS PLAY 13.0 release readiness
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [sebas-play-13-0-independent-full-improvements-20261126]
+    paths:
+      - "src/**"
+      - "apps/roku/**"
+      - "server/windows-media/**"
+      - "scripts/**"
+      - "capacitor.config.ts"
+      - "package.json"
+      - ".github/workflows/release-readiness.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "apps/roku/**"
+      - "server/windows-media/**"
+      - "scripts/**"
+      - "capacitor.config.ts"
+      - "package.json"
+
+permissions:
+  contents: read
+
+jobs:
+  web-and-identity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Verify Android and Roku 13.0 identities
+        run: node scripts/verify-release.mjs
+      - name: TypeScript and production web build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ououwdzxywmjpppzqxqy.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_y3FtFQtvnYVcmy2VTJaYDQ_QhZlj4tx' }}
+
+  windows-media:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test Windows media server authentication, catalog, upload and playback
+        run: node server/windows-media/smoke-test.mjs
+
+  roku-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and package Roku 13.0
+        run: |
+          test -f apps/roku/manifest
+          grep -q "^title=SEBAS PLAY 13.0$" apps/roku/manifest
+          grep -q "^major_version=13$" apps/roku/manifest
+          python3 -m pip install --quiet Pillow
+          cd apps/roku
+          python3 generate-icons.py
+          mkdir -p ../../dist/roku
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-13-0.zip . -x "*.DS_Store" "*.zip"
+          cd ../..
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-13-0.zip | grep -qx "manifest"
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-13-0.zip | grep -qx "source/main.brs"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SEBAS-PLAY-13-0-ROKU-RELEASE-CHECK
+          path: dist/roku/SEBAS-PLAY-Roku-13-0.zip
+          if-no-files-found: error
+          retention-days: 14
