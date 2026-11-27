@@ -56,6 +56,12 @@ public class VlcPlayerPlugin extends Plugin {
             Intent intent = new Intent(getContext(), VlcPlaybackActivity.class);
             intent.putExtra("url", url);
             intent.putExtra("title", title);
+            intent.putExtra("supabaseUrl", call.getString("supabaseUrl", ""));
+            intent.putExtra("anonKey", call.getString("anonKey", ""));
+            intent.putExtra("accessToken", call.getString("accessToken", ""));
+            intent.putExtra("userId", call.getString("userId", ""));
+            intent.putExtra("contentType", call.getString("contentType", ""));
+            intent.putExtra("contentId", call.getString("contentId", ""));
             getActivity().runOnUiThread(() -> getActivity().startActivity(intent));
             call.resolve();
         } catch (Exception error) {
