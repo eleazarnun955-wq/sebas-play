@@ -91,6 +91,11 @@ import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaPlayer;
 import org.videolan.libvlc.util.VLCVideoLayout;
 import java.util.ArrayList;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 
 public class VlcPlaybackActivity extends Activity {
     private LibVLC libVLC;
@@ -104,6 +109,13 @@ public class VlcPlaybackActivity extends Activity {
     private String progressKey = "";
     private long savedPosition = 0;
     private boolean resumeApplied = false;
+    private long lastRemoteSyncSeconds = -10;
+    private String supabaseUrl = "";
+    private String anonKey = "";
+    private String accessToken = "";
+    private String userId = "";
+    private String contentType = "";
+    private String contentId = "";
     private final Runnable progressUpdate = new Runnable() {
         @Override public void run() {
             if (player != null && seekBar != null && timeLabel != null) {
@@ -122,6 +134,11 @@ public class VlcPlaybackActivity extends Activity {
                     seekBar.setProgress((int)Math.min(1000, Math.max(0, current * 1000 / length)));
                 }
                 timeLabel.setText(formatTime(current) + " / " + formatTime(length));
+                long seconds = current / 1000;
+                if (seconds - lastRemoteSyncSeconds >= 10) {
+                    lastRemoteSyncSeconds = seconds;
+                    syncProgress(seconds, length > 0 ? length / 1000 : 0);
+                }
                 if (!released) handler.postDelayed(this, 1000);
             }
         }
@@ -142,6 +159,12 @@ public class VlcPlaybackActivity extends Activity {
         progressKey = "position_" + Integer.toHexString(url.hashCode());
         SharedPreferences resumeStore = getSharedPreferences("sebas_play_resume", MODE_PRIVATE);
         savedPosition = resumeStore.getLong(progressKey, 0);
+        supabaseUrl = getIntent().getStringExtra("supabaseUrl");
+        anonKey = getIntent().getStringExtra("anonKey");
+        accessToken = getIntent().getStringExtra("accessToken");
+        userId = getIntent().getStringExtra("userId");
+        contentType = getIntent().getStringExtra("contentType");
+        contentId = getIntent().getStringExtra("contentId");
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
