@@ -81,6 +81,7 @@ jobs:
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v15.independiente20261127"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.v14.independiente20261127"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v13.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v12.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
