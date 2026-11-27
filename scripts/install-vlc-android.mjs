@@ -245,8 +245,42 @@ public class VlcPlaybackActivity extends Activity {
         releasePlayer();
     }
 
+    private void syncProgress(long positionSeconds, long durationSeconds) {
+        if (supabaseUrl == null || supabaseUrl.isEmpty() || anonKey == null || anonKey.isEmpty() ||
+            accessToken == null || accessToken.isEmpty() || userId == null || userId.isEmpty() ||
+            contentId == null || contentId.isEmpty() ||
+            !("movie".equals(contentType) || "episode".equals(contentType))) return;
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                URL endpoint = new URL(supabaseUrl.replaceAll("/$", "") +
+                    "/rest/v1/watch_progress?on_conflict=user_id,content_type,content_id");
+                connection = (HttpURLConnection) endpoint.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+                connection.setDoOutput(true);
+                connection.setRequestProperty("apikey", anonKey);
+                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Prefer", "resolution=merge-duplicates,return=minimal");
+                String durationJson = durationSeconds > 0 ? Long.toString(durationSeconds) : "null";
+                String json = "{\"user_id\":\"" + userId + "\",\"content_type\":\"" + contentType +
+                    "\",\"content_id\":\"" + contentId + "\",\"position_seconds\":" + positionSeconds +
+                    ",\"duration_seconds\":" + durationJson + ",\"updated_at\":\"" + Instant.now().toString() + "\"}";
+                byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+                try (OutputStream stream = connection.getOutputStream()) { stream.write(bytes); }
+                connection.getResponseCode();
+            } catch (Exception ignored) {
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }).start();
+    }
+
     private void releasePlayer() {
         if (released) return;
+        if (player != null) syncProgress(Math.max(0, player.getTime() / 1000), Math.max(0, player.getLength() / 1000));
         released = true;
         handler.removeCallbacks(progressUpdate);
         if (player != null) {
