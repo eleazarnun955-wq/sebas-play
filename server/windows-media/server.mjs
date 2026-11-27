@@ -196,8 +196,6 @@ const server = http.createServer(async (req, res) => {
     } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
   }
   if (req.method === "GET" && url.pathname.startsWith("/transcode/")) {
-    if (!getFfmpegStatus().installed) return sendError(res, 503, "FFmpeg no está instalado en la laptop.");
-    if (activeTranscodes >= MAX_CONCURRENT_TRANSCODES) return sendError(res, 429, "La laptop está ocupada convirtiendo otros videos. Inténtalo en un momento.");
     let rel;
     try { rel = url.pathname.slice("/transcode/".length).split("/").map(decodeURIComponent).join(path.sep); }
     catch { return sendError(res, 400, "Ruta inválida"); }
@@ -215,6 +213,9 @@ const server = http.createServer(async (req, res) => {
       const st = await fs.promises.stat(realFile);
       if (!st.isFile() || !ALLOWED.has(path.extname(realFile).toLowerCase())) return sendError(res, 404, "Archivo no encontrado");
     } catch { return sendError(res, 404, "Archivo no encontrado"); }
+    // Validate the signed URL and file before exposing FFmpeg availability or capacity.
+    if (!getFfmpegStatus().installed) return sendError(res, 503, "FFmpeg no está instalado en la laptop.");
+    if (activeTranscodes >= MAX_CONCURRENT_TRANSCODES) return sendError(res, 429, "La laptop está ocupada convirtiendo otros videos. Inténtalo en un momento.");
     activeTranscodes++;
     const ff = spawn(FFMPEG_BIN, ["-hide_banner","-loglevel","error","-i",realFile,"-map","0:v:0","-map","0:a:0?","-c:v","libx264","-preset","veryfast","-crf","24","-c:a","aac","-b:a","128k","-movflags","frag_keyframe+empty_moov+default_base_moof","-f","mp4","pipe:1"], { stdio:["ignore","pipe","pipe"], windowsHide:true });
     let settled = false;
