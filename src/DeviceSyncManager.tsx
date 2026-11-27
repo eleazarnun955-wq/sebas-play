@@ -29,6 +29,7 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
   },[call]);
 
   useEffect(()=>{void refresh();},[refresh]);
+  useEffect(()=>{setCode(null);setNotice("");setError("");},[profileId]);
 
   async function generateCode(){
     setLoading(true);setError("");setNotice("");
