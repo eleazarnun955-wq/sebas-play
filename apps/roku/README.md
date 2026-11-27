@@ -9,7 +9,7 @@ Canal Roku SceneGraph independiente de SEBAS PLAY 12.0, 11.0 y del APK Android.
 - El acceso a la laptop usa la URL y el token guardados localmente en el registro Roku. El token no se incluye en el catálogo público.
 
 ## Reproducción
-La reproducción usa el reproductor SceneGraph nativo. Roku depende del contenedor, códec, DRM y URL; se recomienda MP4 H.264/AAC. Los demás formatos de la laptop se pueden reproducir en Android con VLC. El servidor Windows admite solicitudes HTTP Range y enlaces firmados; no transcodifica.
+La reproducción usa el reproductor SceneGraph nativo. Roku depende del contenedor, códec, DRM y URL; se recomienda MP4 H.264/AAC. Los demás formatos de la laptop se pueden convertir a MP4 H.264/AAC mediante FFmpeg cuando está instalado y detectado por el servidor Windows. El servidor limita las conversiones simultáneas y entrega enlaces firmados; sin FFmpeg, Roku muestra únicamente los archivos compatibles.
 
 ## Empaquetado y pruebas
 El workflow de .github/workflows/roku-package.yml crea un ZIP para modo desarrollador. Antes de distribuir, validar navegación, reproducción, conexión local/remota y regreso al catálogo en un Roku físico o emulador. La certificación y publicación en Channel Store son pasos separados.
