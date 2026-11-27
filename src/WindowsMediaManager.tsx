@@ -139,8 +139,20 @@ export default function WindowsMediaManager() {
       setItems(nextItems);
       setScanCounts(catalog.counts || { movies: catalog.count || 0, episodes: 0, series: 0, seasons: 0 });
       const uploaded = nextItems.find(item => item.file === result.file);
-      if (uploaded) await importMovie(uploaded);
-      else setMessage({ kind: "ok", text: `${file.name} se guardó en la laptop. Actualiza la biblioteca para agregarlo al catálogo.` });
+      if (uploaded?.media_type === "episode" && uploaded.series_title) {
+        const seriesKey = uploaded.series_title.trim().toLocaleLowerCase("es");
+        const relatedEpisodes = nextItems.filter(item =>
+          item.media_type === "episode" &&
+          item.series_title?.trim().toLocaleLowerCase("es") === seriesKey
+        );
+        await importSeries(uploaded.series_title, relatedEpisodes);
+      } else if (uploaded && uploaded.media_type !== "episode") {
+        await importMovie(uploaded);
+      } else if (uploaded?.media_type === "episode") {
+        setMessage({ kind: "error", text: "El archivo se guardó en la laptop, pero no se pudo identificar su serie y temporada. Corrige el nombre y vuelve a escanear." });
+      } else {
+        setMessage({ kind: "ok", text: `${file.name} se guardó en la laptop. Actualiza la biblioteca para agregarlo al catálogo.` });
+      }
     } catch (error) {
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo subir el video a la laptop." });
     } finally { setUploading(false); }
