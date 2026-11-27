@@ -171,7 +171,44 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
-    m.top.errorMessage = "Laptop conectada: " + parsed.items.Count().ToStr() + " archivos; " + playableCount.ToStr() + " MP4 disponibles en Roku."
+
+    ' The Windows scanner groups detected SxxExx files by series and season.
+    ' Add compatible MP4 episodes to Roku as separate season rows.
+    seriesCount = 0
+    episodeCount = 0
+    if type(parsed.series) = "roArray"
+        for each show in parsed.series
+            showTitle = safeString(show.title)
+            if type(show.seasons) = "roArray"
+                for each season in show.seasons
+                    seasonNumber = safeString(season.season_number)
+                    seasonRow = CreateObject("roSGNode", "ContentNode")
+                    seasonRow.Title = showTitle + " · Temporada " + seasonNumber
+                    if type(season.episodes) = "roArray"
+                        for each episode in season.episodes
+                            episodeFile = LCase(safeString(episode.file))
+                            episodeUrl = safeString(episode.stream_url)
+                            if Right(episodeFile, 4) = ".mp4" and episodeUrl <> ""
+                                episodeNode = seasonRow.CreateChild("ContentNode")
+                                episodeNode.Title = safeString(episode.episode_number) + ". " + safeString(episode.title)
+                                episodeNode.Description = showTitle + " · Temporada " + seasonNumber
+                                episodeNode.Url = episodeUrl
+                                episodeNode.StreamFormat = "mp4"
+                                episodeNode.AddFields({ contentType: "episode", seriesTitle: showTitle, seasonNumber: seasonNumber, episodeNumber: safeString(episode.episode_number), contentId: safeString(episode.id) })
+                                episodeCount = episodeCount + 1
+                            end if
+                        end for
+                    end if
+                    if seasonRow.GetChildCount() > 0
+                        root.AppendChild(seasonRow)
+                        seriesCount = seriesCount + 1
+                    end if
+                end for
+            end if
+        end for
+    end if
+
+    m.top.errorMessage = "Laptop conectada: " + parsed.items.Count().ToStr() + " archivos; " + playableCount.ToStr() + " películas MP4 y " + episodeCount.ToStr() + " episodios MP4 en " + seriesCount.ToStr() + " temporadas disponibles en Roku."
     if playableCount = 0 then m.top.errorMessage = m.top.errorMessage + " No hay MP4 con enlace reproducible para Roku."
     if unsupportedCount > 0 then m.top.errorMessage = m.top.errorMessage + " Otros " + unsupportedCount.ToStr() + " archivos se pueden abrir en Android con VLC."
 end sub
