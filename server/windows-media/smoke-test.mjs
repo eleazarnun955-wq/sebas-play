@@ -11,6 +11,8 @@ await fs.writeFile(path.join(temp, "sample.mkv"), Buffer.from("MKV-TEST"));
 await fs.writeFile(path.join(temp, "sample.avi"), Buffer.from("AVI-TEST"));
 await fs.writeFile(path.join(temp, "The Office S02E03 - Office Olympics.mp4"), Buffer.from("EPISODE-TEST"));
 await fs.writeFile(path.join(temp, "The Office 1x02 - Diversity Day.mp4"), Buffer.from("EPISODE-TEST-2"));
+await fs.mkdir(path.join(temp, "The Bear", "Season 01"), { recursive: true });
+await fs.writeFile(path.join(temp, "The Bear", "Season 01", "Episode 04 - Pasta.mp4"), Buffer.from("FOLDER-EPISODE-TEST"));
 await fs.mkdir(path.join(temp, "Subcarpeta"), { recursive: true });
 await fs.writeFile(path.join(temp, "Subcarpeta", "episode.webm"), Buffer.from("WEBM-TEST"));
 const env = {
@@ -84,14 +86,18 @@ try {
   });
   assert.equal(catalogResponse.status, 200);
   const catalog = await catalogResponse.json();
-  assert.equal(catalog.count, 7, "catalog must include MP4, MKV, AVI, recursively found WebM, two episodes and the uploaded MP4");
-  assert.equal(catalog.counts.episodes, 2, "automatic scan must identify SxxExx and NxNN episode names");
-  assert.equal(catalog.counts.series, 1, "episodes must be grouped into series");
-  assert.equal(catalog.counts.seasons, 2, "episodes must be grouped into seasons");
-  assert.equal(catalog.series[0].title, "The Office");
-  assert.equal(catalog.series[0].seasons[0].season_number, 1);
-  assert.equal(catalog.series[0].seasons[0].episodes[0].episode_number, 2);
-  const groupedEpisode = catalog.series[0].seasons[1].episodes[0];
+  assert.equal(catalog.count, 8, "catalog must include MP4, MKV, AVI, recursively found WebM, three episodes and the uploaded MP4");
+  assert.equal(catalog.counts.episodes, 3, "automatic scan must identify filename patterns and episode numbers inside season folders");
+  assert.equal(catalog.counts.series, 2, "episodes must be grouped into series using filename or parent folders");
+  assert.equal(catalog.counts.seasons, 3, "episodes must be grouped into seasons, including Season folders");
+  const office = catalog.series.find(show => show.title === "The Office");
+  const bear = catalog.series.find(show => show.title === "The Bear");
+  assert.ok(office && bear, "series names must be inferred from parent folders when filenames only contain episode numbers");
+  assert.equal(office.seasons[0].season_number, 1);
+  assert.equal(office.seasons[0].episodes[0].episode_number, 2);
+  assert.equal(bear.seasons[0].season_number, 1);
+  assert.equal(bear.seasons[0].episodes[0].episode_number, 4);
+  const groupedEpisode = office.seasons[1].episodes[0];
   if (capabilities.ffmpeg.installed) assert.ok((groupedEpisode.transcode_url || "").includes("/transcode/"), "grouped Roku episodes must expose signed FFmpeg URLs");
   else assert.equal(groupedEpisode.transcode_url, null, "grouped episodes must not expose conversion URLs when FFmpeg is unavailable");
   const mkvItem = catalog.items.find(item => item.file === "sample.mkv");
@@ -101,9 +107,10 @@ try {
   } else {
     assert.equal(mkvItem.transcode_url, null, "do not expose a conversion URL when FFmpeg is unavailable");
   }
-  assert.equal(catalog.series[0].seasons[1].season_number, 2);
-  assert.equal(catalog.series[0].seasons[1].episodes[0].episode_number, 3);
+  assert.equal(office.seasons[1].season_number, 2);
+  assert.equal(office.seasons[1].episodes[0].episode_number, 3);
   assert.ok(catalog.items.some(item => item.media_type === "episode" && item.series_title === "The Office" && item.season_number === 2 && item.episode_number === 3));
+  assert.ok(catalog.items.some(item => item.media_type === "episode" && item.series_title === "The Bear" && item.season_number === 1 && item.episode_number === 4));
   assert.ok(catalog.items.some(item => item.media_type === "movie" && item.year === null));
   assert.ok(catalog.items.some(item => item.file === "sample.mkv" && item.mime_type === "video/x-matroska"));
   assert.ok(catalog.items.some(item => item.file === "sample.avi" && item.mime_type === "video/x-msvideo"));
