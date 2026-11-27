@@ -25,3 +25,12 @@ assert.match(playerXml, /<Video id="video"/, "Native Roku video player must exis
 assert.match(player, /ObserveField\("state", "onVideoState"\)/, "Player must observe playback state");
 assert.match(player, /state = "error"[\s\S]*state = "finished"/, "Player must handle errors and normal completion");
 console.log("PASS: Roku URL → timer → token → authenticated catalog → playback flow regression checks.");
+
+const syncTask = read("apps/roku/components/SyncTask.brs");
+const syncTaskXml = read("apps/roku/components/SyncTask.xml");
+assert.match(syncTaskXml, /extends="Task"/, "Account sync and pairing must run in a SceneGraph Task");
+assert.match(syncTask, /sub runSync\(\)[\s\S]*GetToString\(\)|PostFromString\(/, "SyncTask must perform network requests off the UI thread");
+assert.match(home, /startSyncTask\("pair-device"/, "Pairing must use the background sync task");
+assert.match(home, /startSyncTask\("favorite"/, "Favorite writes must use the background sync task");
+assert.match(home, /startSyncTask\("sync"/, "Account refresh must use the background sync task");
+console.log("PASS: Roku account pairing, favorites and sync run off the UI thread.");
