@@ -23,6 +23,10 @@ export default function EpisodesManager() {
   const showLoadSequence = useRef(0);
   const seasonLoadSequence = useRef(0);
   const episodeLoadSequence = useRef(0);
+  const activeSeasonIdRef = useRef(seasonId);
+  activeSeasonIdRef.current = seasonId;
+  const activeShowIdRef = useRef(showId);
+  activeShowIdRef.current = showId;
 
   async function loadShows() {
     if (!supabase) return;
@@ -36,7 +40,9 @@ export default function EpisodesManager() {
   }
   async function loadSeasons(id: string) {
     const sequence = ++seasonLoadSequence.current;
-    if (!supabase || !id) { setSeasons([]); setSeasonId(""); setEpisodes([]); return; }
+    ++episodeLoadSequence.current;
+    setEpisodes([]);
+    if (!supabase || !id) { setSeasons([]); setSeasonId(""); return; }
     const { data, error } = await supabase.from("seasons").select("id,series_id,season_number,title").eq("series_id", id).order("season_number");
     if (sequence !== seasonLoadSequence.current) return;
     if (error) { setMessage(error.message); return; }
@@ -60,19 +66,19 @@ export default function EpisodesManager() {
     e.preventDefault(); if (!supabase || !showId) return; setBusy(true);
     const { error } = await supabase.from("seasons").insert({ series_id: showId, season_number: Number(seasonNo), title: seasonTitle.trim() || null });
     setBusy(false); setMessage(error ? error.message : "Temporada creada.");
-    if (!error) { setSeasonTitle(""); await loadSeasons(showId); }
+    if (!error) { setSeasonTitle(""); if (activeShowIdRef.current === showId) await loadSeasons(showId); }
   }
   async function addEpisode(e: React.FormEvent) {
     e.preventDefault(); if (!supabase || !seasonId) return; setBusy(true);
     const { error } = await supabase.from("episodes").insert({ season_id: seasonId, episode_number: Number(episodeNo), title: episodeTitle.trim(), video_url: episodeUrl.trim() || null, duration_minutes: episodeDuration ? Number(episodeDuration) : null, is_published: false });
     setBusy(false); setMessage(error ? error.message : "Episodio guardado como borrador.");
-    if (!error) { setEpisodeTitle(""); setEpisodeUrl(""); setEpisodeDuration(""); await loadEpisodes(seasonId); }
+    if (!error) { setEpisodeTitle(""); setEpisodeUrl(""); setEpisodeDuration(""); if (activeSeasonIdRef.current === seasonId) await loadEpisodes(seasonId); }
   }
   async function toggleEpisode(ep: Episode) {
     if (!supabase) return;
     const { error } = await supabase.from("episodes").update({ is_published: !ep.is_published }).eq("id", ep.id);
     setMessage(error ? error.message : (ep.is_published ? "Episodio retirado." : "Episodio publicado."));
-    if (!error) await loadEpisodes(seasonId);
+    if (!error && activeSeasonIdRef.current === seasonId) await loadEpisodes(seasonId);
   }
   async function removeEpisode(id: string) {
     if (!supabase || !window.confirm("¿Eliminar este episodio?")) return;
@@ -84,7 +90,7 @@ export default function EpisodesManager() {
     if (!supabase || !window.confirm("¿Eliminar esta temporada y sus episodios?")) return;
     const { error } = await supabase.from("seasons").delete().eq("id", id);
     setMessage(error ? error.message : "Temporada eliminada.");
-    if (!error) await loadSeasons(showId);
+    if (!error && activeShowIdRef.current === showId) await loadSeasons(showId);
   }
 
   return <section className="content">
