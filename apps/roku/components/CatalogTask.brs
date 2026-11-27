@@ -158,19 +158,28 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     for each entry in parsed.items
         fileName = LCase(safeString(entry.file))
         streamUrl = safeString(entry.stream_url)
+        transcodeUrl = safeString(entry.transcode_url)
         mediaType = safeString(entry.media_type)
         if mediaType = "episode"
-            if Right(fileName, 4) <> ".mp4" then unsupportedCount = unsupportedCount + 1
-        else if Right(fileName, 4) = ".mp4" and streamUrl <> ""
-            item = section.CreateChild("ContentNode")
-            item.Title = safeString(entry.title)
-            item.Description = safeString(entry.file) + " · MP4 para Roku"
-            item.Url = streamUrl
-            item.StreamFormat = "mp4"
-            item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
-            playableCount = playableCount + 1
+            if Right(fileName, 4) <> ".mp4" and transcodeUrl = "" then unsupportedCount = unsupportedCount + 1
         else
-            unsupportedCount = unsupportedCount + 1
+            playUrl = streamUrl
+            if Right(fileName, 4) <> ".mp4" then playUrl = transcodeUrl
+            if playUrl <> ""
+                item = section.CreateChild("ContentNode")
+                item.Title = safeString(entry.title)
+                if Right(fileName, 4) = ".mp4"
+                    item.Description = safeString(entry.file) + " · MP4 para Roku"
+                else
+                    item.Description = safeString(entry.file) + " · Conversión FFmpeg a MP4"
+                end if
+                item.Url = playUrl
+                item.StreamFormat = "mp4"
+                item.AddFields({ contentType: "movie", contentId: safeString(entry.id) })
+                playableCount = playableCount + 1
+            else
+                unsupportedCount = unsupportedCount + 1
+            end if
         end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
@@ -191,7 +200,9 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
                         for each episode in season.episodes
                             episodeFile = LCase(safeString(episode.file))
                             episodeUrl = safeString(episode.stream_url)
-                            if Right(episodeFile, 4) = ".mp4" and episodeUrl <> ""
+                            episodeTranscodeUrl = safeString(episode.transcode_url)
+                            if Right(episodeFile, 4) <> ".mp4" then episodeUrl = episodeTranscodeUrl
+                            if episodeUrl <> ""
                                 episodeNode = seasonRow.CreateChild("ContentNode")
                                 episodeNode.Title = safeString(episode.episode_number) + ". " + safeString(episode.title)
                                 episodeNode.Description = showTitle + " · Temporada " + seasonNumber
