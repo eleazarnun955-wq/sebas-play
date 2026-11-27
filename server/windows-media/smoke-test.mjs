@@ -47,7 +47,7 @@ try {
   assert.equal(capabilities.automaticLibraryScan, true);
   assert.equal(capabilities.rangePlayback, true);
   assert.equal(typeof capabilities.ffmpeg.installed, "boolean");
-  assert.equal(capabilities.ffmpeg.transcodingEndpoint, false, "FFmpeg detection must not claim transcoding before the endpoint exists");
+  assert.equal(capabilities.ffmpeg.transcodingEndpoint, capabilities.ffmpeg.installed, "the signed Roku conversion endpoint must be enabled exactly when FFmpeg is detected");
 
   const landing = await fetch("http://127.0.0.1:18787/");
   assert.equal(landing.status, 200, "server home page must load");
