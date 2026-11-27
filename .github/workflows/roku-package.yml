@@ -6,6 +6,7 @@ on:
     branches: [sebas-play-13-0-independent-full-improvements-20261126]
     paths:
       - "apps/roku/**"
+      - "scripts/verify-roku-flow.mjs"
       - ".github/workflows/roku-package.yml"
   pull_request:
     branches: [main]
