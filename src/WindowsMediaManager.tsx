@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HardDrive, RefreshCw, Film, CheckCircle2, AlertCircle, Server, ShieldCheck } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import "./windows-media.css";
@@ -49,6 +49,45 @@ export default function WindowsMediaManager() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [connected, setConnected] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  const seriesGroups = useMemo(() => {
+    const groups = new Map<string, MediaItem[]>();
+    for (const item of items) {
+      if (item.media_type !== "episode" || !item.series_title) continue;
+      const key = item.series_title.trim().toLocaleLowerCase("es");
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
+    }
+    return [...groups.entries()].map(([key, episodes]) => ({
+      key,
+      title: episodes[0].series_title || episodes[0].title,
+      episodes: episodes.sort((a, b) => (a.season_number || 0) - (b.season_number || 0) || (a.episode_number || 0) - (b.episode_number || 0)),
+      seasons: new Set(episodes.map(item => item.season_number)).size,
+    })).sort((a, b) => a.title.localeCompare(b.title, "es"));
+  }, [items]);
+
+  useEffect(() => {
+    if (!connected || !serverUrl.trim() || !token.trim()) return;
+    let active = true;
+    const refresh = async () => {
+      try {
+        const base = normalizeServerBase(serverUrl);
+        const response = await fetch(base + "/api/catalog", { headers: { Authorization: "Bearer " + token.trim() } });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Error HTTP " + response.status);
+        if (!active) return;
+        setItems((payload.items || []) as MediaItem[]);
+        setScanCounts(payload.counts || { movies: payload.count || 0, episodes: 0, series: 0, seasons: 0 });
+      } catch {
+        if (active) {
+          setConnected(false);
+          setMessage({ kind: "error", text: "Se perdió la conexión automática con la laptop. Comprueba que el servidor siga encendido y vuelve a conectar." });
+        }
+      }
+    };
+    const timer = window.setInterval(() => void refresh(), 60000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [connected, serverUrl, token]);
 
   async function connect() {
     const base = normalizeServerBase(serverUrl);
@@ -127,6 +166,67 @@ export default function WindowsMediaManager() {
     setMessage({ kind: "ok", text: existing ? `Enlace renovado para “${item.title}”.` : `“${item.title}” se agregó como borrador al catálogo compartido.` });
   }
 
+  async function importSeries(title: string, episodes: MediaItem[]) {
+    if (!supabase) { setMessage({ kind: "error", text: "El catálogo Supabase no está configurado." }); return; }
+    const operationId = "series:" + title;
+    setImporting(operationId); setMessage(null);
+    try {
+      const rightsNote = "Servidor Windows SEBAS PLAY; serie detectada: " + title + "; revisar derechos antes de publicar.";
+      const { data: foundSeries, error: seriesLookupError } = await supabase
+        .from("series").select("id").eq("rights_note", rightsNote).maybeSingle();
+      if (seriesLookupError) throw seriesLookupError;
+
+      let seriesId = foundSeries?.id as string | undefined;
+      if (!seriesId) {
+        const { data: created, error: createError } = await supabase.from("series").insert({
+          title, source_type: "owned_upload", rights_note: rightsNote, is_published: false,
+        }).select("id").single();
+        if (createError) throw createError;
+        seriesId = created.id;
+      }
+
+      const seasons = [...new Set(episodes.map(item => item.season_number).filter((value): value is number => Number.isInteger(value) && Number(value) > 0))].sort((a, b) => a - b);
+      let importedEpisodes = 0;
+      for (const seasonNumber of seasons) {
+        const { data: foundSeason, error: seasonLookupError } = await supabase.from("seasons")
+          .select("id").eq("series_id", seriesId).eq("season_number", seasonNumber).maybeSingle();
+        if (seasonLookupError) throw seasonLookupError;
+        let seasonId = foundSeason?.id as string | undefined;
+        if (!seasonId) {
+          const { data: createdSeason, error: createSeasonError } = await supabase.from("seasons")
+            .insert({ series_id: seriesId, season_number: seasonNumber, title: "Temporada " + seasonNumber })
+            .select("id").single();
+          if (createSeasonError) throw createSeasonError;
+          seasonId = createdSeason.id;
+        }
+
+        const seasonEpisodes = episodes.filter(item => item.season_number === seasonNumber && Number(item.episode_number) > 0);
+        const { data: existingEpisodes, error: episodeLookupError } = await supabase.from("episodes")
+          .select("episode_number,is_published").eq("season_id", seasonId);
+        if (episodeLookupError) throw episodeLookupError;
+        const publishedByNumber = new Map((existingEpisodes || []).map(row => [row.episode_number, row.is_published]));
+        const records = seasonEpisodes.map(item => ({
+          season_id: seasonId,
+          episode_number: item.episode_number!,
+          title: item.title,
+          video_url: item.stream_url,
+          is_published: publishedByNumber.get(item.episode_number!) ?? false,
+        }));
+        if (records.length) {
+          const { error: saveEpisodesError } = await supabase.from("episodes")
+            .upsert(records, { onConflict: "season_id,episode_number" });
+          if (saveEpisodesError) throw saveEpisodesError;
+          importedEpisodes += records.length;
+        }
+      }
+      setMessage({ kind: "ok", text: "Serie " + title + " sincronizada: " + seasons.length + " temporadas y " + importedEpisodes + " episodios. Se conservan los estados de publicación existentes." });
+    } catch (error) {
+      setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo importar la serie completa." });
+    } finally {
+      setImporting("");
+    }
+  }
+
   return (
     <section className="windows-media">
       <div className="windows-media-hero">
@@ -151,6 +251,17 @@ export default function WindowsMediaManager() {
       </div>
       {message && <div className={`wm-message ${message.kind}`}>{message.kind === "ok" ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}{message.text}</div>}
       <div className="wm-list-head"><div><h3><HardDrive size={18} /> Videos encontrados</h3><p>{items.length} archivos · {scanCounts.movies} películas · {scanCounts.series} series · {scanCounts.seasons} temporadas · {scanCounts.episodes} episodios</p></div><button className="secondary-btn" onClick={() => void connect()} disabled={loading || !connected}><RefreshCw size={15} /> Actualizar</button></div>
+      {seriesGroups.length > 0 && <div className="wm-series-groups">
+        <div className="wm-list-head"><div><h3><Film size={18} /> Series detectadas en la laptop</h3><p>{seriesGroups.length} series · agrupadas automáticamente por temporada y episodio</p></div></div>
+        {seriesGroups.map(group => <div className="wm-item" key={group.key}>
+          <div className="wm-film"><Film size={19} /></div>
+          <div className="wm-item-copy"><b>{group.title}</b><span>{group.seasons} temporadas · {group.episodes.length} episodios</span><small>{group.episodes.slice(0, 3).map(item => "T" + item.season_number + "E" + item.episode_number).join(" · ")}{group.episodes.length > 3 ? " · …" : ""}</small></div>
+          <button className="primary-btn" onClick={() => void importSeries(group.title, group.episodes)} disabled={Boolean(importing)}>
+            {importing === "series:" + group.title ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}
+            {importing === "series:" + group.title ? "Importando…" : "Importar serie completa"}
+          </button>
+        </div>)}
+      </div>}
       {items.length === 0 ? <div className="wm-empty"><Film size={30} /><b>Tu biblioteca aparecerá aquí</b><span>Conecta la laptop para consultar sus archivos MP4, M4V, MOV y WebM.</span></div> :
         <div className="wm-items">{items.map(item => <div className="wm-item" key={item.id}><div className="wm-film"><Film size={19} /></div><div className="wm-item-copy"><b>{item.title}</b><span>{item.file}</span><small>{formatBytes(item.size_bytes)} · {item.mime_type} · {item.media_type === "episode" ? `Episodio T${item.season_number} E${item.episode_number}` : `Película${item.year ? ` · ${item.year}` : ""}`}</small></div>{item.media_type === "episode" ? <span className="wm-episode-tag">Episodio detectado</span> : <button className="primary-btn" onClick={() => void importMovie(item)} disabled={Boolean(importing)}>{importing === item.id ? <RefreshCw size={15} className="spin" /> : <CheckCircle2 size={15} />}{importing === item.id ? "Guardando…" : "Agregar al catálogo"}</button>}</div>)}</div>}
       <p className="wm-footnote">Los títulos se guardan como borradores. Revisa los derechos, la portada y la información de cada ficha antes de publicarla. Renueva los enlaces firmados desde aquí antes de que venzan.</p>
