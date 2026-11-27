@@ -262,6 +262,8 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
         if tableName = "live_channels"
             item.Title = safeString(entry.name)
             item.Description = safeString(entry.category)
+            upcomingProgram = ""
+            currentProgramFound = false
             for each program in epgPrograms
                 if safeString(program.channel_id) = safeString(entry.id)
                     programTitle = safeString(program.title)
@@ -269,12 +271,16 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
                     programEnd = safeString(program.ends_at)
                     if programStart <= currentIso and programEnd > currentIso
                         item.Description = "EN VIVO: " + programTitle
-                    else if programStart > currentIso and programTitle <> ""
-                        item.Description = "PRÓXIMO: " + programTitle
+                        currentProgramFound = true
+                        exit for
+                    else if programStart > currentIso and programTitle <> "" and upcomingProgram = ""
+                        upcomingProgram = programTitle
                     end if
-                    if item.Description <> "" then exit for
                 end if
             end for
+            if not currentProgramFound and upcomingProgram <> ""
+                item.Description = "PRÓXIMO: " + upcomingProgram
+            end if
             item.Url = safeString(entry.stream_url)
             item.HDPosterUrl = safeString(entry.logo_url)
             item.AddFields({ contentType: "channel", contentId: safeString(entry.id) })
