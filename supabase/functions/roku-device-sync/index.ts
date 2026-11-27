@@ -4,7 +4,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 if (!supabaseUrl || !serviceKey) throw new Error("Missing Supabase server environment");
 const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
-const cors = { "access-control-allow-origin":"*", "access-control-allow-headers":"authorization, apikey, content-type", "access-control-allow-methods":"GET, POST, OPTIONS", "content-type":"application/json; charset=utf-8", "cache-control":"no-store" };
+const cors = { "access-control-allow-origin":"*", "access-control-allow-headers":"authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage", "access-control-allow-methods":"GET, POST, PUT, PATCH, DELETE, OPTIONS", "content-type":"application/json; charset=utf-8", "cache-control":"no-store", "vary":"Origin" };
 const reply=(status:number,data:unknown)=>new Response(JSON.stringify(data),{status,headers:cors});
 const hex=(bytes:Uint8Array)=>[...bytes].map(b=>b.toString(16).padStart(2,"0")).join("");
 async function digest(value:string){return hex(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value))))}
