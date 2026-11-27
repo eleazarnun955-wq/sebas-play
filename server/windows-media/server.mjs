@@ -170,7 +170,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { "content-type":"text/html; charset=utf-8", "cache-control":"no-store", "x-content-type-options":"nosniff" });
     return res.end(html);
   }
-  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
+  if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", version:"13.0" });
   if (url.pathname === "/api/capabilities" && req.method === "GET") {
     if (!authorized(req)) return sendError(res, 401, "No autorizado");
     return json(res, 200, { ok:true, server:"SEBAS PLAY 13.0", formats:Object.keys(MIME).map(ext => ext.slice(1)), rangePlayback:true, automaticLibraryScan:true, ffmpeg:getFfmpegStatus() });
