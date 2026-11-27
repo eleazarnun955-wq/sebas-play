@@ -264,11 +264,15 @@ public class VlcPlaybackActivity extends Activity {
                 connection.setRequestProperty("Authorization", "Bearer " + accessToken);
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setRequestProperty("Prefer", "resolution=merge-duplicates,return=minimal");
-                String durationJson = durationSeconds > 0 ? Long.toString(durationSeconds) : "null";
-                String json = "{\"user_id\":\"" + userId + "\",\"content_type\":\"" + contentType +
-                    "\",\"content_id\":\"" + contentId + "\",\"position_seconds\":" + positionSeconds +
-                    ",\"duration_seconds\":" + durationJson + ",\"updated_at\":\"" + Instant.now().toString() + "\"}";
-                byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+                org.json.JSONObject payload = new org.json.JSONObject();
+                payload.put("user_id", userId);
+                payload.put("content_type", contentType);
+                payload.put("content_id", contentId);
+                payload.put("position_seconds", positionSeconds);
+                if (durationSeconds > 0) payload.put("duration_seconds", durationSeconds);
+                else payload.put("duration_seconds", org.json.JSONObject.NULL);
+                payload.put("updated_at", Instant.now().toString());
+                byte[] bytes = payload.toString().getBytes(StandardCharsets.UTF_8);
                 try (OutputStream stream = connection.getOutputStream()) { stream.write(bytes); }
                 connection.getResponseCode();
             } catch (Exception ignored) {
