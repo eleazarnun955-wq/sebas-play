@@ -4,6 +4,7 @@ sub init()
     m.dialogTimer = m.top.FindNode("dialogTransitionTimer")
     m.dialogTimer.ObserveField("fire", "onDialogTransitionTimer")
     m.dialogTransition = ""
+    m.urlDialogPending = false
     m.actions = m.top.FindNode("topActions")
     m.rows.ObserveField("rowItemSelected", "onItemSelected")
     m.rows.ObserveField("rowItemFocused", "onItemFocused")
@@ -69,15 +70,19 @@ sub onUrlEntered()
     else if Right(lowerUrl, 7) = "/health" then
         m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
     end if
+    if m.urlDialogPending then return
+    m.urlDialogPending = true
     m.top.dialog = invalid
     m.status.text = "Dirección aceptada. Preparando el campo del token..."
     m.dialogTransition = "token"
+    m.dialogTimer.control = "stop"
     m.dialogTimer.control = "start"
 end sub
 
 sub onDialogTransitionTimer()
-    if m.dialogTransition = "token"
+    if m.dialogTransition = "token" and m.urlDialogPending
         m.dialogTransition = ""
+        m.urlDialogPending = false
         askLaptopToken()
     end if
 end sub
