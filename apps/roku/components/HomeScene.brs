@@ -240,11 +240,13 @@ sub syncRokuAccount()
     response = transfer.GetToString()
     if transfer.GetResponseCode() <> 200 or response = invalid
         m.status.text = "Roku vinculado, pero no se pudo descargar la sincronización."
+        loadCatalog()
         return
     end if
     parsed = ParseJson(response)
     if type(parsed) <> "roAssociativeArray"
         m.status.text = "Respuesta de sincronización inválida."
+        loadCatalog()
         return
     end if
     m.syncedProgress = {}
