@@ -27,6 +27,10 @@ jobs:
           test -f apps/roku/components/PlayerScene.xml
           grep -q "title=SEBAS PLAY 13.0" apps/roku/manifest
           grep -q "major_version=13" apps/roku/manifest
+          grep -q 'roRegistrySection", "SEBASPLAY13"' apps/roku/components/HomeScene.brs
+          grep -q 'roRegistrySection", "SEBASPLAY13"' apps/roku/components/PlayerScene.brs
+          ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/HomeScene.brs
+          ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/PlayerScene.brs
       - name: Generate branded Roku home screen icons
         run: |
           python3 -m pip install --quiet Pillow
