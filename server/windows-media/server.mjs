@@ -176,7 +176,7 @@ const server = http.createServer(async (req, res) => {
         show.seasons.get(episode.season_number).push({
           id: episode.id, title: episode.title, episode_number: episode.episode_number,
           file: episode.file, size_bytes: episode.size_bytes, mime_type: episode.mime_type,
-          stream_url: episode.stream_url
+          stream_url: episode.stream_url, transcode_url: episode.transcode_url
         });
         show.episode_count++;
       }
