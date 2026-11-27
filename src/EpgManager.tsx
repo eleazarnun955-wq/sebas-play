@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { CalendarClock, Plus, RefreshCw, Trash2, Radio, CheckCircle2 } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import "./epg-manager.css";
@@ -37,14 +37,17 @@ export default function EpgManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
+  const loadSequence = useRef(0);
 
   const load = useCallback(async () => {
     if (!supabase) return;
+    const sequence = ++loadSequence.current;
     setLoading(true);
     const [channelResult, programResult] = await Promise.all([
       supabase.from("live_channels").select("id,name").order("name"),
       supabase.from("epg_programs").select("id,channel_id,title,description,starts_at,ends_at,is_published,source_name").order("starts_at", { ascending: true }).limit(300),
     ]);
+    if (sequence !== loadSequence.current) return;
     const error = channelResult.error || programResult.error;
     if (error) setNotice({ kind: "error", text: error.message });
     const nextChannels = (channelResult.data || []) as Channel[];
