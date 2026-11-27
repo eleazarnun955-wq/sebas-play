@@ -93,13 +93,10 @@ export default function WindowsMediaManager() {
   }, [connected, serverUrl, token]);
 
   async function connect() {
-    const base = normalizeServerBase(serverUrl);
-    if (!/^https?:\/\//i.test(base) || !token.trim()) {
-      setMessage({ kind: "error", text: "Escribe la dirección del servidor y el token de administración." });
-      return;
-    }
     setLoading(true); setMessage(null);
     try {
+      const base = normalizeServerBase(serverUrl);
+      if (!token.trim()) throw new Error("Escribe el token de administración de la laptop.");
       const response = await fetch(`${base}/api/catalog`, { headers: { Authorization: `Bearer ${token.trim()}` } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
