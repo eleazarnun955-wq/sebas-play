@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isNativeVlcAvailable, openNativeVlc } from "./lib/vlc-player";
 import { HardDrive, Link2, RefreshCw, Play, X, Wifi, WifiOff } from "lucide-react";
 
@@ -16,8 +16,10 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
  const [connected,setConnected]=useState(false);
  const [error,setError]=useState("");
  const [playing,setPlaying]=useState<LaptopItem|null>(null);
+ const requestSequence=useRef(0);
 
  async function connect(){
+  const requestId=++requestSequence.current;
   let base=url.trim().replace(/\/+$/,"");
   if(!/^https?:\/\//i.test(base)||!token.trim()){setError("Escribe una dirección http:// o https:// y el token privado de tu laptop.");return}
   base=base.replace(/\/(api\/catalog|health)$/i,"");
@@ -27,10 +29,14 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
   try{
    const health=await fetch(base+"/health",{method:"GET",headers:{Accept:"application/json"},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});
    if(!health.ok)throw new Error("La dirección respondió con HTTP "+health.status+". Comprueba que sea la dirección base del servidor SEBAS PLAY.");
+   if(requestId!==requestSequence.current)return;
    const healthData=await health.json();
+   if(requestId!==requestSequence.current)return;
    if(!healthData.ok)throw new Error("El servidor respondió, pero no se identificó como SEBAS PLAY.");
    const response=await fetch(base+"/api/catalog",{method:"GET",headers:{Accept:"application/json",Authorization:"Bearer "+token.trim()},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});
+   if(requestId!==requestSequence.current)return;
    const raw=await response.text();
+   if(requestId!==requestSequence.current)return;
    let data:any={};try{data=raw?JSON.parse(raw):{}}catch{throw new Error("El servidor no devolvió una respuesta JSON válida.")}
    if(response.status===401)throw new Error("TOKEN INCORRECTO: usa el contenido exacto de SEBAS-PLAY-ACCESS-TOKEN.txt de esa laptop.");
    if(response.status===404)throw new Error("RUTA NO ENCONTRADA: escribe la dirección base del servidor, sin /health ni /api/catalog.");
@@ -41,15 +47,16 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
    localStorage.setItem("sebas_laptop_token",token.trim());
    setUrl(base);setError("");
   }catch(e){
+   if(requestId!==requestSequence.current)return;
    setConnected(false);
    if(e instanceof Error&&e.name==="AbortError")setError("La laptop no respondió en 15 segundos. Revisa el túnel HTTPS o la conexión Wi-Fi.");
    else if(e instanceof TypeError)setError("Android no pudo abrir la dirección. Usa la IP local y el mismo Wi-Fi, o una URL HTTPS de Cloudflare. Esta APK habilitará HTTP local.");
    else setError(e instanceof Error?e.message:"No se pudo conectar con la laptop.");
-  }finally{window.clearTimeout(timeout);setBusy(false)}
+  }finally{window.clearTimeout(timeout);if(requestId===requestSequence.current)setBusy(false)}
  }
- function disconnect(){setConnected(false);setItems([]);setPlaying(null);setToken("");localStorage.removeItem("sebas_laptop_token");setError("")}
+ function disconnect(){requestSequence.current++;setBusy(false);setConnected(false);setItems([]);setPlaying(null);setToken("");localStorage.removeItem("sebas_laptop_token");setError("")}
  function bytes(n:number){if(!Number.isFinite(n))return "";const u=["B","KB","MB","GB"];let v=n,i=0;while(v>=1024&&i<u.length-1){v/=1024;i++}return v.toFixed(i?1:0)+" "+u[i]}
- useEffect(()=>{const savedUrl=localStorage.getItem("sebas_laptop_url");const savedToken=localStorage.getItem("sebas_laptop_token");if(savedUrl&&savedToken)void (async()=>{try{const controller=new AbortController();const timeout=window.setTimeout(()=>controller.abort(),12000);try{const health=await fetch(savedUrl+"/health",{cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(!health.ok)return;const status=await health.json();if(!status.ok)return;const r=await fetch(savedUrl+"/api/catalog",{headers:{Accept:"application/json",Authorization:"Bearer "+savedToken},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(!r.ok)return;const d=await r.json();setItems((d.items||[]) as LaptopItem[]);setConnected(true)}finally{window.clearTimeout(timeout)}}catch{/* La laptop puede estar apagada o fuera de línea. */}})()},[]);
+ useEffect(()=>{const requestId=++requestSequence.current;const savedUrl=localStorage.getItem("sebas_laptop_url");const savedToken=localStorage.getItem("sebas_laptop_token");if(savedUrl&&savedToken)void (async()=>{try{const controller=new AbortController();const timeout=window.setTimeout(()=>controller.abort(),12000);try{const health=await fetch(savedUrl+"/health",{cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!health.ok)return;const status=await health.json();if(requestId!==requestSequence.current||!status.ok)return;const r=await fetch(savedUrl+"/api/catalog",{headers:{Accept:"application/json",Authorization:"Bearer "+savedToken},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!r.ok)return;const d=await r.json();if(requestId!==requestSequence.current)return;setItems((d.items||[]) as LaptopItem[]);setConnected(true)}finally{window.clearTimeout(timeout)}}catch{/* La laptop puede estar apagada o fuera de línea. */}})();return()=>{requestSequence.current++}},[]);
  return <section style={{position:"fixed",inset:0,zIndex:10000,background:"#080e19f5",color:"#f4f7fb",overflowY:"auto",padding:"max(18px,env(safe-area-inset-top)) 16px 28px"}}>
   <div style={{maxWidth:760,margin:"0 auto"}}>
    <header style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:18}}>
