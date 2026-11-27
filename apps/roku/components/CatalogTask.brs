@@ -18,7 +18,7 @@ sub loadCatalog()
     if key = "" or key = "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
         if laptopUrl = "" or laptopToken = "" then m.top.errorMessage = "Configura Supabase o conecta tu laptop desde el botón superior."
     else
-        loadCollection(root, url, key, "movies", "Películas", "id,title,synopsis,poster_url,release_year,age_rating,video_url", "title")
+        loadCollection(root, url, key, "movies", "Películas", "id,title,synopsis,poster_url,release_year,age_rating,duration_minutes,video_url", "title")
         loadCollection(root, url, key, "series", "Series", "id,title,synopsis,poster_url,release_year,age_rating", "title")
         loadSeriesEpisodes(root, url, key)
         loadCollection(root, url, key, "live_channels", "TV en vivo", "id,name,logo_url,category,country_code,stream_url", "name")
@@ -281,11 +281,19 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
         else
             item.Title = safeString(entry.title)
             item.Description = safeString(entry.synopsis)
+            releaseYear = safeString(entry.release_year)
+            ageRating = safeString(entry.age_rating)
+            if releaseYear <> "" then item.Description = item.Description + " · " + releaseYear
+            if ageRating <> "" then item.Description = item.Description + " · " + ageRating
+            runtimeMinutes = safeString(entry.duration_minutes)
+            if tableName = "movies" and runtimeMinutes <> "" and runtimeMinutes <> "0"
+                item.Description = item.Description + " · " + runtimeMinutes + " min"
+            end if
             item.HDPosterUrl = safeString(entry.poster_url)
             favoriteType = tableName
             if tableName = "movies" then favoriteType = "movie"
             item.AddFields({ contentType: favoriteType, contentId: safeString(entry.id) })
-            item.AddFields({ year: safeString(entry.release_year) })
+            item.AddFields({ year: releaseYear, ageRating: ageRating, runtimeMinutes: runtimeMinutes })
             if tableName = "movies" then item.Url = safeString(entry.video_url)
         end if
         item.AddFields({ ageRating: safeString(entry.age_rating) })
