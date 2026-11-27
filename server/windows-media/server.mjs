@@ -130,7 +130,7 @@ function classifyMedia(rel, filename) {
     }
   }
   if (seasonFromFolder !== null) {
-    const namedEpisode = normalized.match(/^(?:episode|episodio|ep)\s*0*(\d{1,3})(?:\s*[-–—.]\s*(.*))?$/i);
+    const namedEpisode = normalized.match(/^(?:episode|episodio|ep)\s*0*(\d{1,3})(?:\s+.*)?$/i);
     const numberedEpisode = normalized.match(/^0*(\d{1,3})\s*[-–—.]\s*(.+)$/);
     const episode = Number(namedEpisode?.[1] || numberedEpisode?.[1] || 0);
     if (seriesFromFolder && episode > 0) {
