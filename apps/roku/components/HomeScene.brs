@@ -11,9 +11,14 @@ sub init()
     connectButton.text = "Conectar laptop"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar catálogo"
+    pairButton = m.actions.CreateChild("Button")
+    pairButton.text = "Vincular con Android"
     m.registry = CreateObject("roRegistrySection", "SEBASPLAY")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
+    m.deviceToken = m.registry.Read("rokuDeviceToken")
+    if m.deviceToken = invalid then m.deviceToken = ""
+    m.syncedProgress = {}
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
     loadCatalog()
@@ -26,6 +31,8 @@ sub onActionSelected()
         askLaptopUrl()
     else if index = 1
         loadCatalog()
+    else if index = 2
+        askRokuPairCode()
     end if
 end sub
 
@@ -148,6 +155,11 @@ sub onItemSelected()
     m.activePlayer = player
     player.videoUrl = mediaUrl
     player.videoTitle = item.Title
+    player.syncToken = m.deviceToken
+    player.contentType = safeString(item.contentType)
+    player.contentId = safeString(item.contentId)
+    progressKey = player.contentType + "_" + player.contentId
+    if m.syncedProgress.DoesExist(progressKey) then player.resumeSeconds = m.syncedProgress[progressKey]
     m.top.AppendChild(player)
     player.ObserveField("wasClosed", "onPlayerClosed")
     player.ObserveField("errorMessage", "onPlayerError")
@@ -161,4 +173,84 @@ sub onPlayerError()
     if m.activePlayer <> invalid and m.activePlayer.errorMessage <> invalid and m.activePlayer.errorMessage <> ""
         m.status.text = m.activePlayer.errorMessage
     end if
+end sub
+
+sub askRokuPairCode()
+    dialog = CreateObject("roSGNode", "KeyboardDialog")
+    dialog.title = "Código de SEBAS PLAY en Android"
+    dialog.text = ""
+    dialog.buttons = ["Vincular", "Cancelar"]
+    dialog.ObserveField("buttonSelected", "onRokuPairCodeEntered")
+    m.top.dialog = dialog
+end sub
+
+sub onRokuPairCodeEntered()
+    dialog = m.top.dialog
+    if dialog = invalid or dialog.buttonSelected <> 0
+        m.top.dialog = invalid
+        return
+    end if
+    code = UCase(Trim(dialog.text))
+    m.top.dialog = invalid
+    if Len(code) <> 12
+        m.status.text = "El código debe tener 12 caracteres. Genera uno nuevo en Android."
+        return
+    end if
+    m.status.text = "Vinculando Roku con tu cuenta SEBAS PLAY..."
+    transfer = CreateObject("roUrlTransfer")
+    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    transfer.InitClientCertificates()
+    transfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
+    transfer.AddHeader("apikey", SebasPlayPublishableKey())
+    transfer.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
+    transfer.AddHeader("Content-Type", "application/json")
+    body = FormatJson({ action: "pair-device", code: code, device_name: "SEBAS PLAY Roku" })
+    response = transfer.PostFromString(body)
+    if transfer.GetResponseCode() <> 200 or response = invalid
+        m.status.text = "No se pudo vincular. Revisa el código y vuelve a generarlo desde Android."
+        return
+    end if
+    parsed = ParseJson(response)
+    if type(parsed) <> "roAssociativeArray" or safeString(parsed.device_token) = ""
+        m.status.text = "La respuesta de vinculación no fue válida."
+        return
+    end if
+    m.deviceToken = parsed.device_token
+    m.registry.Write("rokuDeviceToken", m.deviceToken)
+    m.registry.Flush()
+    syncRokuAccount()
+end sub
+
+sub syncRokuAccount()
+    if m.deviceToken = ""
+        m.status.text = "Primero vincula este Roku desde tu cuenta Android."
+        return
+    end if
+    transfer = CreateObject("roUrlTransfer")
+    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    transfer.InitClientCertificates()
+    transfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync?action=sync")
+    transfer.AddHeader("apikey", SebasPlayPublishableKey())
+    transfer.AddHeader("Authorization", "Bearer " + m.deviceToken)
+    transfer.AddHeader("Accept", "application/json")
+    response = transfer.GetToString()
+    if transfer.GetResponseCode() <> 200 or response = invalid
+        m.status.text = "Roku vinculado, pero no se pudo descargar la sincronización."
+        return
+    end if
+    parsed = ParseJson(response)
+    if type(parsed) <> "roAssociativeArray"
+        m.status.text = "Respuesta de sincronización inválida."
+        return
+    end if
+    m.syncedProgress = {}
+    if type(parsed.watch_progress) = "roArray"
+        for each entry in parsed.watch_progress
+            key = safeString(entry.content_type) + "_" + safeString(entry.content_id)
+            m.syncedProgress[key] = Val(safeString(entry.position_seconds))
+        end for
+    end if
+    favoritesCount = 0
+    if type(parsed.favorites) = "roArray" then favoritesCount = parsed.favorites.Count()
+    m.status.text = "Roku vinculado. Sincronizados " + favoritesCount.ToStr() + " favoritos y " + m.syncedProgress.Count().ToStr() + " avances de reproducción."
 end sub
