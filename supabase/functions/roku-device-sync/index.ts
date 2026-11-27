@@ -64,11 +64,11 @@ Deno.serve(async(req:Request)=>{
   const profileId=body.profile_id===null||body.profile_id===undefined?null:body.profile_id;
   if(profileId!==null){if(!validUuid(profileId))return reply(400,{error:"Perfil inválido"});const {data,error}=await admin.from("family_profiles").select("id").eq("id",profileId).eq("user_id",user.id).maybeSingle();if(error||!data)return reply(403,{error:"El perfil no pertenece a esta cuenta"})}
   if(!["movie","episode"].includes(String(body.content_type))||!validUuid(body.content_id)||!Number.isSafeInteger(body.position_seconds)||Number(body.position_seconds)<0||(body.duration_seconds!==null&&body.duration_seconds!==undefined&&(!Number.isSafeInteger(body.duration_seconds)||Number(body.duration_seconds)<=0)))return reply(400,{error:"Progreso de reproducción inválido"});
-  const progressTable=profileId?"family_profile_watch_progress":"watch_progress";let query=admin.from(progressTable).select("id").eq("user_id",user.id).eq("content_type",body.content_type).eq("content_id",body.content_id);if(profileId)query=query.eq("profile_id",profileId);
-  const {data:found,error:lookupError}=await query.maybeSingle();if(lookupError)return reply(500,{error:"No se pudo consultar el progreso"});
+  const progressTable=profileId?"family_profile_watch_progress":"watch_progress";
   const row={user_id:user.id,...(profileId?{profile_id:profileId}:{}),content_type:body.content_type,content_id:body.content_id,position_seconds:body.position_seconds,duration_seconds:body.duration_seconds??null,updated_at:new Date().toISOString()};
-  const result=found?await admin.from(progressTable).update(row).eq("id",found.id):await admin.from(progressTable).insert(row);
-  if(result.error)return reply(500,{error:"No se pudo guardar el progreso"});return reply(200,{ok:true});
+  const conflictTarget=profileId?"user_id,profile_id,content_type,content_id":"user_id,content_type,content_id";
+  const {error:saveError}=await admin.from(progressTable).upsert(row,{onConflict:conflictTarget});
+  if(saveError)return reply(500,{error:"No se pudo guardar el progreso"});return reply(200,{ok:true});
  }
  const device=await deviceFromRequest(req);if(!device)return reply(401,{error:"Dispositivo no vinculado o revocado"});
  if(requestedAction==="sync"&&req.method==="GET"){
@@ -78,18 +78,25 @@ Deno.serve(async(req:Request)=>{
  }
  if(requestedAction==="favorite"){
   const type=String(body.content_type??"");if(!["movie","series","channel"].includes(type)||!validUuid(body.content_id)||!["add","remove"].includes(String(body.operation)))return reply(400,{error:"Favorito inválido"});
-  const favoritesTable=device.profile_id?"family_profile_favorites":"favorites";const foundRows=await scopedQuery(favoritesTable,device);if(foundRows.error)return reply(500,{error:"No se pudo consultar favoritos"});
-  if(body.operation==="remove"){let q=admin.from(favoritesTable).delete().eq("user_id",device.user_id).eq("content_type",type).eq("content_id",body.content_id);if(device.profile_id)q=q.eq("profile_id",device.profile_id);const {error}=await q;if(error)return reply(500,{error:"No se pudo quitar el favorito"})}
-  else if(!(foundRows.data??[]).some(x=>x.content_type===type&&x.content_id===body.content_id)){const {error}=await admin.from(favoritesTable).insert({user_id:device.user_id,...(device.profile_id?{profile_id:device.profile_id}:{}),content_type:type,content_id:body.content_id});if(error)return reply(500,{error:"No se pudo guardar el favorito"})}
+  const favoritesTable=device.profile_id?"family_profile_favorites":"favorites";
+  let query=admin.from(favoritesTable).delete().eq("user_id",device.user_id).eq("content_type",type).eq("content_id",body.content_id);
+  if(device.profile_id)query=query.eq("profile_id",device.profile_id);
+  if(body.operation==="remove"){const {error}=await query;if(error)return reply(500,{error:"No se pudo quitar el favorito"})}
+  else{
+   const row={user_id:device.user_id,...(device.profile_id?{profile_id:device.profile_id}:{}),content_type:type,content_id:body.content_id};
+   const conflictTarget=device.profile_id?"user_id,profile_id,content_type,content_id":"user_id,content_type,content_id";
+   const {error}=await admin.from(favoritesTable).upsert(row,{onConflict:conflictTarget,ignoreDuplicates:true});
+   if(error)return reply(500,{error:"No se pudo guardar el favorito"});
+  }
   return reply(200,{ok:true});
  }
  if(requestedAction==="progress"){
   if(!["movie","episode"].includes(String(body.content_type))||!validUuid(body.content_id)||!Number.isSafeInteger(body.position_seconds)||Number(body.position_seconds)<0||(body.duration_seconds!==null&&body.duration_seconds!==undefined&&(!Number.isSafeInteger(body.duration_seconds)||Number(body.duration_seconds)<=0)))return reply(400,{error:"Progreso de reproducción inválido"});
-  const progressTable=device.profile_id?"family_profile_watch_progress":"watch_progress";const {data:rows,error:lookupError}=await scopedQuery(progressTable,device);if(lookupError)return reply(500,{error:"No se pudo consultar el progreso"});
-  const found=(rows??[]).find(x=>x.content_type===body.content_type&&x.content_id===body.content_id);
+  const progressTable=device.profile_id?"family_profile_watch_progress":"watch_progress";
   const row={user_id:device.user_id,...(device.profile_id?{profile_id:device.profile_id}:{}),content_type:body.content_type,content_id:body.content_id,position_seconds:body.position_seconds,duration_seconds:body.duration_seconds??null,updated_at:new Date().toISOString()};
-  const result=found?await admin.from(progressTable).update(row).eq("id",found.id):await admin.from(progressTable).insert(row);
-  if(result.error)return reply(500,{error:"No se pudo guardar el progreso"});return reply(200,{ok:true});
+  const conflictTarget=device.profile_id?"user_id,profile_id,content_type,content_id":"user_id,content_type,content_id";
+  const {error:saveError}=await admin.from(progressTable).upsert(row,{onConflict:conflictTarget});
+  if(saveError)return reply(500,{error:"No se pudo guardar el progreso"});return reply(200,{ok:true});
  }
  return reply(404,{error:"Acción no reconocida"});
 });
