@@ -13,6 +13,7 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
   const [notice,setNotice]=useState("");
   const [error,setError]=useState("");
   const refreshSequence=useRef(0);
+  const profileEpoch=useRef(0);
 
   const call=useCallback(async(body:Record<string,unknown>)=>{
     if(!supabase) throw new Error("Supabase no está conectado.");
@@ -34,7 +35,7 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
     finally{if(showLoading&&requestId===refreshSequence.current)setLoading(false);}
   },[call,profileId]);
 
-  useEffect(()=>{refreshSequence.current++;setDevices([]);setCode(null);setNotice("");setError("");void refresh();},[profileId,refresh]);
+  useEffect(()=>{profileEpoch.current++;refreshSequence.current++;setDevices([]);setCode(null);setNotice("");setError("");void refresh();},[profileId,refresh]);
   useEffect(()=>{
     if(!code)return;
     const remaining=Math.max(0,new Date(code.expires_at).getTime()-Date.now());
@@ -53,18 +54,30 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
   }
 
   async function generateCode(){
-    setLoading(true);setError("");setNotice("");
-    try {const data=await call({action:"pair-code",profile_id:profileId});setCode({code:data.code,expires_at:data.expires_at});setNotice("Código de un solo uso generado. Dura cinco minutos.");}
-    catch(e){setError(e instanceof Error?e.message:"No se pudo generar el código.");}
-    finally{setLoading(false);}
+    const epoch=profileEpoch.current;
+    setLoading(true);setError("");setNotice("");setCode(null);
+    try {
+      const data=await call({action:"pair-code",profile_id:profileId});
+      if(epoch!==profileEpoch.current)return;
+      setCode({code:data.code,expires_at:data.expires_at});
+      setNotice("Código de un solo uso generado. Dura cinco minutos.");
+    }
+    catch(e){if(epoch===profileEpoch.current)setError(e instanceof Error?e.message:"No se pudo generar el código.");}
+    finally{if(epoch===profileEpoch.current)setLoading(false);}
   }
 
   async function revoke(device:PairedDevice){
     if(!window.confirm("¿Desvincular "+device.device_name+"?")) return;
+    const epoch=profileEpoch.current;
     setLoading(true);setError("");
-    try {await call({action:"revoke-device",device_id:device.id,profile_id:profileId});setNotice("Dispositivo desvinculado.");await refresh(false);}
-    catch(e){setError(e instanceof Error?e.message:"No se pudo desvincular.");}
-    finally{setLoading(false);}
+    try {
+      await call({action:"revoke-device",device_id:device.id,profile_id:profileId});
+      if(epoch!==profileEpoch.current)return;
+      setNotice("Dispositivo desvinculado.");
+      await refresh(false);
+    }
+    catch(e){if(epoch===profileEpoch.current)setError(e instanceof Error?e.message:"No se pudo desvincular.");}
+    finally{if(epoch===profileEpoch.current)setLoading(false);}
   }
 
   const active=devices.filter(d=>!d.revoked_at);
