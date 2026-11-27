@@ -271,7 +271,9 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
             item.Title = safeString(entry.title)
             item.Description = safeString(entry.synopsis)
             item.HDPosterUrl = safeString(entry.poster_url)
-            item.AddFields({ contentType: tableName, contentId: safeString(entry.id) })
+            favoriteType = tableName
+            if tableName = "movies" then favoriteType = "movie"
+            item.AddFields({ contentType: favoriteType, contentId: safeString(entry.id) })
             item.AddFields({ year: safeString(entry.release_year) })
             if tableName = "movies" then item.Url = safeString(entry.video_url)
         end if
