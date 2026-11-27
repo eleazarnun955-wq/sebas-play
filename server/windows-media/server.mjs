@@ -94,8 +94,8 @@ function classifyMedia(rel, filename) {
   const normalized = cleanMediaTitle(base);
   const episodeMatch = normalized.match(/^(.*?)\s*(?:S(\d{1,2})\s*E(\d{1,3})|Season\s*(\d{1,2})\s*Episode\s*(\d{1,3})|T(\d{1,2})\s*E(\d{1,3}))/i);
   if (episodeMatch) {
-    const season = Number(episodeMatch[2] || episodeMatch[4] || episodeMatch[6] || 1);
-    const episode = Number(episodeMatch[3] || episodeMatch[5] || episodeMatch[7]);
+    const season = Number(episodeMatch[2] || episodeMatch[4] || episodeMatch[6] || episodeMatch[8] || 1);
+    const episode = Number(episodeMatch[3] || episodeMatch[5] || episodeMatch[7] || episodeMatch[9]);
     const folder = path.basename(path.dirname(rel));
     const seriesTitle = cleanMediaTitle(episodeMatch[1]) || cleanMediaTitle(folder);
     return { media_type:"episode", series_title:seriesTitle, season_number:season, episode_number:episode, year:null };
