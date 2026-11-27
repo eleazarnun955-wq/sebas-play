@@ -135,7 +135,7 @@ export default function StorageManager() {
   async function uploadToCloud() {
     if (!supabase || !selectedFile || busy) return;
     const file = selectedFile;
-    const title = cloudTitle.trim() || file.name.replace(/\\.[^.]+$/, "");
+    const title = cloudTitle.trim() || file.name.replace(/\.[^.]+$/, "");
     const rights = rightsNote.trim();
     if (!file.name.toLowerCase().endsWith(".mp4") || file.type !== "" && file.type !== "video/mp4") {
       setNotice({ type: "error", text: "Para la nube y Roku utiliza MP4 (H.264/AAC) para mayor compatibilidad." });
