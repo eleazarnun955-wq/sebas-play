@@ -1,10 +1,10 @@
-name: SEBAS PLAY 15.0 independiente Android APK
+name: SEBAS PLAY 16.0 independiente Android APK
 # Independent package: preserve 13.0 and all previous installs.
 
 on:
   workflow_dispatch:
   push:
-    branches: [fix/sebas-play-15-profile-creation-20261127]
+    branches: [feature/sebas-play-16-netflix-visual-20261127]
     paths:
       - "src/**"
       - "public/**"
@@ -76,18 +76,18 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.v15.independiente20261127"
+          EXPECTED="com.eleazarcompany.sebasplay.v16.independiente20261127"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
-          test "$ACTUAL" != "com.eleazarcompany.sebasplay.v14.independiente20261127"
+          test "$ACTUAL" != "com.eleazarcompany.sebasplay.v15.independiente20261127"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v13.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v12.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
-      - name: Upload SEBAS PLAY 15.0 APK
+      - name: Upload SEBAS PLAY 16.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-15-0-ANDROID-INDEPENDIENTE
+          name: SEBAS-PLAY-16-0-ANDROID-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
