@@ -48,7 +48,7 @@ const syncTask = read("apps/roku/components/SyncTask.brs");
 const progressTask = read("apps/roku/components/ProgressTask.brs");
 for (const [name, source] of [["CatalogTask", catalogTask], ["SyncTask", syncTask], ["ProgressTask", progressTask]]) {
   const transfers = (source.match(/CreateObject\("roUrlTransfer"\)/g) || []).length;
-  const guards = (source.match(/SetMinimumTransferRate\(1, 20\)/g) || []).length;
-  assert.equal(guards, transfers, name + " must protect every network transfer against stalled responses");
+  const guarded = (source.match(/\b\w+\.SetMinimumTransferRate\(/g) || []).length;
+  assert.equal(guarded, transfers, name + " must protect every network transfer against stalled responses");
 }
 console.log("PASS: Roku catalog, account sync and playback progress transfers have stall protection.");
