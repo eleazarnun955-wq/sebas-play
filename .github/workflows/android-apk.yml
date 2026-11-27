@@ -4,7 +4,7 @@ name: SEBAS PLAY 14.0 independiente Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-14-0-independent-20261127]
+    branches: [sebas-play-14-0-independent-20261127, fix/sebas-play-14-profiles-loading-20261127]
     paths:
       - "src/**"
       - "public/**"
