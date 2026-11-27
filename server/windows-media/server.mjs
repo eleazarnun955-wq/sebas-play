@@ -112,15 +112,15 @@ function classifyMedia(rel, filename) {
   const base = path.basename(filename, path.extname(filename));
   const normalized = cleanMediaTitle(base);
   const folders = rel.split(/[\\/]/).slice(0, -1);
-  const seasonFolderIndex = folders.findIndex(folder => /^(?:season|temporada|temp|s)\\s*0?(\\d{1,2})$/i.test(cleanMediaTitle(folder)));
+  const seasonFolderIndex = folders.findIndex(folder => /^(?:season|temporada|temp|s)\s*0?(\d{1,2})$/i.test(cleanMediaTitle(folder)));
   const seasonFolderMatch = seasonFolderIndex >= 0
-    ? cleanMediaTitle(folders[seasonFolderIndex]).match(/^(?:season|temporada|temp|s)\\s*0?(\\d{1,2})$/i)
+    ? cleanMediaTitle(folders[seasonFolderIndex]).match(/^(?:season|temporada|temp|s)\s*0?(\d{1,2})$/i)
     : null;
   const seasonFromFolder = seasonFolderMatch ? Number(seasonFolderMatch[1]) : null;
   const seriesFromFolder = seasonFolderIndex >= 0
     ? cleanMediaTitle(folders[seasonFolderIndex - 1] || "")
     : cleanMediaTitle(folders.at(-1) || "");
-  const explicitEpisode = normalized.match(/^(.*?)\\s*(?:S(\\d{1,2})\\s*E(\\d{1,3})|Season\\s*(\\d{1,2})\\s*Episode\\s*(\\d{1,3})|T(\\d{1,2})\\s*E(\\d{1,3})|(\\d{1,2})x(\\d{1,3}))/i);
+  const explicitEpisode = normalized.match(/^(.*?)\s*(?:S(\d{1,2})\s*E(\d{1,3})|Season\s*(\d{1,2})\s*Episode\s*(\d{1,3})|T(\d{1,2})\s*E(\d{1,3})|(\d{1,2})x(\d{1,3}))/i);
   if (explicitEpisode) {
     const season = Number(explicitEpisode[2] || explicitEpisode[4] || explicitEpisode[6] || explicitEpisode[8] || seasonFromFolder || 1);
     const episode = Number(explicitEpisode[3] || explicitEpisode[5] || explicitEpisode[7] || explicitEpisode[9]);
@@ -130,14 +130,14 @@ function classifyMedia(rel, filename) {
     }
   }
   if (seasonFromFolder !== null) {
-    const namedEpisode = normalized.match(/^(?:episode|episodio|ep)\\s*0*(\\d{1,3})(?:\\s*[-–—.]\\s*(.*))?$/i);
-    const numberedEpisode = normalized.match(/^0*(\\d{1,3})\\s*[-–—.]\\s*(.+)$/);
+    const namedEpisode = normalized.match(/^(?:episode|episodio|ep)\s*0*(\d{1,3})(?:\s*[-–—.]\s*(.*))?$/i);
+    const numberedEpisode = normalized.match(/^0*(\d{1,3})\s*[-–—.]\s*(.+)$/);
     const episode = Number(namedEpisode?.[1] || numberedEpisode?.[1] || 0);
     if (seriesFromFolder && episode > 0) {
       return { media_type:"episode", series_title:seriesFromFolder, season_number:seasonFromFolder, episode_number:episode, year:null };
     }
   }
-  const yearMatch = normalized.match(/(?:^|\\s)((?:19|20)\\d{2})(?:\\s|$)/);
+  const yearMatch = normalized.match(/(?:^|\s)((?:19|20)\d{2})(?:\s|$)/);
   return { media_type:"movie", series_title:null, season_number:null, episode_number:null, year:yearMatch ? Number(yearMatch[1]) : null };
 }
 
