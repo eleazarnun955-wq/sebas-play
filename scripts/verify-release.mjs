@@ -34,3 +34,8 @@ assert.match(rokuSyncFunction, /family_profile_watch_progress/);
 assert.match(familyFunction, /verify-profile-pin/);
 assert.match(pinHelper, /PBKDF2/);
 console.log("PASS: Android and Roku 13.0 retain independent package identity, labels, and Roku registry.");
+
+const viewer = read("src/ViewerApp.tsx");
+assert.match(viewer, /onPause=\{e=>\{const v=e\.currentTarget;if\(!v\.ended\)void saveProgress\("movie",selected\.item\.id,v\.currentTime,v\.duration,true\)\}\}/, "Pausing a movie must immediately flush watch progress");
+assert.match(viewer, /onPause=\{e=>\{const v=e\.currentTarget;if\(!v\.ended\)void saveProgress\("episode",episode\.id,v\.currentTime,v\.duration,true\)\}\}/, "Pausing an episode must immediately flush watch progress");
+console.log("PASS: movie and episode pause events immediately persist playback progress.");
