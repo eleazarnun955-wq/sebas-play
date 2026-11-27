@@ -13,7 +13,7 @@ sub init()
     refreshButton.text = "Actualizar catálogo"
     pairButton = m.actions.CreateChild("Button")
     pairButton.text = "Vincular con Android"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY13")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")
