@@ -110,6 +110,7 @@ public class VlcPlaybackActivity extends Activity {
     private String progressKey = "";
     private long savedPosition = 0;
     private boolean resumeApplied = false;
+    private boolean finishedProgressCleared = false;
     private long lastRemoteSyncSeconds = -10;
     private String supabaseUrl = "";
     private String anonKey = "";
@@ -123,6 +124,14 @@ public class VlcPlaybackActivity extends Activity {
             if (player != null && seekBar != null && timeLabel != null) {
                 long length = player.getLength();
                 long current = player.getTime();
+                if (length > 0 && current >= length - 1500 && !player.isPlaying()) {
+                    if (!finishedProgressCleared) {
+                        syncProgress(0, length / 1000);
+                        finishedProgressCleared = true;
+                    }
+                } else if (current < length - 1500) {
+                    finishedProgressCleared = false;
+                }
                 if (length > 0) {
                     if (!resumeApplied) {
                         resumeApplied = true;
@@ -288,7 +297,12 @@ public class VlcPlaybackActivity extends Activity {
 
     private void releasePlayer() {
         if (released) return;
-        if (player != null) syncProgress(Math.max(0, player.getTime() / 1000), Math.max(0, player.getLength() / 1000));
+        if (player != null) {
+            long current = Math.max(0, player.getTime());
+            long length = Math.max(0, player.getLength());
+            long positionSeconds = length > 0 && current >= length - 1500 ? 0 : current / 1000;
+            syncProgress(positionSeconds, length / 1000);
+        }
         released = true;
         handler.removeCallbacks(progressUpdate);
         if (player != null) {
