@@ -30,6 +30,7 @@ sub startPlayback()
         savedPosition = Val(savedPositionText)
         if savedPosition > 0 then m.resumePosition = savedPosition
     end if
+    if m.top.resumeSeconds > m.resumePosition then m.resumePosition = m.top.resumeSeconds
     content = CreateObject("roSGNode", "ContentNode")
     content.Url = m.top.videoUrl
     content.Title = m.top.videoTitle
