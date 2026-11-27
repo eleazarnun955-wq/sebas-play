@@ -61,16 +61,14 @@ end sub
 sub syncPlaybackProgress(position as dynamic, duration as dynamic)
     if m.top.syncToken = "" or m.top.contentId = "" then return
     if m.top.contentType <> "movie" and m.top.contentType <> "episode" then return
-    syncTransfer = CreateObject("roUrlTransfer")
-    syncTransfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    syncTransfer.InitClientCertificates()
-    syncTransfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
-    syncTransfer.AddHeader("apikey", SebasPlayPublishableKey())
-    syncTransfer.AddHeader("Authorization", "Bearer " + m.top.syncToken)
-    syncTransfer.AddHeader("Content-Type", "application/json")
-    payload = { action: "progress", content_type: m.top.contentType, content_id: m.top.contentId, position_seconds: Int(position) }
-    if duration <> invalid and duration > 0 then payload.duration_seconds = Int(duration)
-    syncTransfer.PostFromString(FormatJson(payload))
+    if m.progressTask <> invalid and m.progressTask.control = "RUN" then m.progressTask.control = "STOP"
+    m.progressTask = CreateObject("roSGNode", "ProgressTask")
+    m.progressTask.syncToken = m.top.syncToken
+    m.progressTask.contentType = m.top.contentType
+    m.progressTask.contentId = m.top.contentId
+    m.progressTask.positionSeconds = Int(position)
+    if duration <> invalid and duration > 0 then m.progressTask.durationSeconds = Int(duration)
+    m.progressTask.control = "RUN"
 end sub
 
 sub onVideoState()
