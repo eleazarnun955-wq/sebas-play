@@ -254,3 +254,8 @@ sub syncRokuAccount()
     if type(parsed.favorites) = "roArray" then favoritesCount = parsed.favorites.Count()
     m.status.text = "Roku vinculado. Sincronizados " + favoritesCount.ToStr() + " favoritos y " + m.syncedProgress.Count().ToStr() + " avances de reproducción."
 end sub
+
+function safeString(value as dynamic) as string
+    if value = invalid then return ""
+    return value.ToStr()
+end function
