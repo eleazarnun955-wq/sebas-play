@@ -92,11 +92,24 @@ function safePath(rel) {
   if (full !== ROOT && !full.startsWith(ROOT + path.sep)) return null;
   return full;
 }
+async function mapLimit(items, limit, mapper) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (true) {
+      const index = next++;
+      if (index >= items.length) return;
+      results[index] = await mapper(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length:Math.min(limit, items.length) }, () => worker()));
+  return results;
+}
 async function walk(dir, prefix = "", req) {
   const entries = await fs.promises.readdir(dir, { withFileTypes:true });
-  // Scan sibling folders and file metadata concurrently. This keeps large libraries
-  // responsive without changing the catalog schema or following symbolic links.
-  const batches = await Promise.all(entries.map(async ent => {
+  // Keep directory/file discovery parallel but bound per-folder work so very large
+  // libraries do not create thousands of simultaneous stat/readdir operations.
+  const batches = await mapLimit(entries, 16, async ent => {
     const abs = path.join(dir, ent.name);
     const rel = path.join(prefix, ent.name);
     if (ent.isSymbolicLink()) return [];
@@ -116,7 +129,7 @@ async function walk(dir, prefix = "", req) {
       stream_url:signedUrl(rel, req),
       transcode_url:getFfmpegStatus().installed && ext !== ".mp4" ? signedTranscodeUrl(rel, req) : null
     }];
-  }));
+  });
   return batches.flat();
 }
 
