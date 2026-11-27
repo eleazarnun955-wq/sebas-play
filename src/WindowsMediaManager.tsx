@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HardDrive, RefreshCw, Film, CheckCircle2, AlertCircle, Server, ShieldCheck } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import "./windows-media.css";
@@ -52,6 +52,8 @@ export default function WindowsMediaManager() {
   const [connected, setConnected] = useState(false);
   const [capabilities, setCapabilities] = useState<ServerCapabilities | null>(null);
   const [uploading, setUploading] = useState(false);
+  const connectionSequence = useRef(0);
+  const refreshSequence = useRef(0);
 
   const seriesGroups = useMemo(() => {
     const groups = new Map<string, MediaItem[]>();
@@ -73,44 +75,52 @@ export default function WindowsMediaManager() {
     if (!connected || !serverUrl.trim() || !token.trim()) return;
     let active = true;
     const refresh = async () => {
+      const request = ++refreshSequence.current;
       try {
         const base = normalizeServerBase(serverUrl);
         const response = await fetch(base + "/api/catalog", { headers: { Authorization: "Bearer " + token.trim() } });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Error HTTP " + response.status);
-        if (!active) return;
+        if (!active || request !== refreshSequence.current) return;
         setItems((payload.items || []) as MediaItem[]);
         setScanCounts(payload.counts || { movies: payload.count || 0, episodes: 0, series: 0, seasons: 0 });
       } catch {
-        if (active) {
+        if (active && request === refreshSequence.current) {
           setConnected(false);
           setMessage({ kind: "error", text: "Se perdió la conexión automática con la laptop. Comprueba que el servidor siga encendido y vuelve a conectar." });
         }
       }
     };
     const timer = window.setInterval(() => void refresh(), 60000);
-    return () => { active = false; window.clearInterval(timer); };
+    return () => { active = false; refreshSequence.current++; window.clearInterval(timer); };
   }, [connected, serverUrl, token]);
 
   async function connect() {
+    const request = ++connectionSequence.current;
+    const requestedUrl = serverUrl;
+    const requestedToken = token.trim();
     setLoading(true); setMessage(null);
     try {
-      const base = normalizeServerBase(serverUrl);
-      if (!token.trim()) throw new Error("Escribe el token de administración de la laptop.");
-      const response = await fetch(`${base}/api/catalog`, { headers: { Authorization: `Bearer ${token.trim()}` } });
+      const base = normalizeServerBase(requestedUrl);
+      if (!requestedToken) throw new Error("Escribe el token de administración de la laptop.");
+      const response = await fetch(`${base}/api/catalog`, { headers: { Authorization: `Bearer ${requestedToken}` } });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Error HTTP ${response.status}`);
+      if (request !== connectionSequence.current) return;
       setItems((payload.items || []) as MediaItem[]);
       setScanCounts(payload.counts || { movies: payload.count || 0, episodes: 0, series: 0, seasons: 0 });
-      const capabilityResponse = await fetch(`${base}/api/capabilities`, { headers: { Authorization: `Bearer ${token.trim()}` } });
+      const capabilityResponse = await fetch(`${base}/api/capabilities`, { headers: { Authorization: `Bearer ${requestedToken}` } });
+      if (request !== connectionSequence.current) return;
       if (capabilityResponse.ok) setCapabilities((await capabilityResponse.json()) as ServerCapabilities);
       else setCapabilities(null);
       setConnected(true);
       setMessage({ kind: "ok", text: `Conectado. Se encontraron ${payload.count || 0} videos compatibles.` });
     } catch (error) {
-      setConnected(false);
-      setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo conectar con la laptop." });
-    } finally { setLoading(false); }
+      if (request === connectionSequence.current) {
+        setConnected(false);
+        setMessage({ kind: "error", text: error instanceof Error ? error.message : "No se pudo conectar con la laptop." });
+      }
+    } finally { if (request === connectionSequence.current) setLoading(false); }
   }
 
   async function uploadFile(file: File) {
