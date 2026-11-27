@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, Film, Clapperboard } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
@@ -20,25 +20,35 @@ export default function EpisodesManager() {
   const [episodeUrl, setEpisodeUrl] = useState("");
   const [episodeDuration, setEpisodeDuration] = useState("");
   const [message, setMessage] = useState("");
+  const showLoadSequence = useRef(0);
+  const seasonLoadSequence = useRef(0);
+  const episodeLoadSequence = useRef(0);
 
   async function loadShows() {
     if (!supabase) return;
-    const { data } = await supabase.from("series").select("id,title").order("title");
+    const sequence = ++showLoadSequence.current;
+    const { data, error } = await supabase.from("series").select("id,title").order("title");
+    if (sequence !== showLoadSequence.current) return;
+    if (error) { setMessage(error.message); return; }
     const list = (data ?? []) as Show[];
     setShows(list);
-    if (!showId && list[0]) setShowId(list[0].id);
+    setShowId((current) => current && list.some((show) => show.id === current) ? current : list[0]?.id ?? "");
   }
   async function loadSeasons(id: string) {
-    if (!supabase || !id) { setSeasons([]); setSeasonId(""); return; }
+    const sequence = ++seasonLoadSequence.current;
+    if (!supabase || !id) { setSeasons([]); setSeasonId(""); setEpisodes([]); return; }
     const { data, error } = await supabase.from("seasons").select("id,series_id,season_number,title").eq("series_id", id).order("season_number");
+    if (sequence !== seasonLoadSequence.current) return;
     if (error) { setMessage(error.message); return; }
     const list = (data ?? []) as Season[];
     setSeasons(list);
-    setSeasonId((current) => list.some((s) => s.id === current) ? current : list[0]?.id ?? "");
+    setSeasonId((current) => current && list.some((season) => season.id === current) ? current : list[0]?.id ?? "");
   }
   async function loadEpisodes(id: string) {
+    const sequence = ++episodeLoadSequence.current;
     if (!supabase || !id) { setEpisodes([]); return; }
     const { data, error } = await supabase.from("episodes").select("id,season_id,episode_number,title,synopsis,duration_minutes,video_url,is_published").eq("season_id", id).order("episode_number");
+    if (sequence !== episodeLoadSequence.current) return;
     if (error) { setMessage(error.message); return; }
     setEpisodes((data ?? []) as Episode[]);
   }
