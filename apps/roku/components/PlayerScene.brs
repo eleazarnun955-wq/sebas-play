@@ -24,7 +24,9 @@ sub startPlayback()
     m.resumeApplied = false
     savedUrl = m.registry.Read("lastVideoUrl")
     if savedUrl = m.top.videoUrl
-        savedPosition = Val(m.registry.Read("lastVideoPosition"))
+        savedPositionText = m.registry.Read("lastVideoPosition")
+        if savedPositionText = invalid then savedPositionText = "0"
+        savedPosition = Val(savedPositionText)
         if savedPosition > 0 then m.resumePosition = savedPosition
     end if
     content = CreateObject("roSGNode", "ContentNode")
@@ -64,8 +66,7 @@ sub onVideoState()
             m.resumeApplied = true
             if m.resumePosition > 15
                 m.video.seek = m.resumePosition
-                m.loadingLabel.text = "Continuando desde donde lo dejaste"
-                m.loadingLabel.visible = true
+                m.loadingLabel.visible = false
             end if
             m.saveTimer.control = "start"
         end if
