@@ -47,6 +47,7 @@ sub askLaptopUrl()
     dialog.buttons = ["Siguiente", "Cancelar"]
     dialog.ObserveField("buttonSelected", "onUrlEntered")
     m.top.dialog = dialog
+    dialog.SetFocus(true)
 end sub
 
 sub onUrlEntered()
@@ -70,17 +71,27 @@ sub onUrlEntered()
     else if Right(lowerUrl, 7) = "/health" then
         m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
     end if
-    if m.urlDialogPending then return
+    if m.urlDialogPending
+        m.top.dialog = invalid
+        return
+    end if
     m.urlDialogPending = true
     m.top.dialog = invalid
     m.status.text = "Dirección aceptada. Preparando el campo del token..."
     m.dialogTransition = "token"
+    if m.dialogTimer = invalid
+        m.dialogTransition = ""
+        m.urlDialogPending = false
+        askLaptopToken()
+        return
+    end if
     m.dialogTimer.control = "stop"
     m.dialogTimer.control = "start"
 end sub
 
 sub onDialogTransitionTimer()
     if m.dialogTransition = "token" and m.urlDialogPending
+        m.dialogTimer.control = "stop"
         m.dialogTransition = ""
         m.urlDialogPending = false
         askLaptopToken()
@@ -94,12 +105,14 @@ sub askLaptopToken()
     dialog.buttons = ["Conectar", "Cancelar"]
     dialog.ObserveField("buttonSelected", "onTokenEntered")
     m.top.dialog = dialog
+    dialog.SetFocus(true)
 end sub
 
 sub onTokenEntered()
     dialog = m.top.dialog
     if dialog = invalid or dialog.buttonSelected <> 0 then
         m.top.dialog = invalid
+        m.actions.SetFocus(true)
         return
     end if
     m.laptopToken = Trim(dialog.text)
