@@ -93,18 +93,31 @@ function safePath(rel) {
   return full;
 }
 async function walk(dir, prefix = "", req) {
-  const out = [];
-  for (const ent of await fs.promises.readdir(dir, { withFileTypes:true })) {
+  const entries = await fs.promises.readdir(dir, { withFileTypes:true });
+  // Scan sibling folders and file metadata concurrently. This keeps large libraries
+  // responsive without changing the catalog schema or following symbolic links.
+  const batches = await Promise.all(entries.map(async ent => {
     const abs = path.join(dir, ent.name);
     const rel = path.join(prefix, ent.name);
-    if (ent.isSymbolicLink()) continue;
-    if (ent.isDirectory()) out.push(...await walk(abs, rel, req));
-    else if (ent.isFile() && ALLOWED.has(path.extname(ent.name).toLowerCase())) {
-      const st = await fs.promises.stat(abs);
-      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:cleanMediaTitle(path.basename(ent.name, path.extname(ent.name))), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], ...classifyMedia(rel, ent.name), stream_url:signedUrl(rel, req), transcode_url:getFfmpegStatus().installed && path.extname(ent.name).toLowerCase() !== ".mp4" ? signedTranscodeUrl(rel, req) : null });
-    }
-  }
-  return out;
+    if (ent.isSymbolicLink()) return [];
+    if (ent.isDirectory()) return walk(abs, rel, req);
+    const ext = path.extname(ent.name).toLowerCase();
+    if (!ent.isFile() || !ALLOWED.has(ext)) return [];
+    let st;
+    try { st = await fs.promises.stat(abs); }
+    catch (error) { if (error?.code === "ENOENT") return []; throw error; }
+    return [{
+      id: crypto.createHash("sha1").update(rel).digest("hex"),
+      title:cleanMediaTitle(path.basename(ent.name, ext)),
+      file:rel.split(path.sep).join("/"),
+      size_bytes:st.size,
+      mime_type:MIME[ext],
+      ...classifyMedia(rel, ent.name),
+      stream_url:signedUrl(rel, req),
+      transcode_url:getFfmpegStatus().installed && ext !== ".mp4" ? signedTranscodeUrl(rel, req) : null
+    }];
+  }));
+  return batches.flat();
 }
 
 function cleanMediaTitle(value) {
