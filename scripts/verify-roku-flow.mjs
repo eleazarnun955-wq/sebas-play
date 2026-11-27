@@ -54,6 +54,6 @@ console.log("PASS: Roku catalog, account sync and playback progress transfers ha
 
 const syncFunction = read("supabase/functions/roku-device-sync/index.ts");
 assert.match(syncFunction, /access-control-allow-headers":"authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage"/, "Supabase function CORS must allow the headers sent by supabase-js browser clients");
-assert.match(home, /dialog\\.SetFocus\\(true\\)/, "Roku URL and token dialogs must explicitly receive focus");
-assert.match(home, /if m\\.dialogTimer = invalid[\\s\\S]*askLaptopToken\\(\\)/, "Laptop setup must fall back to token entry if the transition timer is unavailable");
+assert.match(home, /dialog\.SetFocus\(true\)/, "Roku URL and token dialogs must explicitly receive focus");
+assert.match(home, /if m\.dialogTimer = invalid[\s\S]*askLaptopToken\(\)/, "Laptop setup must fall back to token entry if the transition timer is unavailable");
 console.log("PASS: Android pairing CORS headers and Roku dialog focus/fallback regression checks.");
