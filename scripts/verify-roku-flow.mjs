@@ -34,3 +34,11 @@ assert.match(home, /startSyncTask\("pair-device"/, "Pairing must use the backgro
 assert.match(home, /startSyncTask\("favorite"/, "Favorite writes must use the background sync task");
 assert.match(home, /startSyncTask\("sync"/, "Account refresh must use the background sync task");
 console.log("PASS: Roku account pairing, favorites and sync run off the UI thread.");
+
+const progressTask = read("apps/roku/components/ProgressTask.brs");
+const progressTaskXml = read("apps/roku/components/ProgressTask.xml");
+assert.match(progressTaskXml, /extends="Task"/, "Playback progress network writes must run in a SceneGraph Task");
+assert.match(player, /CreateObject\("roSGNode", "ProgressTask"\)/, "Player must delegate cloud progress writes to ProgressTask");
+assert.doesNotMatch(player, /syncTransfer\.PostFromString/, "Player UI thread must not perform blocking cloud progress writes");
+assert.match(progressTask, /PostFromString\(FormatJson\(payload\)\)/, "ProgressTask must persist playback position to the sync endpoint");
+console.log("PASS: playback progress uploads run off the Roku UI thread.");
