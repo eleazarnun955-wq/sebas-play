@@ -70,6 +70,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.content.SharedPreferences;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -94,12 +95,23 @@ public class VlcPlaybackActivity extends Activity {
     private TextView timeLabel;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private boolean released = false;
+    private String progressKey = "";
+    private long savedPosition = 0;
+    private boolean resumeApplied = false;
     private final Runnable progressUpdate = new Runnable() {
         @Override public void run() {
             if (player != null && seekBar != null && timeLabel != null) {
                 long length = player.getLength();
                 long current = player.getTime();
                 if (length > 0) {
+                    if (!resumeApplied) {
+                        resumeApplied = true;
+                        if (savedPosition > 5000 && savedPosition < length - 15000) {
+                            player.setTime(savedPosition);
+                            current = savedPosition;
+                            android.widget.Toast.makeText(VlcPlaybackActivity.this, "Continuando donde lo dejaste", android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    }
                     seekBar.setMax(1000);
                     seekBar.setProgress((int)Math.min(1000, Math.max(0, current * 1000 / length)));
                 }
@@ -121,6 +133,9 @@ public class VlcPlaybackActivity extends Activity {
         String url = getIntent().getStringExtra("url");
         String title = getIntent().getStringExtra("title");
         if (url == null || url.trim().isEmpty()) { finish(); return; }
+        progressKey = "position_" + Integer.toHexString(url.hashCode());
+        SharedPreferences resumeStore = getSharedPreferences("sebas_play_resume", MODE_PRIVATE);
+        savedPosition = resumeStore.getLong(progressKey, 0);
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
@@ -199,7 +214,15 @@ public class VlcPlaybackActivity extends Activity {
         if (released) return;
         released = true;
         handler.removeCallbacks(progressUpdate);
-        if (player != null) { player.stop(); player.detachViews(); player.release(); player = null; }
+        if (player != null) {
+            long current = player.getTime();
+            long length = player.getLength();
+            SharedPreferences.Editor editor = getSharedPreferences("sebas_play_resume", MODE_PRIVATE).edit();
+            if (length > 0 && current > 5000 && current < length - 15000) editor.putLong(progressKey, current);
+            else editor.remove(progressKey);
+            editor.apply();
+            player.stop(); player.detachViews(); player.release(); player = null;
+        }
         if (libVLC != null) { libVLC.release(); libVLC = null; }
     }
 
