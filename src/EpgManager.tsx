@@ -15,6 +15,16 @@ function displayTime(value: string) {
   return new Date(value).toLocaleString("es-MX", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+async function hasPublishedOverlap(channelId: string, startsAt: string, endsAt: string, excludeId?: string) {
+  if (!supabase) return false;
+  let query = supabase.from("epg_programs").select("id").eq("channel_id", channelId)
+    .eq("is_published", true).lt("starts_at", endsAt).gt("ends_at", startsAt);
+  if (excludeId) query = query.neq("id", excludeId);
+  const { data, error } = await query.limit(1);
+  if (error) throw error;
+  return Boolean(data?.length);
+}
+
 export default function EpgManager() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -55,6 +65,15 @@ export default function EpgManager() {
       setNotice({ kind: "error", text: "La hora de finalización debe ser posterior al inicio." }); return;
     }
     setSaving(true); setNotice(null);
+    try {
+      if (await hasPublishedOverlap(channelId, start.toISOString(), end.toISOString())) {
+        setNotice({ kind: "error", text: "Ese horario se cruza con otro programa publicado del mismo canal. Ajusta la hora antes de guardar." });
+        setSaving(false); return;
+      }
+    } catch (error) {
+      setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudo validar el horario." });
+      setSaving(false); return;
+    }
     const { error } = await supabase.from("epg_programs").insert({
       channel_id: channelId, title: title.trim(), description: description.trim() || null,
       starts_at: start.toISOString(), ends_at: end.toISOString(),
@@ -70,6 +89,17 @@ export default function EpgManager() {
 
   async function togglePublished(program: Program) {
     if (!supabase) return;
+    if (!program.is_published) {
+      try {
+        if (await hasPublishedOverlap(program.channel_id, program.starts_at, program.ends_at, program.id)) {
+          setNotice({ kind: "error", text: "No se puede publicar: el horario se cruza con otro programa ya publicado en ese canal." });
+          return;
+        }
+      } catch (error) {
+        setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudo validar el horario." });
+        return;
+      }
+    }
     const { error } = await supabase.from("epg_programs").update({ is_published: !program.is_published, updated_at: new Date().toISOString() }).eq("id", program.id);
     if (error) setNotice({ kind: "error", text: error.message });
     else { setNotice({ kind: "ok", text: program.is_published ? "Programa retirado de la guía." : "Programa publicado en la guía." }); await load(); }
