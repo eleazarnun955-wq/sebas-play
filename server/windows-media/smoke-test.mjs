@@ -88,6 +88,9 @@ try {
   assert.equal(catalog.series[0].title, "The Office");
   assert.equal(catalog.series[0].seasons[0].season_number, 1);
   assert.equal(catalog.series[0].seasons[0].episodes[0].episode_number, 2);
+  const groupedEpisode = catalog.series[0].seasons[1].episodes[0];
+  if (capabilities.ffmpeg.installed) assert.ok((groupedEpisode.transcode_url || "").includes("/transcode/"), "grouped Roku episodes must expose signed FFmpeg URLs");
+  else assert.equal(groupedEpisode.transcode_url, null, "grouped episodes must not expose conversion URLs when FFmpeg is unavailable");
   const mkvItem = catalog.items.find(item => item.file === "sample.mkv");
   assert.ok(mkvItem, "catalog must expose the MKV sample");
   if (capabilities.ffmpeg.installed) {
