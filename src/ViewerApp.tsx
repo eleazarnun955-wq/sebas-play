@@ -55,13 +55,13 @@ export default function ViewerApp(){
   ...channels.map(item=>({kind:"channel" as const,item,date:item.created_at}))
  ].sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,12),[movies,series,channels]);
  async function playNativeContent(url:string,title:string,type:"movie"|"episode",id:string){
-  let progressContext: {supabaseUrl:string;anonKey:string;accessToken:string;userId:string;contentType:"movie"|"episode";contentId:string}|undefined;
+  let progressContext: {supabaseUrl:string;anonKey:string;accessToken:string;userId:string;contentType:"movie"|"episode";contentId:string;profileId:string|null}|undefined;
   if(supabase&&user){
    const {data}=await supabase.auth.getSession();
    if(data.session){
     const supabaseUrl=import.meta.env.VITE_SUPABASE_URL as string|undefined;
     const anonKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string|undefined;
-    if(supabaseUrl&&anonKey) progressContext={supabaseUrl,anonKey,accessToken:data.session.access_token,userId:user.id,contentType:type,contentId:id};
+    if(supabaseUrl&&anonKey) progressContext={supabaseUrl,anonKey,accessToken:data.session.access_token,userId:user.id,contentType:type,contentId:id,profileId:activeProfileId};
    }
   }
   await openNativeVlc(url,title,progressContext);
