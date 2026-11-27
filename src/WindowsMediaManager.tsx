@@ -240,7 +240,7 @@ export default function WindowsMediaManager() {
         <div><span className="wm-eyebrow">BIBLIOTECA PRINCIPAL</span><h2>Servidor Windows 10</h2><p>Conecta la laptop y envía sus películas al catálogo que comparten Android y Roku.</p></div>
       </div>
       <div className="wm-security"><ShieldCheck size={18} /><span>El token solo se usa desde este panel de administrador. Los videos se transmiten desde la laptop; no se copian a Supabase Storage.</span></div>
-      {capabilities && <div className="wm-security"><Server size={18} /><span><b>Compatibilidad multimedia:</b> escaneo automático y reproducción por rangos activos. {capabilities.ffmpeg.installed ? `FFmpeg detectado (${capabilities.ffmpeg.version || "versión no identificada"}).` : "FFmpeg no está instalado o no está disponible en PATH."} La conversión automática todavía no está habilitada en esta versión.</span></div>}
+      {capabilities && <div className="wm-security"><Server size={18} /><span><b>Compatibilidad multimedia:</b> escaneo automático y reproducción por rangos activos. {capabilities.ffmpeg.installed ? `FFmpeg detectado (${capabilities.ffmpeg.version || "versión no identificada"}).` : "FFmpeg no está instalado o no está disponible en PATH."} {capabilities.ffmpeg.transcodingEndpoint ? "La conversión MP4 para Roku está disponible para archivos compatibles." : "La conversión para Roku requiere instalar FFmpeg en la laptop."}</span></div>}
       <div className="wm-connect-card">
         <label>Dirección HTTPS pública o dirección local del servidor</label>
         <input value={serverUrl} onChange={e => setServerUrl(e.target.value)} placeholder="http://192.168.1.15:8787" autoComplete="url" />
