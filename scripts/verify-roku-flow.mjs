@@ -43,10 +43,7 @@ assert.doesNotMatch(player, /syncTransfer\.PostFromString/, "Player UI thread mu
 assert.match(progressTask, /PostFromString\(FormatJson\(payload\)\)/, "ProgressTask must persist playback position to the sync endpoint");
 console.log("PASS: playback progress uploads run off the Roku UI thread.");
 
-const catalogTask = read("apps/roku/components/CatalogTask.brs");
-const syncTask = read("apps/roku/components/SyncTask.brs");
-const progressTask = read("apps/roku/components/ProgressTask.brs");
-for (const [name, source] of [["CatalogTask", catalogTask], ["SyncTask", syncTask], ["ProgressTask", progressTask]]) {
+for (const [name, source] of [["CatalogTask", catalog], ["SyncTask", syncTask], ["ProgressTask", progressTask]]) {
   const transfers = (source.match(/CreateObject\("roUrlTransfer"\)/g) || []).length;
   const guarded = (source.match(/\b\w+\.SetMinimumTransferRate\(/g) || []).length;
   assert.equal(guarded, transfers, name + " must protect every network transfer against stalled responses");
