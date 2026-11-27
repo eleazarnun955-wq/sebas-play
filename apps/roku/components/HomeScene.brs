@@ -222,21 +222,7 @@ sub toggleFocusedFavorite()
             exit for
         end if
     end for
-    transfer = CreateObject("roUrlTransfer")
-    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    transfer.InitClientCertificates()
-    transfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
-    transfer.AddHeader("apikey", SebasPlayPublishableKey())
-    transfer.AddHeader("Authorization", "Bearer " + m.deviceToken)
-    transfer.AddHeader("Content-Type", "application/json")
-    payload = { action: "favorite", content_type: contentType, content_id: contentId, operation: operation }
-    response = transfer.PostFromString(FormatJson(payload))
-    if transfer.GetResponseCode() <> 200 or response = invalid
-        m.status.text = "No se pudo actualizar el favorito. Inténtalo de nuevo."
-        return
-    end if
-    m.status.text = "Favorito " + operation + " sincronizado con Android."
-    syncRokuAccount()
+    startSyncTask("favorite", { content_type: contentType, content_id: contentId, operation: operation })
 end sub
 
 sub askRokuPairCode()
@@ -261,28 +247,7 @@ sub onRokuPairCodeEntered()
         return
     end if
     m.status.text = "Vinculando Roku con tu cuenta SEBAS PLAY..."
-    transfer = CreateObject("roUrlTransfer")
-    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    transfer.InitClientCertificates()
-    transfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
-    transfer.AddHeader("apikey", SebasPlayPublishableKey())
-    transfer.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
-    transfer.AddHeader("Content-Type", "application/json")
-    body = FormatJson({ action: "pair-device", code: code, device_name: "SEBAS PLAY Roku" })
-    response = transfer.PostFromString(body)
-    if transfer.GetResponseCode() <> 200 or response = invalid
-        m.status.text = "No se pudo vincular. Revisa el código y vuelve a generarlo desde Android."
-        return
-    end if
-    parsed = ParseJson(response)
-    if type(parsed) <> "roAssociativeArray" or safeString(parsed.device_token) = ""
-        m.status.text = "La respuesta de vinculación no fue válida."
-        return
-    end if
-    m.deviceToken = parsed.device_token
-    m.registry.Write("rokuDeviceToken", m.deviceToken)
-    m.registry.Flush()
-    syncRokuAccount()
+    startSyncTask("pair-device", { code: code, device_name: "SEBAS PLAY Roku" })
 end sub
 
 sub syncRokuAccount()
@@ -290,23 +255,55 @@ sub syncRokuAccount()
         m.status.text = "Primero vincula este Roku desde tu cuenta Android."
         return
     end if
-    transfer = CreateObject("roUrlTransfer")
-    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    transfer.InitClientCertificates()
-    transfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync?action=sync")
-    transfer.AddHeader("apikey", SebasPlayPublishableKey())
-    transfer.AddHeader("Authorization", "Bearer " + m.deviceToken)
-    transfer.AddHeader("Accept", "application/json")
-    response = transfer.GetToString()
-    if transfer.GetResponseCode() <> 200 or response = invalid
-        m.status.text = "Roku vinculado, pero no se pudo descargar la sincronización."
-        loadCatalog()
+    startSyncTask("sync", {})
+end sub
+
+sub startSyncTask(action as string, payload as object)
+    if m.syncTask <> invalid and m.syncTask.control = "RUN"
+        m.status.text = "Hay una sincronización en curso. Espera un momento..."
+        return
+    end if
+    m.syncTask = CreateObject("roSGNode", "SyncTask")
+    m.syncTask.action = action
+    m.syncTask.deviceToken = m.deviceToken
+    m.syncTask.payload = payload
+    m.syncTask.ObserveField("response", "onSyncTaskCompleted")
+    m.syncTask.ObserveField("errorMessage", "onSyncTaskError")
+    m.syncTask.control = "RUN"
+end sub
+
+sub onSyncTaskError()
+    if m.syncTask <> invalid and m.syncTask.errorMessage <> ""
+        m.status.text = m.syncTask.errorMessage
+        if m.syncTask.action = "sync" then loadCatalog()
+    end if
+end sub
+
+sub onSyncTaskCompleted()
+    if m.syncTask = invalid then return
+    response = m.syncTask.response
+    if response = invalid or response = ""
+        m.status.text = "El servicio de sincronización no devolvió datos."
         return
     end if
     parsed = ParseJson(response)
     if type(parsed) <> "roAssociativeArray"
-        m.status.text = "Respuesta de sincronización inválida."
-        loadCatalog()
+        m.status.text = "La respuesta de sincronización no es válida."
+        return
+    end if
+    if m.syncTask.action = "pair-device"
+        if safeString(parsed.device_token) = ""
+            m.status.text = "La vinculación no devolvió un token válido."
+            return
+        end if
+        m.deviceToken = parsed.device_token
+        m.registry.Write("rokuDeviceToken", m.deviceToken)
+        m.registry.Flush()
+        syncRokuAccount()
+        return
+    else if m.syncTask.action = "favorite"
+        m.status.text = "Favorito actualizado. Sincronizando tu lista..."
+        syncRokuAccount()
         return
     end if
     m.syncedProgress = {}
