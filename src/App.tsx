@@ -11,8 +11,9 @@ import StorageManager from "./StorageManager";
 import WindowsMediaManager from "./WindowsMediaManager";
 import ProfilesManager from "./ProfilesManager";
 import EpgManager from "./EpgManager";
+import MetadataManager from "./MetadataManager";
 
-type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources" | "storage" | "windows" | "profiles" | "epg";
+type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources" | "storage" | "windows" | "profiles" | "epg" | "metadata";
 type Movie = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string; poster_url: string | null };
 type Series = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string };
 type Channel = { id: string; name: string; category: string | null; is_published: boolean; country_code: string | null };
@@ -318,6 +319,7 @@ export default function App() {
     { id: "windows" as const, label: "Servidor Windows", icon: Server },
     { id: "profiles" as const, label: "Perfiles familiares", icon: Users },
     { id: "epg" as const, label: "Guía EPG", icon: CalendarClock },
+    { id: "metadata" as const, label: "Fichas y carteles", icon: Film },
   ];
 
   const filteredMovies = movies.filter((m) => m.title.toLowerCase().includes(search.toLowerCase()));
@@ -342,6 +344,7 @@ export default function App() {
         {section === "windows" && <section className="content"><WindowsMediaManager /></section>}
         {section === "profiles" && <section className="content"><ProfilesManager /></section>}
         {section === "epg" && <section className="content"><EpgManager /></section>}
+        {section === "metadata" && <section className="content"><MetadataManager /></section>}
         {section === "overview" && <section className="content">
           <div className="welcome-banner"><div><div className="eyebrow">TU PLATAFORMA, TU CONTENIDO</div><h1>Bienvenido a <span>SEBAS PLAY</span></h1><p>Administra el contenido que se mostrará en tus aplicaciones.</p></div><div className="banner-icon"><Tv2 size={58} /></div></div>
           <div className="stat-grid">
@@ -359,7 +362,7 @@ export default function App() {
           <div className="info-strip"><ShieldCheck size={19} /><div><b>Publicación protegida</b><p>Todo contenido nuevo se guarda como borrador. Revisa sus derechos y datos antes de publicarlo.</p></div></div>
         </section>}
 
-        {section !== "overview" && section !== "episodes" && section !== "sources" && section !== "storage" && section !== "profiles" && section !== "epg" && <section className="content">
+        {section !== "overview" && section !== "episodes" && section !== "sources" && section !== "storage" && section !== "profiles" && section !== "epg" && section !== "metadata" && <section className="content">
           <div className="list-toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar en el catálogo…" /></div><button className="primary-btn" onClick={() => setModal(section === "movies" ? "movie" : section === "series" ? "series" : "channel")}><Plus size={17} /> Agregar {section === "movies" ? "película" : section === "series" ? "serie" : "canal"}</button></div>
           {loading ? <div className="empty-state"><LoaderCircle className="spin" /> Cargando catálogo…</div> :
             section === "movies" ? <ContentTable title="Películas" rows={filteredMovies.map((m) => ({ id: m.id, title: m.title, detail: [m.release_year, sourceLabels[m.source_type] ?? m.source_type].filter(Boolean).join(" · "), published: m.is_published, table: "movies" as const }))} onToggle={togglePublished} onDelete={deleteItem} /> :
