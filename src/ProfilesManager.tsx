@@ -20,66 +20,118 @@ export default function ProfilesManager() {
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const loadSequence = useRef(0);
+  const mounted = useRef(true);
 
+  // Never leave the profile screen waiting forever if the Edge Function stalls.
   const call = useCallback(async (body: Record<string, unknown>) => {
     if (!supabase) throw new Error("Supabase no está configurado.");
-    const { data, error } = await supabase.functions.invoke("sebas-family-profiles", { body });
-    if (error) throw new Error(error.message || "No se pudo conectar con el servicio de perfiles.");
-    if (data?.error) throw new Error(String(data.error));
-    return data;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    try {
+      const { data, error } = await supabase.functions.invoke("sebas-family-profiles", {
+        body,
+        signal: controller.signal,
+      });
+      if (error) {
+        const message = error.message || "No se pudo conectar con el servicio de perfiles.";
+        if (controller.signal.aborted) throw new Error("El servidor de perfiles tardó demasiado. Revisa tu conexión e inténtalo de nuevo.");
+        throw new Error(message);
+      }
+      if (data?.error) throw new Error(String(data.error));
+      if (!data) throw new Error("El servidor de perfiles respondió vacío. Inténtalo de nuevo.");
+      return data;
+    } catch (error) {
+      if (controller.signal.aborted || (error instanceof Error && error.name === "AbortError")) {
+        throw new Error("El servidor de perfiles tardó más de 15 segundos. La pantalla se liberó; puedes volver a intentarlo.");
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
   }, []);
 
   const load = useCallback(async () => {
     const request = ++loadSequence.current;
-    setLoading(true);
+    if (mounted.current) setLoading(true);
     try {
       const data = await call({ action: "list-profiles" });
-      if (request !== loadSequence.current) return;
-      setProfiles((data.profiles || []) as FamilyProfile[]);
+      if (!mounted.current || request !== loadSequence.current) return;
+      setProfiles(Array.isArray(data.profiles) ? data.profiles as FamilyProfile[] : []);
     } catch (error) {
-      if (request === loadSequence.current) setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudieron cargar los perfiles." });
-    } finally { if (request === loadSequence.current) setLoading(false); }
+      if (mounted.current && request === loadSequence.current) {
+        setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudieron cargar los perfiles." });
+      }
+    } finally {
+      if (mounted.current && request === loadSequence.current) setLoading(false);
+    }
   }, [call]);
 
-  useEffect(() => { void load(); return () => { loadSequence.current++; }; }, [load]);
+  useEffect(() => {
+    mounted.current = true;
+    void load();
+    return () => {
+      mounted.current = false;
+      loadSequence.current++;
+    };
+  }, [load]);
 
   async function createProfile(event: React.FormEvent) {
     event.preventDefault();
-    if (!name.trim()) return;
-    setSaving(true); setNotice(null);
+    const displayName = name.trim();
+    if (!displayName || saving) return;
+    setSaving(true);
+    setNotice(null);
     try {
-      await call({ action: "create-profile", display_name: name.trim(), ...(pin ? { pin } : {}) });
-      setName(""); setPin("");
+      const data = await call({ action: "create-profile", display_name: displayName, ...(pin ? { pin } : {}) });
+      setName("");
+      setPin("");
+      if (data.profile?.id) {
+        const created = data.profile as FamilyProfile;
+        setProfiles(current => current.some(item => item.id === created.id) ? current : [...current, created]);
+      }
       setNotice({ kind: "ok", text: "Perfil creado correctamente." });
-      await load();
+      // Refresh in the background; creation success is not held hostage by list refresh.
+      void load();
     } catch (error) {
       setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudo crear el perfil." });
-    } finally { setSaving(false); }
+    } finally {
+      if (mounted.current) setSaving(false);
+    }
   }
 
   async function changePin(profile: FamilyProfile) {
     const nextPin = pinDrafts[profile.id] || "";
-    setSaving(true); setNotice(null);
+    if (saving) return;
+    setSaving(true);
+    setNotice(null);
     try {
       await call({ action: "set-profile-pin", profile_id: profile.id, pin: nextPin });
       setPinDrafts(current => ({ ...current, [profile.id]: "" }));
+      setProfiles(current => current.map(item => item.id === profile.id ? { ...item, pin_enabled: true } : item));
       setNotice({ kind: "ok", text: "PIN actualizado para " + profile.display_name + "." });
-      await load();
+      void load();
     } catch (error) {
       setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudo actualizar el PIN." });
-    } finally { setSaving(false); }
+    } finally {
+      if (mounted.current) setSaving(false);
+    }
   }
 
   async function removeProfile(profile: FamilyProfile) {
     if (!window.confirm("¿Eliminar el perfil " + profile.display_name + "? Esta acción no se puede deshacer.")) return;
-    setSaving(true); setNotice(null);
+    if (saving) return;
+    setSaving(true);
+    setNotice(null);
     try {
       await call({ action: "delete-profile", profile_id: profile.id });
+      setProfiles(current => current.filter(item => item.id !== profile.id));
       setNotice({ kind: "ok", text: "Perfil eliminado." });
-      await load();
+      void load();
     } catch (error) {
       setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudo eliminar el perfil." });
-    } finally { setSaving(false); }
+    } finally {
+      if (mounted.current) setSaving(false);
+    }
   }
 
   return <section className="profiles-manager">
@@ -87,7 +139,7 @@ export default function ProfilesManager() {
     <form className="profiles-create" onSubmit={createProfile}>
       <label>Nombre del perfil<input value={name} onChange={event => setName(event.target.value)} maxLength={40} placeholder="Ej. Sala, Niños, Adultos" required /></label>
       <label>PIN opcional<input type="password" inputMode="numeric" pattern="[0-9]{4,8}" maxLength={8} value={pin} onChange={event => setPin(event.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="4 a 8 dígitos" /></label>
-      <button className="primary-btn" type="submit" disabled={saving || !name.trim()}><Plus size={16} /> Crear perfil</button>
+      <button className="primary-btn" type="submit" disabled={saving || !name.trim()}><Plus size={16} /> {saving ? "Guardando…" : "Crear perfil"}</button>
     </form>
     {notice && <div className={"profiles-notice " + notice.kind}>{notice.text}</div>}
     <div className="profiles-heading"><b>Perfiles registrados</b><button className="secondary-btn" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={15} /> Actualizar</button></div>
