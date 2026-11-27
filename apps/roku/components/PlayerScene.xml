@@ -8,6 +8,7 @@
   </interface>
   <script type="text/brightscript" uri="PlayerScene.brs" />
   <children>
+    <Timer id="progressSaveTimer" duration="10" repeat="true" />
     <Video id="video" width="1920" height="1080" enableUI="true" />
     <Rectangle width="1600" height="90" translation="[160,35]" color="0x00000099" />
     <Label id="titleLabel" translation="[190,48]" width="1500" height="60" color="#FFFFFF" font="font:MediumSystemFont" />
