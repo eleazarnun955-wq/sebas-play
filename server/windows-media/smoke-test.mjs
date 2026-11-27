@@ -39,6 +39,16 @@ try {
   assert.equal((await health.json()).ok, true);
   assert.equal(health.headers.get("access-control-allow-origin"), "*");
 
+  const deniedCapabilities = await fetch("http://127.0.0.1:18787/api/capabilities");
+  assert.equal(deniedCapabilities.status, 401, "capabilities must require admin token");
+  const capabilitiesResponse = await fetch("http://127.0.0.1:18787/api/capabilities", { headers: { authorization: "Bearer " + env.SEBAS_ACCESS_TOKEN } });
+  assert.equal(capabilitiesResponse.status, 200, "authorized clients must be able to inspect server capabilities");
+  const capabilities = await capabilitiesResponse.json();
+  assert.equal(capabilities.automaticLibraryScan, true);
+  assert.equal(capabilities.rangePlayback, true);
+  assert.equal(typeof capabilities.ffmpeg.installed, "boolean");
+  assert.equal(capabilities.ffmpeg.transcodingEndpoint, false, "FFmpeg detection must not claim transcoding before the endpoint exists");
+
   const landing = await fetch("http://127.0.0.1:18787/");
   assert.equal(landing.status, 200, "server home page must load");
   assert.match(await landing.text(), /SEBAS PLAY/);
