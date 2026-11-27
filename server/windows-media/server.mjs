@@ -4,6 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
+import { spawnSync } from "node:child_process";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.SEBAS_MEDIA_ROOT || path.join(HERE, "Peliculas"));
@@ -21,6 +22,16 @@ const MIME = {
   ".ts":"video/mp2t", ".m2ts":"video/mp2t", ".3gp":"video/3gpp", ".flv":"video/x-flv", ".wmv":"video/x-ms-wmv"
 };
 const ALLOWED = new Set(Object.keys(MIME));
+const FFMPEG_BIN = process.env.SEBAS_FFMPEG_PATH || "ffmpeg";
+let ffmpegProbeCache = null;
+function getFfmpegStatus() {
+  if (ffmpegProbeCache) return ffmpegProbeCache;
+  const probe = spawnSync(FFMPEG_BIN, ["-version"], { encoding:"utf8", timeout:3000, windowsHide:true });
+  const output = `${probe.stdout || ""}\\n${probe.stderr || ""}`;
+  const version = output.match(/ffmpeg version\\s+([^\\s]+)/i)?.[1] || null;
+  ffmpegProbeCache = { installed:probe.status === 0 && Boolean(version), version, binary:FFMPEG_BIN, transcodingEndpoint:false, message:probe.error?.code === "ENOENT" ? "FFmpeg no está instalado o no está en PATH." : probe.status === 0 ? "FFmpeg detectado; la conversión automática aún no está habilitada." : "No se pudo verificar FFmpeg." };
+  return ffmpegProbeCache;
+}
 
 if (!ACCESS_TOKEN || ACCESS_TOKEN.length < 24) {
   console.error("Falta la clave de acceso. Ejecuta setup-server.ps1 para preparar el servidor.");
@@ -119,7 +130,7 @@ const server = http.createServer(async (req, res) => {
     return res.end(html);
   }
   if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
-  if (url.pathname === "/api/upload" && req.method === "POST") {
+  if (url.pathname === "/api/capabilities" && req.method === "GET") {\n    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");\n    return json(res, 200, { ok:true, server:"SEBAS PLAY 13.0", formats:Object.keys(MIME).map(ext => ext.slice(1)), rangePlayback:true, automaticLibraryScan:true, ffmpeg:getFfmpegStatus() });\n  }\n  if (url.pathname === "/api/upload" && req.method === "POST") {
     if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
     if (!Number.isSafeInteger(length) || length <= 0) return sendError(res, 411, "Se requiere Content-Length");
