@@ -21,15 +21,15 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
     return data;
   },[]);
 
-  const refresh=useCallback(async()=>{
-    setLoading(true);setError("");
-    try { const data=await call({action:"devices"});setDevices((data.devices||[]) as PairedDevice[]); }
+  const refresh=useCallback(async(showLoading=true)=>{
+    if(showLoading)setLoading(true);
+    setError("");
+    try { const data=await call({action:"devices",profile_id:profileId});setDevices((data.devices||[]) as PairedDevice[]); }
     catch(e){setError(e instanceof Error?e.message:"No se pudieron consultar los dispositivos.");}
-    finally{setLoading(false);}
-  },[call]);
+    finally{if(showLoading)setLoading(false);}
+  },[call,profileId]);
 
-  useEffect(()=>{void refresh();},[refresh]);
-  useEffect(()=>{setCode(null);setNotice("");setError("");},[profileId]);
+  useEffect(()=>{setDevices([]);setCode(null);setNotice("");setError("");void refresh();},[profileId,refresh]);
 
   async function generateCode(){
     setLoading(true);setError("");setNotice("");
@@ -41,7 +41,7 @@ export default function DeviceSyncManager({ profileId = null }: { profileId?: st
   async function revoke(device:PairedDevice){
     if(!window.confirm("¿Desvincular "+device.device_name+"?")) return;
     setLoading(true);setError("");
-    try {await call({action:"revoke-device",device_id:device.id});setNotice("Dispositivo desvinculado.");await refresh();}
+    try {await call({action:"revoke-device",device_id:device.id,profile_id:profileId});setNotice("Dispositivo desvinculado.");await refresh(false);}
     catch(e){setError(e instanceof Error?e.message:"No se pudo desvincular.");}
     finally{setLoading(false);}
   }
