@@ -55,10 +55,12 @@ function safeEqual(a, b) {
   const bb = Buffer.from(String(b || ""));
   return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
 }
-function authorized(req, url) {
+function authorized(req) {
+  // Admin credentials are accepted only in the Authorization header; query strings
+  // can leak through browser history, proxy logs, analytics, and copied URLs.
   const header = req.headers.authorization || "";
   const bearer = header.startsWith("Bearer ") ? header.slice(7) : "";
-  return safeEqual(bearer, ACCESS_TOKEN) || safeEqual(url.searchParams.get("access_token"), ACCESS_TOKEN);
+  return safeEqual(bearer, ACCESS_TOKEN);
 }
 function signature(rel, exp) {
   return crypto.createHmac("sha256", SIGNING_SECRET).update(`${rel}\n${exp}`).digest("hex");
@@ -157,11 +159,11 @@ const server = http.createServer(async (req, res) => {
   }
   if (url.pathname === "/health" && req.method === "GET") return json(res, 200, { ok:true, service:"SEBAS PLAY Windows Media Server", storage_root:ROOT, port:PORT, access_url:`${requestBaseUrl(req)}/` });
   if (url.pathname === "/api/capabilities" && req.method === "GET") {
-    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
     return json(res, 200, { ok:true, server:"SEBAS PLAY 13.0", formats:Object.keys(MIME).map(ext => ext.slice(1)), rangePlayback:true, automaticLibraryScan:true, ffmpeg:getFfmpegStatus() });
   }
   if (url.pathname === "/api/upload" && req.method === "POST") {
-    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
     const length = Number(req.headers["content-length"] || 0);
     if (!Number.isSafeInteger(length) || length <= 0) return sendError(res, 411, "Se requiere Content-Length");
     if (length > MAX_UPLOAD_BYTES) return sendError(res, 413, "El archivo supera el límite configurado");
@@ -180,7 +182,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
   if (url.pathname === "/api/catalog" && req.method === "GET") {
-    if (!authorized(req, url)) return sendError(res, 401, "No autorizado");
+    if (!authorized(req)) return sendError(res, 401, "No autorizado");
     try {
       const items = await walk(ROOT, "", req);
       const movies = items.filter(x => x.media_type === "movie");
