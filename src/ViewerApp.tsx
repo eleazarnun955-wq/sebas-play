@@ -21,7 +21,7 @@ export default function ViewerApp(){
  const [movies,setMovies]=useState<Movie[]>([]),[series,setSeries]=useState<Series[]>([]),[channels,setChannels]=useState<Channel[]>([]);
  const [channelPrograms,setChannelPrograms]=useState<ChannelProgram[]>([]);
  const [loading,setLoading]=useState(true),[error,setError]=useState(""),[search,setSearch]=useState(""),[activeGenre,setActiveGenre]=useState("Todos"),[selected,setSelected]=useState<Selected|null>(null);
- const [user,setUser]=useState<any>(null),[authOpen,setAuthOpen]=useState(false),[authMode,setAuthMode]=useState<"login"|"signup">("login"),[authEmail,setAuthEmail]=useState(""),[authPassword,setAuthPassword]=useState(""),[authBusy,setAuthBusy]=useState(false),[favorites,setFavorites]=useState<Favorite[]>([]),[seasons,setSeasons]=useState<Season[]>([]),[episodes,setEpisodes]=useState<Episode[]>([]),[seasonId,setSeasonId]=useState(""),[episode,setEpisode]=useState<Episode|null>(null),[busy,setBusy]=useState(false);const [history,setHistory]=useState<WatchProgress[]>([]);const [profiles,setProfiles]=useState<FamilyProfile[]>([]);const [activeProfileId,setActiveProfileId]=useState<string|null>(null);const [profilePin,setProfilePin]=useState("");const [profileNeedsPin,setProfileNeedsPin]=useState(false);const [profileUnlocked,setProfileUnlocked]=useState(true);const progressWriteRef=useRef<Record<string,number>>({});const progressInFlightRef=useRef<Record<string,boolean>>({});const [adminStorageOpen,setAdminStorageOpen]=useState(false);const [laptopOpen,setLaptopOpen]=useState(false);const [syncOpen,setSyncOpen]=useState(false);const videoRef=useRef<HTMLVideoElement|null>(null);
+ const [user,setUser]=useState<any>(null),[authOpen,setAuthOpen]=useState(false),[authMode,setAuthMode]=useState<"login"|"signup">("login"),[authEmail,setAuthEmail]=useState(""),[authPassword,setAuthPassword]=useState(""),[authBusy,setAuthBusy]=useState(false),[favorites,setFavorites]=useState<Favorite[]>([]),[seasons,setSeasons]=useState<Season[]>([]),[episodes,setEpisodes]=useState<Episode[]>([]),[seasonId,setSeasonId]=useState(""),[episode,setEpisode]=useState<Episode|null>(null),[busy,setBusy]=useState(false);const [history,setHistory]=useState<WatchProgress[]>([]);const [profiles,setProfiles]=useState<FamilyProfile[]>([]);const [activeProfileId,setActiveProfileId]=useState<string|null>(null);const [profilePin,setProfilePin]=useState("");const [profileNeedsPin,setProfileNeedsPin]=useState(false);const [profileUnlocked,setProfileUnlocked]=useState(true);const progressWriteRef=useRef<Record<string,number>>({});const progressInFlightRef=useRef<Record<string,boolean>>({});const progressQueueRef=useRef<Record<string,{table:"family_profile_watch_progress"|"watch_progress";row:any;type:"movie"|"episode";id:string}>>({});const [adminStorageOpen,setAdminStorageOpen]=useState(false);const [laptopOpen,setLaptopOpen]=useState(false);const [syncOpen,setSyncOpen]=useState(false);const videoRef=useRef<HTMLVideoElement|null>(null);
  useEffect(()=>{let alive=true;async function load(){if(!supabase){setError("SEBAS PLAY todavía no está conectado al catálogo.");setLoading(false);return}
   const [m,s,c,session]=await Promise.all([
    supabase.from("movies").select("id,title,synopsis,poster_url,backdrop_url,release_year,duration_minutes,age_rating,genres,video_url,rights_note,created_at").eq("is_published",true).order("created_at",{ascending:false}),
@@ -70,30 +70,34 @@ export default function ViewerApp(){
   if(!supabase||!user||(activeProfileId&&!profileUnlocked)||!Number.isFinite(position)||(!force&&position<5))return;
   const progressKey=(activeProfileId||"account")+":"+type+":"+id;
   const now=Date.now();
-  if(progressInFlightRef.current[progressKey])return;
   if(!force&&now-(progressWriteRef.current[progressKey]||0)<8000)return;
+  const profileId=activeProfileId;
+  const row={user_id:user.id,...(profileId?{profile_id:profileId}:{}),content_type:type,content_id:id,position_seconds:Math.max(0,Math.floor(position)),duration_seconds:Number.isFinite(duration)&&duration>0?Math.floor(duration):null,updated_at:new Date().toISOString()};
+  progressQueueRef.current[progressKey]={table:profileId?"family_profile_watch_progress":"watch_progress",row,type,id};
+  if(progressInFlightRef.current[progressKey])return;
   progressInFlightRef.current[progressKey]=true;
   progressWriteRef.current[progressKey]=now;
-  try{
-   const progressTable=activeProfileId?"family_profile_watch_progress":"watch_progress";
-   const row={user_id:user.id,...(activeProfileId?{profile_id:activeProfileId}:{}),content_type:type,content_id:id,position_seconds:Math.max(0,Math.floor(position)),duration_seconds:Number.isFinite(duration)&&duration>0?Math.floor(duration):null,updated_at:new Date().toISOString()};
-   let lookup=supabase.from(progressTable).select("id").eq("user_id",user.id).eq("content_type",type).eq("content_id",id);
-   if(activeProfileId)lookup=lookup.eq("profile_id",activeProfileId);
-   const {data:existing,error:lookupError}=await lookup.maybeSingle();
-   if(lookupError)throw lookupError;
-   if(existing){
-    const {error}=await supabase.from(progressTable).update(row).eq("id",existing.id);
-    if(error)throw error;
-   }else{
-    const {error}=await supabase.from(progressTable).insert(row);
-    if(error)throw error;
+  while(true){
+   const pending=progressQueueRef.current[progressKey];
+   if(!pending){delete progressInFlightRef.current[progressKey];break}
+   delete progressQueueRef.current[progressKey];
+   try{
+    let lookup=supabase.from(pending.table).select("id").eq("user_id",pending.row.user_id).eq("content_type",pending.type).eq("content_id",pending.id);
+    if(pending.row.profile_id)lookup=lookup.eq("profile_id",pending.row.profile_id);
+    const {data:existing,error:lookupError}=await lookup.maybeSingle();
+    if(lookupError)throw lookupError;
+    if(existing){
+     const {error}=await supabase.from(pending.table).update(pending.row).eq("id",existing.id);
+     if(error)throw error;
+    }else{
+     const {error}=await supabase.from(pending.table).insert(pending.row);
+     if(error)throw error;
+    }
+    setHistory(old=>[pending.row,...old.filter(x=>!(x.content_type===pending.type&&x.content_id===pending.id))].slice(0,12));
+   }catch(err){
+    setError(err instanceof Error?err.message:"No se pudo guardar el progreso.");
+    delete progressWriteRef.current[progressKey];
    }
-   setHistory(old=>[row,...old.filter(x=>!(x.content_type===type&&x.content_id===id))].slice(0,12));
-  }catch(err){
-   setError(err instanceof Error?err.message:"No se pudo guardar el progreso.");
-   if(!force)delete progressWriteRef.current[progressKey];
-  }finally{
-   delete progressInFlightRef.current[progressKey];
   }
  }
  async function toggleFavorite(kind:"movie"|"series"|"channel",id:string){if(!supabase)return;if(activeProfileId&&!profileUnlocked){setError("Desbloquea el perfil antes de guardar favoritos.");return}if(!user){setError("Inicia sesión para guardar tus favoritos.");return}setBusy(true);const exists=favorites.some(f=>f.content_type===kind&&f.content_id===id);const favoritesTable=activeProfileId?"family_profile_favorites":"favorites";let remove=supabase.from(favoritesTable).delete().eq("user_id",user.id).eq("content_type",kind).eq("content_id",id);if(activeProfileId)remove=remove.eq("profile_id",activeProfileId);let saveError: {message:string}|null=null;if(exists){const {error}=await remove;saveError=error}else{const {error}=await supabase.from(favoritesTable).insert({user_id:user.id,...(activeProfileId?{profile_id:activeProfileId}:{}),content_type:kind,content_id:id});saveError=error}setBusy(false);if(saveError){setError(saveError.message);return}setFavorites(old=>exists?old.filter(f=>!(f.content_type===kind&&f.content_id===id)):[...old,{content_type:kind,content_id:id}])}
