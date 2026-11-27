@@ -52,20 +52,25 @@ sub savePlaybackPosition()
             m.registry.Write("lastVideoUrl", m.top.videoUrl)
             m.registry.Write("lastVideoPosition", position.ToStr())
             m.registry.Flush()
-            if m.top.syncToken <> "" and m.top.contentId <> "" and (m.top.contentType = "movie" or m.top.contentType = "episode")
-                syncTransfer = CreateObject("roUrlTransfer")
-                syncTransfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-                syncTransfer.InitClientCertificates()
-                syncTransfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
-                syncTransfer.AddHeader("apikey", SebasPlayPublishableKey())
-                syncTransfer.AddHeader("Authorization", "Bearer " + m.top.syncToken)
-                syncTransfer.AddHeader("Content-Type", "application/json")
-                duration = m.video.duration
-                syncBody = FormatJson({ action: "progress", content_type: m.top.contentType, content_id: m.top.contentId, position_seconds: position, duration_seconds: duration })
-                syncTransfer.PostFromString(syncBody)
-            end if
+            syncPlaybackProgress(position, m.video.duration)
         end if
     end if
+end sub
+
+
+sub syncPlaybackProgress(position as dynamic, duration as dynamic)
+    if m.top.syncToken = "" or m.top.contentId = "" then return
+    if m.top.contentType <> "movie" and m.top.contentType <> "episode" then return
+    syncTransfer = CreateObject("roUrlTransfer")
+    syncTransfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    syncTransfer.InitClientCertificates()
+    syncTransfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
+    syncTransfer.AddHeader("apikey", SebasPlayPublishableKey())
+    syncTransfer.AddHeader("Authorization", "Bearer " + m.top.syncToken)
+    syncTransfer.AddHeader("Content-Type", "application/json")
+    payload = { action: "progress", content_type: m.top.contentType, content_id: m.top.contentId, position_seconds: Int(position) }
+    if duration <> invalid and duration > 0 then payload.duration_seconds = Int(duration)
+    syncTransfer.PostFromString(FormatJson(payload))
 end sub
 
 sub onVideoState()
@@ -95,6 +100,8 @@ sub onVideoState()
         m.registry.Write("lastVideoUrl", m.top.videoUrl)
         m.registry.Write("lastVideoPosition", "0")
         m.registry.Flush()
+        ' Clear cloud resume position when playback reaches the end.
+        syncPlaybackProgress(0, m.video.duration)
         m.saveTimer.control = "stop"
         m.top.wasClosed = true
         m.top.RemoveFromParent()
