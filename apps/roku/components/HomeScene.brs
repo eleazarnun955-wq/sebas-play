@@ -6,7 +6,9 @@ sub init()
     m.dialogTransition = ""
     m.actions = m.top.FindNode("topActions")
     m.rows.ObserveField("rowItemSelected", "onItemSelected")
+    m.rows.ObserveField("rowItemFocused", "onItemFocused")
     m.actions.ObserveField("buttonSelected", "onActionSelected")
+    m.focusedItem = invalid
     connectButton = m.actions.CreateChild("Button")
     connectButton.text = "Conectar laptop"
     refreshButton = m.actions.CreateChild("Button")
@@ -178,6 +180,62 @@ sub onPlayerError()
     if m.activePlayer <> invalid and m.activePlayer.errorMessage <> invalid and m.activePlayer.errorMessage <> ""
         m.status.text = m.activePlayer.errorMessage
     end if
+end sub
+
+sub onItemFocused()
+    selection = m.rows.rowItemFocused
+    if selection = invalid then return
+    rowIndex = selection[0]
+    itemIndex = selection[1]
+    if m.rows.content = invalid then return
+    row = m.rows.content.GetChild(rowIndex)
+    if row = invalid then return
+    m.focusedItem = row.GetChild(itemIndex)
+end sub
+
+function onKeyEvent(key as string, press as boolean) as boolean
+    if not press then return false
+    if key = "options"
+        toggleFocusedFavorite()
+        return true
+    end if
+    return false
+end function
+
+sub toggleFocusedFavorite()
+    if m.deviceToken = "" or m.focusedItem = invalid
+        m.status.text = "Vincula Roku con Android y selecciona una película o episodio para guardar favoritos."
+        return
+    end if
+    item = m.focusedItem
+    contentType = safeString(item.contentType)
+    contentId = safeString(item.contentId)
+    if (contentType <> "movie" and contentType <> "series" and contentType <> "channel") or Len(contentId) <> 36
+        m.status.text = "Este elemento no admite favoritos sincronizados."
+        return
+    end if
+    operation = "add"
+    for each favorite in m.syncedFavorites
+        if safeString(favorite.content_type) = contentType and safeString(favorite.content_id) = contentId
+            operation = "remove"
+            exit for
+        end if
+    end for
+    transfer = CreateObject("roUrlTransfer")
+    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    transfer.InitClientCertificates()
+    transfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
+    transfer.AddHeader("apikey", SebasPlayPublishableKey())
+    transfer.AddHeader("Authorization", "Bearer " + m.deviceToken)
+    transfer.AddHeader("Content-Type", "application/json")
+    payload = { action: "favorite", content_type: contentType, content_id: contentId, operation: operation }
+    response = transfer.PostFromString(FormatJson(payload))
+    if transfer.GetResponseCode() <> 200 or response = invalid
+        m.status.text = "No se pudo actualizar el favorito. Inténtalo de nuevo."
+        return
+    end if
+    m.status.text = "Favorito " + operation + " sincronizado con Android."
+    syncRokuAccount()
 end sub
 
 sub askRokuPairCode()
