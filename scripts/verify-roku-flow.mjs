@@ -42,3 +42,13 @@ assert.match(player, /CreateObject\("roSGNode", "ProgressTask"\)/, "Player must 
 assert.doesNotMatch(player, /syncTransfer\.PostFromString/, "Player UI thread must not perform blocking cloud progress writes");
 assert.match(progressTask, /PostFromString\(FormatJson\(payload\)\)/, "ProgressTask must persist playback position to the sync endpoint");
 console.log("PASS: playback progress uploads run off the Roku UI thread.");
+
+const catalogTask = read("apps/roku/components/CatalogTask.brs");
+const syncTask = read("apps/roku/components/SyncTask.brs");
+const progressTask = read("apps/roku/components/ProgressTask.brs");
+for (const [name, source] of [["CatalogTask", catalogTask], ["SyncTask", syncTask], ["ProgressTask", progressTask]]) {
+  const transfers = (source.match(/CreateObject\("roUrlTransfer"\)/g) || []).length;
+  const guards = (source.match(/SetMinimumTransferRate\(1, 20\)/g) || []).length;
+  assert.equal(guards, transfers, name + " must protect every network transfer against stalled responses");
+}
+console.log("PASS: Roku catalog, account sync and playback progress transfers have stall protection.");
