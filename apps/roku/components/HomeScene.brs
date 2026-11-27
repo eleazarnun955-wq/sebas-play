@@ -19,8 +19,10 @@ sub init()
     m.deviceToken = m.registry.Read("rokuDeviceToken")
     if m.deviceToken = invalid then m.deviceToken = ""
     m.syncedProgress = {}
+    m.syncedFavorites = []
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
+    if m.deviceToken <> "" then syncRokuAccount()
     loadCatalog()
     m.actions.SetFocus(true)
 end sub
@@ -121,7 +123,10 @@ end sub
 
 sub onCatalogLoaded()
     catalog = m.task.catalog
-    if catalog <> invalid then m.rows.content = catalog
+    if catalog <> invalid
+        appendSyncedFavorites(catalog)
+        m.rows.content = catalog
+    end if
     if m.task.errorMessage <> invalid and m.task.errorMessage <> "" then m.status.text = m.task.errorMessage
 end sub
 
@@ -244,6 +249,8 @@ sub syncRokuAccount()
         return
     end if
     m.syncedProgress = {}
+    m.syncedFavorites = []
+    if type(parsed.favorites) = "roArray" then m.syncedFavorites = parsed.favorites
     if type(parsed.watch_progress) = "roArray"
         for each entry in parsed.watch_progress
             key = safeString(entry.content_type) + "_" + safeString(entry.content_id)
@@ -253,9 +260,39 @@ sub syncRokuAccount()
     favoritesCount = 0
     if type(parsed.favorites) = "roArray" then favoritesCount = parsed.favorites.Count()
     m.status.text = "Roku vinculado. Sincronizados " + favoritesCount.ToStr() + " favoritos y " + m.syncedProgress.Count().ToStr() + " avances de reproducción."
+    loadCatalog()
 end sub
 
 function safeString(value as dynamic) as string
     if value = invalid then return ""
     return value.ToStr()
 end function
+
+sub appendSyncedFavorites(root as object)
+    if type(m.syncedFavorites) <> "roArray" or m.syncedFavorites.Count() = 0 then return
+    favoritesRow = CreateObject("roSGNode", "ContentNode")
+    favoritesRow.Title = "Mi lista sincronizada"
+    for each favorite in m.syncedFavorites
+        favoriteType = safeString(favorite.content_type)
+        favoriteId = safeString(favorite.content_id)
+        for rowIndex = 0 to root.GetChildCount() - 1
+            sourceRow = root.GetChild(rowIndex)
+            if sourceRow <> invalid
+                for itemIndex = 0 to sourceRow.GetChildCount() - 1
+                    sourceItem = sourceRow.GetChild(itemIndex)
+                    if sourceItem <> invalid and safeString(sourceItem.contentType) = favoriteType and safeString(sourceItem.contentId) = favoriteId
+                        copy = favoritesRow.CreateChild("ContentNode")
+                        copy.Title = sourceItem.Title
+                        copy.Description = sourceItem.Description
+                        copy.Url = sourceItem.Url
+                        copy.StreamFormat = sourceItem.StreamFormat
+                        copy.HDPosterUrl = sourceItem.HDPosterUrl
+                        copy.AddFields({ contentType: favoriteType, contentId: favoriteId })
+                        exit for
+                    end if
+                end for
+            end if
+        end for
+    end for
+    if favoritesRow.GetChildCount() > 0 then root.AppendChild(favoritesRow)
+end sub
