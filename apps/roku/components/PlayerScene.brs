@@ -6,6 +6,11 @@ sub init()
     m.top.ObserveField("videoUrl", "startPlayback")
     m.top.ObserveField("videoTitle", "updateTitle")
     m.video.ObserveField("state", "onVideoState")
+    m.saveTimer = m.top.FindNode("progressSaveTimer")
+    m.saveTimer.ObserveField("fire", "savePlaybackPosition")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY13")
+    m.resumePosition = 0
+    m.resumeApplied = false
     m.video.enableUI = true
     if m.top.videoUrl <> "" then startPlayback()
 end sub
@@ -15,6 +20,13 @@ sub startPlayback()
     m.errorLabel.visible = false
     m.loadingLabel.visible = true
     m.loadingLabel.text = "Cargando video..."
+    m.resumePosition = 0
+    m.resumeApplied = false
+    savedUrl = m.registry.Read("lastVideoUrl")
+    if savedUrl = m.top.videoUrl
+        savedPosition = Val(m.registry.Read("lastVideoPosition"))
+        if savedPosition > 0 then m.resumePosition = savedPosition
+    end if
     content = CreateObject("roSGNode", "ContentNode")
     content.Url = m.top.videoUrl
     content.Title = m.top.videoTitle
@@ -29,6 +41,17 @@ sub updateTitle()
     end if
 end sub
 
+sub savePlaybackPosition()
+    if m.video <> invalid and m.top.videoUrl <> ""
+        position = m.video.position
+        if position > 0
+            m.registry.Write("lastVideoUrl", m.top.videoUrl)
+            m.registry.Write("lastVideoPosition", position.ToStr())
+            m.registry.Flush()
+        end if
+    end if
+end sub
+
 sub onVideoState()
     state = m.video.state
     if state = "buffering"
@@ -37,6 +60,15 @@ sub onVideoState()
     else if state = "playing"
         m.loadingLabel.visible = false
         m.errorLabel.visible = false
+        if not m.resumeApplied
+            m.resumeApplied = true
+            if m.resumePosition > 15
+                m.video.seek = m.resumePosition
+                m.loadingLabel.text = "Continuando desde donde lo dejaste"
+                m.loadingLabel.visible = true
+            end if
+            m.saveTimer.control = "start"
+        end if
     else if state = "error"
         m.top.errorMessage = "Roku no pudo reproducir este archivo. Para Roku se recomienda MP4 con video H.264 y audio AAC. Comprueba también que el enlace siga vigente."
         m.video.control = "stop"
@@ -45,6 +77,10 @@ sub onVideoState()
         m.errorLabel.visible = true
     else if state = "finished"
         m.video.control = "stop"
+        m.registry.Write("lastVideoUrl", m.top.videoUrl)
+        m.registry.Write("lastVideoPosition", "0")
+        m.registry.Flush()
+        m.saveTimer.control = "stop"
         m.top.wasClosed = true
         m.top.RemoveFromParent()
     end if
@@ -53,6 +89,8 @@ end sub
 function onKeyEvent(key as string, press as boolean) as boolean
     if not press then return false
     if key = "back"
+        savePlaybackPosition()
+        m.saveTimer.control = "stop"
         m.video.control = "stop"
         m.top.wasClosed = true
         m.top.RemoveFromParent()
