@@ -25,28 +25,19 @@ export default function ProfilesManager() {
   // Never leave the profile screen waiting forever if the Edge Function stalls.
   const call = useCallback(async (body: Record<string, unknown>) => {
     if (!supabase) throw new Error("Supabase no está configurado.");
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    let timeoutId: number | undefined;
     try {
-      const { data, error } = await supabase.functions.invoke("sebas-family-profiles", {
-        body,
-        signal: controller.signal,
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error("El servidor de perfiles tardó más de 15 segundos. La pantalla se liberó; puedes volver a intentarlo.")), 15000);
       });
-      if (error) {
-        const message = error.message || "No se pudo conectar con el servicio de perfiles.";
-        if (controller.signal.aborted) throw new Error("El servidor de perfiles tardó demasiado. Revisa tu conexión e inténtalo de nuevo.");
-        throw new Error(message);
-      }
+      const request = supabase.functions.invoke("sebas-family-profiles", { body });
+      const { data, error } = await Promise.race([request, timeout]);
+      if (error) throw new Error(error.message || "No se pudo conectar con el servicio de perfiles.");
       if (data?.error) throw new Error(String(data.error));
       if (!data) throw new Error("El servidor de perfiles respondió vacío. Inténtalo de nuevo.");
       return data;
-    } catch (error) {
-      if (controller.signal.aborted || (error instanceof Error && error.name === "AbortError")) {
-        throw new Error("El servidor de perfiles tardó más de 15 segundos. La pantalla se liberó; puedes volver a intentarlo.");
-      }
-      throw error;
     } finally {
-      window.clearTimeout(timeout);
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
     }
   }, []);
 
