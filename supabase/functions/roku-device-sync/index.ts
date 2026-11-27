@@ -66,9 +66,24 @@ Deno.serve(async(req:Request)=>{
   if(!["movie","episode"].includes(String(body.content_type))||!validUuid(body.content_id)||!Number.isSafeInteger(body.position_seconds)||Number(body.position_seconds)<0||(body.duration_seconds!==null&&body.duration_seconds!==undefined&&(!Number.isSafeInteger(body.duration_seconds)||Number(body.duration_seconds)<=0)))return reply(400,{error:"Progreso de reproducción inválido"});
   const progressTable=profileId?"family_profile_watch_progress":"watch_progress";
   const row={user_id:user.id,...(profileId?{profile_id:profileId}:{}),content_type:body.content_type,content_id:body.content_id,position_seconds:body.position_seconds,duration_seconds:body.duration_seconds??null,updated_at:new Date().toISOString()};
-  const conflictTarget=profileId?"user_id,profile_id,content_type,content_id":"user_id,content_type,content_id";
-  const {error:saveError}=await admin.from(progressTable).upsert(row,{onConflict:conflictTarget});
-  if(saveError)return reply(500,{error:"No se pudo guardar el progreso"});return reply(200,{ok:true});
+  let lookup=admin.from(progressTable).select("id").eq("user_id",user.id).eq("content_type",body.content_type).eq("content_id",body.content_id);
+  if(profileId)lookup=lookup.eq("profile_id",profileId);
+  const {data:existing,error:lookupError}=await lookup.maybeSingle();
+  if(lookupError)return reply(500,{error:"No se pudo consultar el progreso"});
+  if(existing){
+   const {error:saveError}=await admin.from(progressTable).update(row).eq("id",existing.id);
+   if(saveError)return reply(500,{error:"No se pudo guardar el progreso"});
+  }else{
+   const {error:insertError}=await admin.from(progressTable).insert(row);
+   if(insertError){
+    if(insertError.code!=="23505")return reply(500,{error:"No se pudo guardar el progreso"});
+    let retry=admin.from(progressTable).update(row).eq("user_id",user.id).eq("content_type",body.content_type).eq("content_id",body.content_id);
+    if(profileId)retry=retry.eq("profile_id",profileId);
+    const {error:retryError}=await retry;
+    if(retryError)return reply(500,{error:"No se pudo actualizar el progreso concurrente"});
+   }
+  }
+  return reply(200,{ok:true});
  }
  const device=await deviceFromRequest(req);if(!device)return reply(401,{error:"Dispositivo no vinculado o revocado"});
  if(requestedAction==="sync"&&req.method==="GET"){
@@ -83,10 +98,15 @@ Deno.serve(async(req:Request)=>{
   if(device.profile_id)query=query.eq("profile_id",device.profile_id);
   if(body.operation==="remove"){const {error}=await query;if(error)return reply(500,{error:"No se pudo quitar el favorito"})}
   else{
-   const row={user_id:device.user_id,...(device.profile_id?{profile_id:device.profile_id}:{}),content_type:type,content_id:body.content_id};
-   const conflictTarget=device.profile_id?"user_id,profile_id,content_type,content_id":"user_id,content_type,content_id";
-   const {error}=await admin.from(favoritesTable).upsert(row,{onConflict:conflictTarget,ignoreDuplicates:true});
-   if(error)return reply(500,{error:"No se pudo guardar el favorito"});
+   let lookup=admin.from(favoritesTable).select("id").eq("user_id",device.user_id).eq("content_type",type).eq("content_id",body.content_id);
+   if(device.profile_id)lookup=lookup.eq("profile_id",device.profile_id);
+   const {data:existing,error:lookupError}=await lookup.maybeSingle();
+   if(lookupError)return reply(500,{error:"No se pudo consultar favoritos"});
+   if(!existing){
+    const row={user_id:device.user_id,...(device.profile_id?{profile_id:device.profile_id}:{}),content_type:type,content_id:body.content_id};
+    const {error:insertError}=await admin.from(favoritesTable).insert(row);
+    if(insertError&&insertError.code!=="23505")return reply(500,{error:"No se pudo guardar el favorito"});
+   }
   }
   return reply(200,{ok:true});
  }
@@ -94,9 +114,24 @@ Deno.serve(async(req:Request)=>{
   if(!["movie","episode"].includes(String(body.content_type))||!validUuid(body.content_id)||!Number.isSafeInteger(body.position_seconds)||Number(body.position_seconds)<0||(body.duration_seconds!==null&&body.duration_seconds!==undefined&&(!Number.isSafeInteger(body.duration_seconds)||Number(body.duration_seconds)<=0)))return reply(400,{error:"Progreso de reproducción inválido"});
   const progressTable=device.profile_id?"family_profile_watch_progress":"watch_progress";
   const row={user_id:device.user_id,...(device.profile_id?{profile_id:device.profile_id}:{}),content_type:body.content_type,content_id:body.content_id,position_seconds:body.position_seconds,duration_seconds:body.duration_seconds??null,updated_at:new Date().toISOString()};
-  const conflictTarget=device.profile_id?"user_id,profile_id,content_type,content_id":"user_id,content_type,content_id";
-  const {error:saveError}=await admin.from(progressTable).upsert(row,{onConflict:conflictTarget});
-  if(saveError)return reply(500,{error:"No se pudo guardar el progreso"});return reply(200,{ok:true});
+  let lookup=admin.from(progressTable).select("id").eq("user_id",device.user_id).eq("content_type",body.content_type).eq("content_id",body.content_id);
+  if(device.profile_id)lookup=lookup.eq("profile_id",device.profile_id);
+  const {data:existing,error:lookupError}=await lookup.maybeSingle();
+  if(lookupError)return reply(500,{error:"No se pudo consultar el progreso"});
+  if(existing){
+   const {error:saveError}=await admin.from(progressTable).update(row).eq("id",existing.id);
+   if(saveError)return reply(500,{error:"No se pudo guardar el progreso"});
+  }else{
+   const {error:insertError}=await admin.from(progressTable).insert(row);
+   if(insertError){
+    if(insertError.code!=="23505")return reply(500,{error:"No se pudo guardar el progreso"});
+    let retry=admin.from(progressTable).update(row).eq("user_id",device.user_id).eq("content_type",body.content_type).eq("content_id",body.content_id);
+    if(device.profile_id)retry=retry.eq("profile_id",device.profile_id);
+    const {error:retryError}=await retry;
+    if(retryError)return reply(500,{error:"No se pudo actualizar el progreso concurrente"});
+   }
+  }
+  return reply(200,{ok:true});
  }
  return reply(404,{error:"Acción no reconocida"});
 });
