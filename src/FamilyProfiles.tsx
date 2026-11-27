@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Users, X, LoaderCircle, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, LoaderCircle, RefreshCw } from "lucide-react";
 import { supabase } from "./lib/supabase";
 
 type FamilyProfile = {
