@@ -8,6 +8,9 @@ const home = read("apps/roku/components/HomeScene.brs");
 const player = read("apps/roku/components/PlayerScene.brs");
 const androidWorkflow = read(".github/workflows/android-apk.yml");
 const rokuWorkflow = read(".github/workflows/roku-package.yml");
+const rokuSyncFunction = read("supabase/functions/roku-device-sync/index.ts");
+const familyFunction = read("supabase/functions/sebas-family-profiles/index.ts");
+const pinHelper = read("supabase/functions/sebas-family-profiles/profile-security.mjs");
 
 const appId = capacitor.match(/appId:\s*"([^"]+)"/)?.[1];
 const appName = capacitor.match(/appName:\s*"([^"]+)"/)?.[1];
@@ -25,4 +28,9 @@ for (const [name, source] of [["Roku HomeScene", home], ["Roku PlayerScene", pla
 }
 assert.match(androidWorkflow, /com\.eleazarcompany\.sebasplay\.v13\.independiente20261126/);
 assert.match(rokuWorkflow, /SEBAS-PLAY-13-0-ROKU-INDEPENDIENTE/);
+assert.match(rokuSyncFunction, /pair-device/);
+assert.match(rokuSyncFunction, /revoke-device/);
+assert.match(rokuSyncFunction, /family_profile_watch_progress/);
+assert.match(familyFunction, /verify-profile-pin/);
+assert.match(pinHelper, /PBKDF2/);
 console.log("PASS: Android and Roku 13.0 retain independent package identity, labels, and Roku registry.");
