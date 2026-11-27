@@ -4,7 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(process.env.SEBAS_MEDIA_ROOT || path.join(HERE, "Peliculas"));
@@ -24,13 +24,15 @@ const MIME = {
 const ALLOWED = new Set(Object.keys(MIME));
 const FFMPEG_BIN = process.env.SEBAS_FFMPEG_PATH || "ffmpeg";
 let ffmpegProbeCache = null;
+let activeTranscodes = 0;
+const MAX_CONCURRENT_TRANSCODES = Math.max(1, Number(process.env.SEBAS_MAX_TRANSCODES || 2));
 function getFfmpegStatus() {
   if (ffmpegProbeCache) return ffmpegProbeCache;
   const probe = spawnSync(FFMPEG_BIN, ["-version"], { encoding:"utf8", timeout:3000, windowsHide:true });
   const output = (probe.stdout || "") + "\n" + (probe.stderr || "");
   const versionLine = output.split(/\r?\n/).find(line => line.toLowerCase().includes("ffmpeg version"));
   const version = versionLine?.trim().split(/\s+/)[2] || null;
-  ffmpegProbeCache = { installed:probe.status === 0 && Boolean(version), version, binary:FFMPEG_BIN, transcodingEndpoint:false, message:probe.error?.code === "ENOENT" ? "FFmpeg no está instalado o no está en PATH." : probe.status === 0 ? "FFmpeg detectado; la conversión automática aún no está habilitada." : "No se pudo verificar FFmpeg." };
+  ffmpegProbeCache = { installed:probe.status === 0 && Boolean(version), version, binary:FFMPEG_BIN, transcodingEndpoint:probe.status === 0 && Boolean(version), message:probe.error?.code === "ENOENT" ? "FFmpeg no está instalado o no está en PATH." : probe.status === 0 ? "FFmpeg detectado; la conversión MP4 para Roku está disponible." : "No se pudo verificar FFmpeg." };
   return ffmpegProbeCache;
 }
 
@@ -77,6 +79,11 @@ function signedUrl(rel, req) {
   const encoded = rel.split(path.sep).map(encodeURIComponent).join("/");
   return `${requestBaseUrl(req)}/media/${encoded}?exp=${exp}&sig=${signature(rel, exp)}`;
 }
+function signedTranscodeUrl(rel, req) {
+  const exp = Math.floor(Date.now()/1000) + URL_TTL_SECONDS;
+  const encoded = rel.split(path.sep).map(encodeURIComponent).join("/");
+  return `${requestBaseUrl(req)}/transcode/${encoded}?exp=${exp}&sig=${signature(rel, exp)}`;
+}
 function safePath(rel) {
   if (!rel || rel.includes("\0")) return null;
   const full = path.resolve(ROOT, rel);
@@ -92,7 +99,7 @@ async function walk(dir, prefix = "", req) {
     if (ent.isDirectory()) out.push(...await walk(abs, rel, req));
     else if (ent.isFile() && ALLOWED.has(path.extname(ent.name).toLowerCase())) {
       const st = await fs.promises.stat(abs);
-      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:cleanMediaTitle(path.basename(ent.name, path.extname(ent.name))), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], ...classifyMedia(rel, ent.name), stream_url:signedUrl(rel, req) });
+      out.push({ id: crypto.createHash("sha1").update(rel).digest("hex"), title:cleanMediaTitle(path.basename(ent.name, path.extname(ent.name))), file:rel.split(path.sep).join("/"), size_bytes:st.size, mime_type:MIME[path.extname(ent.name).toLowerCase()], ...classifyMedia(rel, ent.name), stream_url:signedUrl(rel, req), transcode_url:getFfmpegStatus().installed && path.extname(ent.name).toLowerCase() !== ".mp4" ? signedTranscodeUrl(rel, req) : null });
     }
   }
   return out;
@@ -187,6 +194,46 @@ const server = http.createServer(async (req, res) => {
         note:"Biblioteca local agrupada automáticamente en películas, series, temporadas y episodios. Roku reproduce los formatos que admite su reproductor nativo. Publica únicamente contenido con derechos."
       });
     } catch (e) { return sendError(res, 500, e.message || "No se pudo leer la biblioteca"); }
+  }
+  if (req.method === "GET" && url.pathname.startsWith("/transcode/")) {
+    if (!getFfmpegStatus().installed) return sendError(res, 503, "FFmpeg no está instalado en la laptop.");
+    if (activeTranscodes >= MAX_CONCURRENT_TRANSCODES) return sendError(res, 429, "La laptop está ocupada convirtiendo otros videos. Inténtalo en un momento.");
+    let rel;
+    try { rel = url.pathname.slice("/transcode/".length).split("/").map(decodeURIComponent).join(path.sep); }
+    catch { return sendError(res, 400, "Ruta inválida"); }
+    const exp = Number(url.searchParams.get("exp") || 0);
+    const sig = url.searchParams.get("sig") || "";
+    if (!Number.isSafeInteger(exp) || exp < Math.floor(Date.now()/1000)) return sendError(res, 401, "Enlace vencido");
+    if (!safeEqual(sig, signature(rel, exp))) return sendError(res, 403, "Firma inválida");
+    const full = safePath(rel);
+    if (!full) return sendError(res, 400, "Ruta fuera de la biblioteca");
+    let realFile;
+    try {
+      const realRoot = await fs.promises.realpath(ROOT);
+      realFile = await fs.promises.realpath(full);
+      if (!realFile.startsWith(realRoot + path.sep)) return sendError(res, 403, "Ruta no permitida");
+      const st = await fs.promises.stat(realFile);
+      if (!st.isFile() || !ALLOWED.has(path.extname(realFile).toLowerCase())) return sendError(res, 404, "Archivo no encontrado");
+    } catch { return sendError(res, 404, "Archivo no encontrado"); }
+    activeTranscodes++;
+    const ff = spawn(FFMPEG_BIN, ["-hide_banner","-loglevel","error","-i",realFile,"-map","0:v:0","-map","0:a:0?","-c:v","libx264","-preset","veryfast","-crf","24","-c:a","aac","-b:a","128k","-movflags","frag_keyframe+empty_moov+default_base_moof","-f","mp4","pipe:1"], { stdio:["ignore","pipe","pipe"], windowsHide:true });
+    let settled = false;
+    const finish = () => { if (!settled) { settled = true; activeTranscodes = Math.max(0, activeTranscodes - 1); } };
+    ff.on("error", error => {
+      finish();
+      if (!res.headersSent) sendError(res, 500, "No se pudo iniciar FFmpeg: " + error.message);
+      else res.destroy(error);
+    });
+    ff.stderr.on("data", () => {});
+    res.writeHead(200, { "content-type":"video/mp4", "cache-control":"no-store", "x-content-type-options":"nosniff", "accept-ranges":"none" });
+    ff.stdout.pipe(res);
+    ff.on("close", code => {
+      finish();
+      if (code !== 0 && !res.headersSent) sendError(res, 500, "FFmpeg no pudo convertir este archivo.");
+      else if (!res.writableEnded) res.end();
+    });
+    req.on("close", () => { if (!res.writableEnded && !ff.killed) ff.kill("SIGKILL"); finish(); });
+    return;
   }
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname.startsWith("/media/")) {
     let rel;
