@@ -62,3 +62,8 @@ alter table public.device_pairing_sessions
   add column if not exists profile_id uuid null references public.family_profiles(id) on delete cascade;
 alter table public.paired_devices
   add column if not exists profile_id uuid null references public.family_profiles(id) on delete cascade;
+
+create index if not exists favorites_profile_id_idx on public.favorites(profile_id) where profile_id is not null;
+create index if not exists watch_progress_profile_id_idx on public.watch_progress(profile_id) where profile_id is not null;
+create index if not exists device_pairing_sessions_profile_id_idx on public.device_pairing_sessions(profile_id) where profile_id is not null;
+create index if not exists paired_devices_profile_id_idx on public.paired_devices(profile_id) where profile_id is not null;
