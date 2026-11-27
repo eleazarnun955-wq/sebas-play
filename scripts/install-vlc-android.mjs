@@ -62,6 +62,7 @@ public class VlcPlayerPlugin extends Plugin {
             intent.putExtra("userId", call.getString("userId", ""));
             intent.putExtra("contentType", call.getString("contentType", ""));
             intent.putExtra("contentId", call.getString("contentId", ""));
+            intent.putExtra("profileId", call.getString("profileId", ""));
             getActivity().runOnUiThread(() -> getActivity().startActivity(intent));
             call.resolve();
         } catch (Exception error) {
@@ -116,6 +117,7 @@ public class VlcPlaybackActivity extends Activity {
     private String userId = "";
     private String contentType = "";
     private String contentId = "";
+    private String profileId = "";
     private final Runnable progressUpdate = new Runnable() {
         @Override public void run() {
             if (player != null && seekBar != null && timeLabel != null) {
@@ -165,6 +167,7 @@ public class VlcPlaybackActivity extends Activity {
         userId = getIntent().getStringExtra("userId");
         contentType = getIntent().getStringExtra("contentType");
         contentId = getIntent().getStringExtra("contentId");
+        profileId = getIntent().getStringExtra("profileId");
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
@@ -254,7 +257,7 @@ public class VlcPlaybackActivity extends Activity {
             HttpURLConnection connection = null;
             try {
                 URL endpoint = new URL(supabaseUrl.replaceAll("/$", "") +
-                    "/rest/v1/watch_progress?on_conflict=user_id,content_type,content_id");
+                    "/functions/v1/roku-device-sync");
                 connection = (HttpURLConnection) endpoint.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setConnectTimeout(5000);
@@ -263,9 +266,10 @@ public class VlcPlaybackActivity extends Activity {
                 connection.setRequestProperty("apikey", anonKey);
                 connection.setRequestProperty("Authorization", "Bearer " + accessToken);
                 connection.setRequestProperty("Content-Type", "application/json");
-                connection.setRequestProperty("Prefer", "resolution=merge-duplicates,return=minimal");
+                
                 org.json.JSONObject payload = new org.json.JSONObject();
-                payload.put("user_id", userId);
+                payload.put("action", "progress-user");
+                payload.put("profile_id", profileId == null || profileId.isEmpty() ? org.json.JSONObject.NULL : profileId);
                 payload.put("content_type", contentType);
                 payload.put("content_id", contentId);
                 payload.put("position_seconds", positionSeconds);
