@@ -114,6 +114,8 @@ public class VlcPlaybackActivity extends Activity {
     private boolean finishedProgressCleared = false;
     private long lastRemoteSyncSeconds = -10;
     private final AtomicBoolean syncInFlight = new AtomicBoolean(false);
+    private volatile long queuedPositionSeconds = -1;
+    private volatile long queuedDurationSeconds = 0;
     private String supabaseUrl = "";
     private String anonKey = "";
     private String accessToken = "";
@@ -264,37 +266,49 @@ public class VlcPlaybackActivity extends Activity {
             accessToken == null || accessToken.isEmpty() || userId == null || userId.isEmpty() ||
             contentId == null || contentId.isEmpty() ||
             !("movie".equals(contentType) || "episode".equals(contentType))) return;
+        queuedPositionSeconds = Math.max(0, positionSeconds);
+        queuedDurationSeconds = Math.max(0, durationSeconds);
         if (!syncInFlight.compareAndSet(false, true)) return;
         new Thread(() -> {
-            HttpURLConnection connection = null;
             try {
-                URL endpoint = new URL(supabaseUrl.replaceAll("/$", "") +
-                    "/functions/v1/roku-device-sync");
-                connection = (HttpURLConnection) endpoint.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setConnectTimeout(5000);
-                connection.setReadTimeout(5000);
-                connection.setDoOutput(true);
-                connection.setRequestProperty("apikey", anonKey);
-                connection.setRequestProperty("Authorization", "Bearer " + accessToken);
-                connection.setRequestProperty("Content-Type", "application/json");
-                
-                org.json.JSONObject payload = new org.json.JSONObject();
-                payload.put("action", "progress-user");
-                payload.put("profile_id", profileId == null || profileId.isEmpty() ? org.json.JSONObject.NULL : profileId);
-                payload.put("content_type", contentType);
-                payload.put("content_id", contentId);
-                payload.put("position_seconds", positionSeconds);
-                if (durationSeconds > 0) payload.put("duration_seconds", durationSeconds);
-                else payload.put("duration_seconds", org.json.JSONObject.NULL);
-                payload.put("updated_at", Instant.now().toString());
-                byte[] bytes = payload.toString().getBytes(StandardCharsets.UTF_8);
-                try (OutputStream stream = connection.getOutputStream()) { stream.write(bytes); }
-                connection.getResponseCode();
-            } catch (Exception ignored) {
+                while (true) {
+                    long nextPosition = queuedPositionSeconds;
+                    long nextDuration = queuedDurationSeconds;
+                    queuedPositionSeconds = -1;
+                    if (nextPosition < 0) break;
+                    HttpURLConnection connection = null;
+                    try {
+                        URL endpoint = new URL(supabaseUrl.replaceAll("/$", "") +
+                            "/functions/v1/roku-device-sync");
+                        connection = (HttpURLConnection) endpoint.openConnection();
+                        connection.setRequestMethod("POST");
+                        connection.setConnectTimeout(5000);
+                        connection.setReadTimeout(5000);
+                        connection.setDoOutput(true);
+                        connection.setRequestProperty("apikey", anonKey);
+                        connection.setRequestProperty("Authorization", "Bearer " + accessToken);
+                        connection.setRequestProperty("Content-Type", "application/json");
+
+                        org.json.JSONObject payload = new org.json.JSONObject();
+                        payload.put("action", "progress-user");
+                        payload.put("profile_id", profileId == null || profileId.isEmpty() ? org.json.JSONObject.NULL : profileId);
+                        payload.put("content_type", contentType);
+                        payload.put("content_id", contentId);
+                        payload.put("position_seconds", nextPosition);
+                        if (nextDuration > 0) payload.put("duration_seconds", nextDuration);
+                        else payload.put("duration_seconds", org.json.JSONObject.NULL);
+                        payload.put("updated_at", Instant.now().toString());
+                        byte[] bytes = payload.toString().getBytes(StandardCharsets.UTF_8);
+                        try (OutputStream stream = connection.getOutputStream()) { stream.write(bytes); }
+                        connection.getResponseCode();
+                    } catch (Exception ignored) {
+                    } finally {
+                        if (connection != null) connection.disconnect();
+                    }
+                }
             } finally {
-                if (connection != null) connection.disconnect();
                 syncInFlight.set(false);
+                if (queuedPositionSeconds >= 0) syncProgress(queuedPositionSeconds, queuedDurationSeconds);
             }
         }, "SebasPlayProgressSync").start();
     }
