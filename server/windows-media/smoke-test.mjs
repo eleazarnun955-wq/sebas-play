@@ -38,7 +38,11 @@ try {
     await wait(250);
   }
   assert.ok(health?.ok, "health endpoint did not become ready: " + logs);
-  assert.equal((await health.json()).ok, true);
+  const healthData = await health.json();
+  assert.equal(healthData.ok, true);
+  assert.equal(healthData.version, "13.0");
+  assert.equal("storage_root" in healthData, false, "public health must not expose the laptop's local media path");
+  assert.equal("port" in healthData, false, "public health must not expose internal server configuration");
   assert.equal(health.headers.get("access-control-allow-origin"), "*");
 
   const deniedCapabilities = await fetch("http://127.0.0.1:18787/api/capabilities");
