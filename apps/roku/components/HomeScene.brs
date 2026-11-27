@@ -162,6 +162,7 @@ sub onItemSelected()
     player.syncToken = m.deviceToken
     player.contentType = safeString(item.contentType)
     player.contentId = safeString(item.contentId)
+    if Len(player.contentId) <> 36 then player.contentId = ""
     progressKey = player.contentType + "_" + player.contentId
     if m.syncedProgress.DoesExist(progressKey) then player.resumeSeconds = m.syncedProgress[progressKey]
     m.top.AppendChild(player)
