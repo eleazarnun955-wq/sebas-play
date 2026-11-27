@@ -91,7 +91,7 @@ try {
   const mkvItem = catalog.items.find(item => item.file === "sample.mkv");
   assert.ok(mkvItem, "catalog must expose the MKV sample");
   if (capabilities.ffmpeg.installed) {
-    assert.match(mkvItem.transcode_url || "", /\\/transcode\\//, "non-MP4 files must expose a signed Roku conversion URL when FFmpeg is installed");
+    assert.ok((mkvItem.transcode_url || "").includes("/transcode/"), "non-MP4 files must expose a signed Roku conversion URL when FFmpeg is installed");
   } else {
     assert.equal(mkvItem.transcode_url, null, "do not expose a conversion URL when FFmpeg is unavailable");
   }
