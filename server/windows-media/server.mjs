@@ -92,7 +92,7 @@ function cleanMediaTitle(value) {
 function classifyMedia(rel, filename) {
   const base = path.basename(filename, path.extname(filename));
   const normalized = cleanMediaTitle(base);
-  const episodeMatch = normalized.match(/^(.*?)\s*(?:S(\d{1,2})\s*E(\d{1,3})|Season\s*(\d{1,2})\s*Episode\s*(\d{1,3})|T(\d{1,2})\s*E(\d{1,3}))/i);
+  const episodeMatch = normalized.match(/^(.*?)\s*(?:S(\d{1,2})\s*E(\d{1,3})|Season\s*(\d{1,2})\s*Episode\s*(\d{1,3})|T(\d{1,2})\s*E(\d{1,3})|(\d{1,2})x(\d{1,3}))/i);
   if (episodeMatch) {
     const season = Number(episodeMatch[2] || episodeMatch[4] || episodeMatch[6] || episodeMatch[8] || 1);
     const episode = Number(episodeMatch[3] || episodeMatch[5] || episodeMatch[7] || episodeMatch[9]);
