@@ -11,6 +11,7 @@ sub init()
     m.registry = CreateObject("roRegistrySection", "SEBASPLAY13")
     m.resumePosition = 0
     m.resumeApplied = false
+    if m.top.resumeSeconds > m.resumePosition then m.resumePosition = m.top.resumeSeconds
     m.video.enableUI = true
     if m.top.videoUrl <> "" then startPlayback()
 end sub
@@ -50,6 +51,18 @@ sub savePlaybackPosition()
             m.registry.Write("lastVideoUrl", m.top.videoUrl)
             m.registry.Write("lastVideoPosition", position.ToStr())
             m.registry.Flush()
+            if m.top.syncToken <> "" and m.top.contentId <> "" and (m.top.contentType = "movie" or m.top.contentType = "episode")
+                syncTransfer = CreateObject("roUrlTransfer")
+                syncTransfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+                syncTransfer.InitClientCertificates()
+                syncTransfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
+                syncTransfer.AddHeader("apikey", SebasPlayPublishableKey())
+                syncTransfer.AddHeader("Authorization", "Bearer " + m.top.syncToken)
+                syncTransfer.AddHeader("Content-Type", "application/json")
+                duration = m.video.duration
+                syncBody = FormatJson({ action: "progress", content_type: m.top.contentType, content_id: m.top.contentId, position_seconds: position, duration_seconds: duration })
+                syncTransfer.PostFromString(syncBody)
+            end if
         end if
     end if
 end sub
