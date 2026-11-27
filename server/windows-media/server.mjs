@@ -27,8 +27,9 @@ let ffmpegProbeCache = null;
 function getFfmpegStatus() {
   if (ffmpegProbeCache) return ffmpegProbeCache;
   const probe = spawnSync(FFMPEG_BIN, ["-version"], { encoding:"utf8", timeout:3000, windowsHide:true });
-  const output = `${probe.stdout || ""}\\n${probe.stderr || ""}`;
-  const version = output.match(/ffmpeg version\\s+([^\\s]+)/i)?.[1] || null;
+  const output = (probe.stdout || "") + "\n" + (probe.stderr || "");
+  const versionLine = output.split(/\r?\n/).find(line => line.toLowerCase().includes("ffmpeg version"));
+  const version = versionLine?.trim().split(/\s+/)[2] || null;
   ffmpegProbeCache = { installed:probe.status === 0 && Boolean(version), version, binary:FFMPEG_BIN, transcodingEndpoint:false, message:probe.error?.code === "ENOENT" ? "FFmpeg no está instalado o no está en PATH." : probe.status === 0 ? "FFmpeg detectado; la conversión automática aún no está habilitada." : "No se pudo verificar FFmpeg." };
   return ffmpegProbeCache;
 }
