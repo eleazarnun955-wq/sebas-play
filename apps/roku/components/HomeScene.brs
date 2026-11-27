@@ -148,6 +148,7 @@ sub onItemSelected()
     if row = invalid then return
     item = row.GetChild(itemIndex)
     if item = invalid then return
+    m.focusedItem = item
     mediaUrl = item.Url
     if mediaUrl = invalid or mediaUrl = ""
         m.status.text = "Este título todavía no tiene un video autorizado disponible."
