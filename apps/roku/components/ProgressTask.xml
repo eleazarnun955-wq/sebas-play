@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ProgressTask" extends="Task">
+  <interface>
+    <field id="syncToken" type="string" />
+    <field id="contentType" type="string" />
+    <field id="contentId" type="string" />
+    <field id="positionSeconds" type="integer" value="0" />
+    <field id="durationSeconds" type="integer" value="0" />
+  </interface>
+  <script type="text/brightscript" uri="ProgressTask.brs" />
+  <script type="text/brightscript" uri="pkg:/source/config.brs" />
+</component>
