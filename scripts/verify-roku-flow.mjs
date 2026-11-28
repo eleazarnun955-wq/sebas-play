@@ -33,7 +33,10 @@ console.log("PASS: Android-to-Roku direct laptop handoff and working library ref
 const syncTask = read("apps/roku/components/SyncTask.brs");
 const syncTaskXml = read("apps/roku/components/SyncTask.xml");
 assert.match(syncTaskXml, /extends="Task"/, "Account sync and pairing must run in a SceneGraph Task");
-assert.match(syncTask, /sub runSync\(\)[\s\S]*GetToString\(\)|PostFromString\(/, "SyncTask must perform network requests off the UI thread");
+assert.match(syncTask, /AsyncGetToString\(\)/, "SyncTask must use asynchronous GET requests");
+assert.match(syncTask, /AsyncPostFromString\(body\)/, "SyncTask must use asynchronous POST requests");
+assert.match(syncTask, /Wait\(timeoutMs, port\)/, "SyncTask must cap network waits");
+assert.match(syncTask, /AsyncCancel\(\)/, "SyncTask must cancel requests that exceed the timeout");
 assert.match(home, /startSyncTask\("pair-device"/, "Pairing must use the background sync task");
 assert.match(home, /startSyncTask\("favorite"/, "Favorite writes must use the background sync task");
 assert.match(home, /startSyncTask\("sync"/, "Account refresh must use the background sync task");
@@ -44,7 +47,8 @@ const progressTaskXml = read("apps/roku/components/ProgressTask.xml");
 assert.match(progressTaskXml, /extends="Task"/, "Playback progress network writes must run in a SceneGraph Task");
 assert.match(player, /CreateObject\("roSGNode", "ProgressTask"\)/, "Player must delegate cloud progress writes to ProgressTask");
 assert.doesNotMatch(player, /syncTransfer\.PostFromString/, "Player UI thread must not perform blocking cloud progress writes");
-assert.match(progressTask, /PostFromString\(FormatJson\(payload\)\)/, "ProgressTask must persist playback position to the sync endpoint");
+assert.match(progressTask, /AsyncPostFromString\(FormatJson\(payload\)\)/, "ProgressTask must persist playback position asynchronously");
+assert.match(progressTask, /Wait\(8000, port\)/, "ProgressTask must cap progress upload waits");
 console.log("PASS: playback progress uploads run off the Roku UI thread.");
 
 for (const [name, source] of [["CatalogTask", catalog], ["SyncTask", syncTask], ["ProgressTask", progressTask]]) {

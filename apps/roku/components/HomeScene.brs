@@ -10,7 +10,7 @@ sub init()
     m.connectButton.text = "Conectar desde Android"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar biblioteca"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY20")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY21")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")

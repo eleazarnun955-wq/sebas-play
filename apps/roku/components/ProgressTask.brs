@@ -14,12 +14,16 @@ sub saveProgress()
     transfer = CreateObject("roUrlTransfer")
     transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
     transfer.InitClientCertificates()
-    transfer.SetMinimumTransferRate(1, 20)
+    transfer.SetMinimumTransferRate(1, 10)
     transfer.SetUrl(SebasPlaySupabaseUrl() + "/functions/v1/roku-device-sync")
     transfer.AddHeader("apikey", SebasPlayPublishableKey())
     transfer.AddHeader("Authorization", "Bearer " + safeString(m.top.syncToken))
     transfer.AddHeader("Content-Type", "application/json")
-    transfer.PostFromString(FormatJson(payload))
+    port = CreateObject("roMessagePort")
+    transfer.SetMessagePort(port)
+    if not transfer.AsyncPostFromString(FormatJson(payload)) then return
+    event = Wait(8000, port)
+    if event = invalid then transfer.AsyncCancel()
 end sub
 
 function safeString(value as dynamic) as string
