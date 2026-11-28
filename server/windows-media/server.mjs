@@ -230,7 +230,7 @@ const server = http.createServer(async (req, res) => {
       const seriesMap = new Map();
       for (const episode of episodeItems) {
         const key = episode.series_title.toLocaleLowerCase("es");
-        if (!seriesMap.has(key)) seriesMap.set(key, { title: episode.series_title, seasons: new Map(), episode_count: 0 });
+        if (!seriesMap.has(key)) seriesMap.set(key, { title: episode.series_title, category: episode.category || "Series", seasons: new Map(), episode_count: 0 });
         const show = seriesMap.get(key);
         if (!show.seasons.has(episode.season_number)) show.seasons.set(episode.season_number, []);
         show.seasons.get(episode.season_number).push({
@@ -241,7 +241,7 @@ const server = http.createServer(async (req, res) => {
         show.episode_count++;
       }
       const series = [...seriesMap.values()].map(show => ({
-        title: show.title, episode_count: show.episode_count,
+        title: show.title, category: show.category, episode_count: show.episode_count,
         seasons: [...show.seasons.entries()].sort((a,b)=>a[0]-b[0]).map(([season_number, episodes]) => ({
           season_number, episode_count: episodes.length,
           episodes: episodes.sort((a,b)=>a.episode_number-b.episode_number)
