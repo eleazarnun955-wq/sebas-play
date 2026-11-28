@@ -17,6 +17,7 @@ assert.match(direct,/localStorage\.getItem\("sebas_laptop_url"\)/,"Android must 
 assert.match(direct,/localStorage\.getItem\("sebas_laptop_token"\)/,"Android must pass the saved laptop token to Roku");
 assert.match(direct,/RokuDiscovery\.launch\(\{ip:device\.ip,channelId:device\.channelId\|\|"dev",laptopUrl,laptopToken\}\)/,"Android must launch Roku with laptop connection details");
 assert.match(nativeInstaller,/M-SEARCH/,"Native Android plugin must perform SSDP discovery");
+assert.match(nativeInstaller,/new URL\(location\)\.getHost\(\)/,"SSDP LOCATION parsing must strip the ECP port before building the Roku address");
 assert.match(nativeInstaller,/CHANGE_WIFI_MULTICAST_STATE/,"Android manifest must allow multicast discovery");
 assert.match(nativeInstaller,/channelId="dev"/,"Native discovery must attempt Roku developer-mode sideloads when app listing omits them");
 assert.match(nativeInstaller,/laptopUrl=/,"Native ECP launch must transfer the laptop address");
