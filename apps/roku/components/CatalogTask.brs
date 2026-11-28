@@ -5,7 +5,7 @@ end sub
 sub loadCatalog()
     root = CreateObject("roSGNode", "ContentNode")
     root.title = "SEBAS PLAY 19.0"
-    laptopUrl = safeString(m.top.laptopUrl)
+    laptopUrl = normalizeBaseUrl(safeString(m.top.laptopUrl))
     laptopToken = safeString(m.top.laptopToken)
     if laptopUrl = "" or laptopToken = "" then
         m.top.errorMessage = "Conecta primero Mi laptop desde Android. Roku utiliza directamente la biblioteca de tu laptop."
@@ -92,7 +92,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     healthRequest = CreateObject("roUrlTransfer")
     healthRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
     healthRequest.InitClientCertificates()
-    healthRequest.SetMinimumTransferRate(1, 20)
+    healthRequest.SetMinimumTransferRate(1, 5)
     healthRequest.SetUrl(baseUrl + "/health")
     healthRequest.AddHeader("Accept", "application/json")
     healthResponse = healthRequest.GetToString()
@@ -114,7 +114,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
-    request.SetMinimumTransferRate(1, 20)
+    request.SetMinimumTransferRate(1, 5)
     request.SetUrl(baseUrl + "/api/catalog")
     request.AddHeader("Authorization", "Bearer " + token)
     request.AddHeader("Accept", "application/json")
@@ -300,6 +300,14 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
 end sub
+
+function normalizeBaseUrl(value as string) as string
+    cleaned = Trim(value)
+    while Len(cleaned) > 0 and Right(cleaned, 1) = "/"
+        cleaned = Left(cleaned, Len(cleaned) - 1)
+    end while
+    return cleaned
+end function
 
 function safeString(value as dynamic) as string
     if value = invalid then return ""
