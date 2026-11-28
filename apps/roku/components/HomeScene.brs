@@ -1,10 +1,7 @@
 sub init()
     m.rows = m.top.FindNode("catalogRows")
     m.status = m.top.FindNode("status")
-    m.dialogTimer = m.top.FindNode("dialogTransitionTimer")
-    m.dialogTimer.ObserveField("fire", "onDialogTransitionTimer")
-    m.dialogTransition = ""
-    m.urlDialogPending = false
+    m.awaitingToken = false
     m.actions = m.top.FindNode("topActions")
     m.rows.ObserveField("rowItemSelected", "onItemSelected")
     m.rows.ObserveField("rowItemFocused", "onItemFocused")
@@ -30,7 +27,7 @@ end sub
 sub onActionSelected()
     index = m.actions.buttonSelected
     if index = 0
-        askLaptopUrl()
+        if m.awaitingToken then askLaptopToken() else askLaptopUrl()
     else if index = 1
         if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
     end if
@@ -67,31 +64,13 @@ sub onUrlEntered()
     else if Right(lowerUrl, 7) = "/health" then
         m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
     end if
-    if m.urlDialogPending
-        m.top.dialog = invalid
-        return
-    end if
-    m.urlDialogPending = true
+    ' Close the keyboard dialog and return focus before opening the token dialog.
+    ' Opening a second KeyboardDialog from the first dialog's button callback can
+    ' leave some Roku firmware versions stuck in the dialog transition.
     m.top.dialog = invalid
-    m.status.text = "Dirección aceptada. Preparando el campo del token..."
-    m.dialogTransition = "token"
-    if m.dialogTimer = invalid
-        m.dialogTransition = ""
-        m.urlDialogPending = false
-        askLaptopToken()
-        return
-    end if
-    m.dialogTimer.control = "stop"
-    m.dialogTimer.control = "start"
-end sub
-
-sub onDialogTransitionTimer()
-    if m.dialogTransition = "token" and m.urlDialogPending
-        m.dialogTimer.control = "stop"
-        m.dialogTransition = ""
-        m.urlDialogPending = false
-        askLaptopToken()
-    end if
+    m.awaitingToken = true
+    m.status.text = "Dirección aceptada. Pulsa Conectar laptop otra vez para introducir el token."
+    m.actions.SetFocus(true)
 end sub
 
 sub askLaptopToken()
@@ -113,6 +92,7 @@ sub onTokenEntered()
     end if
     m.laptopToken = Trim(dialog.text)
     m.top.dialog = invalid
+    m.awaitingToken = false
     if m.laptopToken = ""
         m.status.text = "Falta el token privado. Pulsa Conectar laptop y pega el código de acceso."
         m.actions.SetFocus(true)
