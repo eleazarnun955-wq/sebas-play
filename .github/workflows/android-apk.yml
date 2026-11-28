@@ -4,7 +4,7 @@ name: SEBAS PLAY 23.0 independiente Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-22-roku-launch-guard-20261128]
+    branches: [feature/sebas-play-23-tubi-experience-parallel-20261128]
     paths:
       - "src/**"
       - "public/**"
@@ -92,7 +92,7 @@ jobs:
       - name: Upload SEBAS PLAY 23.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-22-0-ANDROID-INDEPENDIENTE
+          name: SEBAS-PLAY-23-0-ANDROID-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
