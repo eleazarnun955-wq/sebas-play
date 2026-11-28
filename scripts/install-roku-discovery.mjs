@@ -28,7 +28,7 @@ const java = String.raw`package ${pkg};
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
-import com.getcapacitor.Plugin;
+import com.getcapacitor.Plugin;\nimport com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
@@ -85,7 +85,7 @@ public class RokuDiscoveryPlugin extends Plugin {
       JSONObject row=new JSONObject();row.put("ip",entry.getKey());row.put("name",name);row.put("channelId",channelId);row.put("sebasPlayInstalled",!channelId.isEmpty());found.put(row);
      }catch(Exception ignored){}
     }
-    call.resolve(new JSONObject().put("devices",found));
+    JSObject result=new JSObject();result.put("devices",found);call.resolve(result);
    }catch(Exception e){call.reject("No se pudieron buscar dispositivos Roku en la red local: "+e.getMessage(),e);}
    finally{if(lock!=null&&lock.isHeld())lock.release();}
   });
@@ -99,7 +99,7 @@ public class RokuDiscoveryPlugin extends Plugin {
     String contentId=call.getString("contentId","");String mediaType=call.getString("mediaType","");
     if(!contentId.isEmpty())path+="?contentId="+URLEncoder.encode(contentId,"UTF-8")+"&mediaType="+URLEncoder.encode(mediaType,"UTF-8");
     HttpURLConnection c=(HttpURLConnection)new URL(path).openConnection();c.setRequestMethod("POST");c.setConnectTimeout(4000);c.setReadTimeout(5000);int status=c.getResponseCode();c.disconnect();
-    if(status>=200&&status<300)call.resolve(new JSONObject().put("launched",true));else call.reject("Roku respondió HTTP "+status+".");
+    if(status>=200&&status<300)JSObject result=new JSObject();result.put("launched",true);call.resolve(result);else call.reject("Roku respondió HTTP "+status+".");
    }catch(Exception e){call.reject("No se pudo abrir SEBAS PLAY en Roku: "+e.getMessage(),e);}
   });
  }
