@@ -7,14 +7,21 @@ sub loadCatalog()
     root.title = "SEBAS PLAY 23.0"
     laptopUrl = normalizeBaseUrl(safeString(m.top.laptopUrl))
     laptopToken = safeString(m.top.laptopToken)
-    if laptopUrl = "" or laptopToken = "" then
-        m.top.errorMessage = "Conecta primero Mi laptop desde Android. Roku utiliza directamente la biblioteca de tu laptop."
-        m.top.catalog = root
-        return
-    end if
 
-    m.top.errorMessage = "Conectando directamente con la biblioteca de tu laptop..."
-    loadLaptopCatalog(root, laptopUrl, laptopToken)
+    ' Build the Roku discovery catalog from the same published SEBAS PLAY
+    ' database used by Android. All network work stays inside this Task node.
+    supabaseUrl = SebasPlaySupabaseUrl()
+    publicKey = SebasPlayPublishableKey()
+    loadCollection(root, supabaseUrl, publicKey, "movies", "Películas para descubrir", "id,title,synopsis,release_year,age_rating,duration_minutes,poster_url,video_url", "created_at")
+    loadSeriesEpisodes(root, supabaseUrl, publicKey)
+    loadCollection(root, supabaseUrl, publicKey, "live_channels", "Televisión en vivo", "id,name,category,stream_url,logo_url,age_rating", "created_at")
+
+    if laptopUrl <> "" and laptopToken <> ""
+        m.top.errorMessage = "Catálogo SEBAS PLAY cargado. Conectando también con Mi laptop..."
+        loadLaptopCatalog(root, laptopUrl, laptopToken)
+    else
+        m.top.errorMessage = "Explora el catálogo gratuito de SEBAS PLAY. Para añadir tus archivos, conecta Mi laptop desde Android."
+    end if
     m.top.catalog = root
 end sub
 
