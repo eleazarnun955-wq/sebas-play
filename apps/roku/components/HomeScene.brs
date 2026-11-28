@@ -14,9 +14,7 @@ sub init()
     connectButton.text = "Conectar laptop"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar catálogo"
-    pairButton = m.actions.CreateChild("Button")
-    pairButton.text = "Vincular con Android"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY13")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY17")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")
@@ -35,8 +33,6 @@ sub onActionSelected()
         askLaptopUrl()
     else if index = 1
         if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
-    else if index = 2
-        askRokuPairCode()
     end if
 end sub
 
