@@ -3,7 +3,7 @@ name: SEBAS PLAY 25.0 independiente Roku channel
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-25-curated-current-catalog-20261128]
+    branches: [feature/sebas-play-25-direct-live-tv-20261128]
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
