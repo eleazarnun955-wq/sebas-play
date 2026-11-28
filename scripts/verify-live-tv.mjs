@@ -16,7 +16,12 @@ for (const value of urls) {
   assert.match(url.pathname, /\.m3u8$/i, "Every candidate must be a direct HLS manifest, not a webpage");
   assert.equal(url.hash, "", "Candidate URLs must not contain fragments");
 }
-assert.match(candidates, /Prueba técnica antes de publicar/, "Candidate UI must explain review-only status");\nassert.match(candidates, /Hls\.isSupported\(\)/, "Admin must offer an HLS playback probe");\nassert.match(candidates, /no concede derechos/, "Technical playback must not be confused with retransmission rights");\nassert.match(candidates, /Canal Catorce/);\nassert.match(candidates, /TV UNAM/);\nassert.match(candidates, /Canal 44 Chihuahua/);
+assert.match(candidates, /Prueba técnica antes de publicar/, "Candidate UI must explain review-only status");
+assert.match(candidates, /Hls\.isSupported\(\)/, "Admin must offer an HLS playback probe");
+assert.match(candidates, /no concede derechos/, "Technical playback must not be confused with retransmission rights");
+assert.match(candidates, /Canal Catorce/);
+assert.match(candidates, /TV UNAM/);
+assert.match(candidates, /Canal 44 Chihuahua/);
 assert.match(admin, /Solo se aceptan señales HLS directas HTTPS/, "Admin must reject web pages and non-HLS URLs");
 assert.ok(admin.includes('/\\.m3u8$/i'), "Admin HLS validator must check the URL path suffix");
 assert.match(admin, /rights_note/,"Admin must require documented rights before publishing live channels");
@@ -28,4 +33,4 @@ assert.match(rokuManifest, /title=SEBAS PLAY 27\.0/);
 assert.match(rokuManifest, /major_version=27/);
 assert.match(androidConfig, /com\.eleazarcompany\.sebasplay\.v27\.mexicolivetv20261128/);
 assert.match(androidConfig, /SEBAS PLAY 27\.0/);
-console.log("PASS: v26 Spanish live-TV candidates are HTTPS HLS only, draft-only until rights review, and filtered on Android/Roku.");
+assert.match(rsPlayerPlaceholder, /content.StreamFormat = "hls"/);
