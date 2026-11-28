@@ -19,18 +19,31 @@ sub init()
     m.syncedFavorites = []
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
+    ' Android launch arguments may arrive just after SceneGraph init; observe both fields.
+    m.top.ObserveField("launchLaptopUrl", "onLaunchLaptopConnectionChanged")
+    m.top.ObserveField("launchLaptopToken", "onLaunchLaptopConnectionChanged")
+    if safeString(m.top.launchLaptopUrl) <> "" and safeString(m.top.launchLaptopToken) <> ""
+        onLaunchLaptopConnectionChanged()
+    else if m.deviceToken <> ""
+        syncRokuAccount()
+    else
+        loadCatalog()
+    end if
+    m.actions.SetFocus(true)
+end sub
+
+sub onLaunchLaptopConnectionChanged()
     launchUrl = safeString(m.top.launchLaptopUrl)
     launchToken = safeString(m.top.launchLaptopToken)
-    if launchUrl <> "" and launchToken <> ""
-        m.laptopUrl = launchUrl
-        m.laptopToken = launchToken
-        m.registry.Write("laptopUrl", m.laptopUrl)
-        m.registry.Write("laptopToken", m.laptopToken)
-        m.registry.Flush()
-        m.status.text = "Android conectado. Cargando la biblioteca de tu laptop..."
-    end if
-    if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
-    m.actions.SetFocus(true)
+    if launchUrl = "" or launchToken = "" then return
+    if launchUrl = m.laptopUrl and launchToken = m.laptopToken then return
+    m.laptopUrl = launchUrl
+    m.laptopToken = launchToken
+    m.registry.Write("laptopUrl", m.laptopUrl)
+    m.registry.Write("laptopToken", m.laptopToken)
+    m.registry.Flush()
+    m.status.text = "Android conectado. Cargando la biblioteca de tu laptop..."
+    loadCatalog()
 end sub
 
 sub onActionSelected()
