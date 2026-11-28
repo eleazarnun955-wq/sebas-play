@@ -59,6 +59,7 @@ assert.match(syncFunction, /access-control-allow-headers":"authorization, x-clie
 assert.ok(home.includes('m.actions.ObserveField("buttonSelected", "onActionSelected")'), "Roku action buttons must be wired to their handler");
 console.log("PASS: Android pairing CORS headers, direct laptop handoff and Roku library refresh regression checks.");
 
-assert.match(catalog, /if laptopUrl = "" or laptopToken = "" then[\\s\\S]*loadLaptopCatalog\\(root, laptopUrl, laptopToken\\)[\\s\\S]*return/, "Roku catalog must use the laptop as the only media source");
+assert.match(catalog, /if laptopUrl = "" or laptopToken = "" then[\\s\\S]*m\.top\.catalog = root[\\s\\S]*return/, "Roku must stop cleanly until Android passes the laptop connection");
+assert.match(catalog, /loadLaptopCatalog\\(root, laptopUrl, laptopToken\\)/, "Roku must load its only catalog from the laptop");
 assert.doesNotMatch(catalog.slice(0, catalog.indexOf("sub loadSeriesEpisodes")), /SebasPlaySupabaseUrl|live_channels|loadCollection/, "Roku home catalog must not load external channel feeds");
 console.log("PASS: Roku uses only the private laptop library; no external TV/channel feeds.");
