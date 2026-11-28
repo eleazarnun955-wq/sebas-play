@@ -54,5 +54,5 @@ console.log("PASS: Roku catalog, account sync and playback progress transfers ha
 
 const syncFunction = read("supabase/functions/roku-device-sync/index.ts");
 assert.match(syncFunction, /access-control-allow-headers":"authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage"/, "Supabase function CORS must allow the headers sent by supabase-js browser clients");
-assert.match(home, /m\\.actions\\.ObserveField\\("buttonSelected", "onActionSelected"\\)/, "Roku action buttons must be wired to their handler");
+assert.ok(home.includes('m.actions.ObserveField("buttonSelected", "onActionSelected")'), "Roku action buttons must be wired to their handler");
 console.log("PASS: Android pairing CORS headers, direct laptop handoff and Roku library refresh regression checks.");
