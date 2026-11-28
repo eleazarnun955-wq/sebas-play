@@ -58,3 +58,7 @@ const syncFunction = read("supabase/functions/roku-device-sync/index.ts");
 assert.match(syncFunction, /access-control-allow-headers":"authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage"/, "Supabase function CORS must allow the headers sent by supabase-js browser clients");
 assert.ok(home.includes('m.actions.ObserveField("buttonSelected", "onActionSelected")'), "Roku action buttons must be wired to their handler");
 console.log("PASS: Android pairing CORS headers, direct laptop handoff and Roku library refresh regression checks.");
+
+assert.match(catalog, /if laptopUrl = "" or laptopToken = "" then[\\s\\S]*loadLaptopCatalog\\(root, laptopUrl, laptopToken\\)[\\s\\S]*return/, "Roku catalog must use the laptop as the only media source");
+assert.doesNotMatch(catalog.slice(0, catalog.indexOf("sub loadSeriesEpisodes")), /SebasPlaySupabaseUrl|live_channels|loadCollection/, "Roku home catalog must not load external channel feeds");
+console.log("PASS: Roku uses only the private laptop library; no external TV/channel feeds.");
