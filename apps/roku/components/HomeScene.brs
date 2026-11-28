@@ -30,6 +30,7 @@ sub init()
     else
         m.status.text = "Conecta Mi laptop en Android y pulsa Conectar a Roku para enviar tu biblioteca."
     end if
+    if m.deviceToken <> "" then syncRokuAccount()
     m.actions.SetFocus(true)
 end sub
 
