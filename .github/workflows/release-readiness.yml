@@ -62,7 +62,7 @@ jobs:
         run: |
           test -f apps/roku/manifest
           grep -q "^title=SEBAS PLAY 22.0$" apps/roku/manifest
-          grep -q "^major_version=21$" apps/roku/manifest
+          grep -q "^major_version=22$" apps/roku/manifest
           python3 -m pip install --quiet Pillow
           cd apps/roku
           python3 generate-icons.py
