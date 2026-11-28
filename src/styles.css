@@ -100,3 +100,32 @@
 .viewer-epg-row>div{display:grid;gap:3px;min-width:0}
 .viewer-epg-row b{font-size:12px}
 .viewer-epg-row small{font-size:10px;color:var(--muted,#7b8190);overflow-wrap:anywhere}
+
+
+/* SEBAS PLAY 16.0 — modern Netflix-style controls. The Mi laptop control is intentionally excluded. */
+.viewer-category-bar{display:flex;gap:9px;overflow-x:auto;padding:12px max(4vw,18px);scrollbar-width:none;background:linear-gradient(180deg,#101010,#080808);border-bottom:1px solid #242424}
+.viewer-category-bar::-webkit-scrollbar{display:none}
+.viewer-category-bar button{flex:0 0 auto;border:1px solid #383838;border-radius:999px;background:linear-gradient(180deg,#242424,#171717);color:#e8e8e8;padding:9px 16px;font-size:11px;font-weight:700;letter-spacing:.15px;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.viewer-category-bar button:hover{transform:translateY(-2px);border-color:#777;background:#303030}
+.viewer-category-bar button.active{background:#e50914;border-color:#e50914;color:#fff;box-shadow:0 5px 18px #e5091438}
+.viewer-admin,.viewer-profile-switch,.viewer-admin-storage{border:1px solid #393939;border-radius:999px;background:linear-gradient(180deg,#242424,#151515);color:#f4f4f4;padding:9px 14px;font-size:11px;font-weight:750;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.viewer-admin:hover,.viewer-profile-switch:hover,.viewer-admin-storage:hover{background:#303030;border-color:#777;transform:translateY(-1px)}
+.viewer-feature-play,.viewer-feature-more,.viewer-play,.viewer-detail-fav,.viewer-vlc-launch{border-radius:9px;box-shadow:0 5px 18px #0006;transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+.viewer-feature-play{background:#e50914;color:#fff}
+.viewer-feature-play:hover{background:#f6121d;color:#fff;transform:translateY(-2px);box-shadow:0 8px 24px #e5091440}
+.viewer-feature-more{border:1px solid #ffffff30;background:#ffffff20;color:#fff}
+.viewer-feature-more:hover{background:#ffffff35;transform:translateY(-2px)}
+.viewer-play{background:linear-gradient(180deg,#f21b25,#c90812);border:1px solid #ff5259;color:#fff}
+.viewer-play:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.viewer-detail-fav{background:linear-gradient(180deg,#292929,#191919);border-color:#484848}
+.viewer-detail-fav:hover,.viewer-episode:hover{border-color:#e50914;transform:translateY(-1px)}
+.viewer-episode{border-radius:11px;background:linear-gradient(110deg,#242424,#171717);border-color:#3a3a3a;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.viewer-heart{backdrop-filter:blur(8px);box-shadow:0 3px 12px #0008;transition:transform .18s ease,background .18s ease}
+.viewer-heart:hover{transform:scale(1.08);background:#e50914;color:#fff}
+.viewer-favs button,.viewer-history button{border-radius:12px;transition:transform .18s ease,border-color .18s ease}
+.viewer-favs button:hover,.viewer-history button:hover{transform:translateY(-2px);border-color:#e50914}
+.viewer-close{border-radius:50%;width:38px;height:38px}
+.viewer-auth-switch{transition:color .18s ease}
+.viewer-auth-switch:hover{color:#fff}
+.viewer-feature-play:focus-visible,.viewer-feature-more:focus-visible,.viewer-play:focus-visible,.viewer-category-bar button:focus-visible,.viewer-admin:focus-visible,.viewer-profile-switch:focus-visible,.viewer-admin-storage:focus-visible{outline:2px solid #ff424a;outline-offset:3px}
+@media(max-width:650px){.viewer-category-bar{padding:10px 4vw;gap:7px}.viewer-category-bar button{padding:8px 13px;font-size:10px}.viewer-admin,.viewer-profile-switch,.viewer-admin-storage{padding:8px 11px}}
