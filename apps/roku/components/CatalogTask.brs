@@ -4,7 +4,7 @@ end sub
 
 sub loadCatalog()
     root = CreateObject("roSGNode", "ContentNode")
-    root.title = "SEBAS PLAY 13.0"
+    root.title = "SEBAS PLAY 17.0"
     laptopUrl = safeString(m.top.laptopUrl)
     laptopToken = safeString(m.top.laptopToken)
     url = SebasPlaySupabaseUrl()
