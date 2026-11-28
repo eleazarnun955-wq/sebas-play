@@ -12,6 +12,7 @@ import WindowsMediaManager from "./WindowsMediaManager";
 import ProfilesManager from "./ProfilesManager";
 import EpgManager from "./EpgManager";
 import MetadataManager from "./MetadataManager";
+import LiveChannelCandidates, { type LiveChannelCandidate } from "./LiveChannelCandidates";
 
 type Section = "overview" | "movies" | "series" | "channels" | "episodes" | "sources" | "storage" | "windows" | "profiles" | "epg" | "metadata";
 type Movie = { id: string; title: string; release_year: number | null; is_published: boolean; source_type: string; poster_url: string | null };
@@ -248,6 +249,12 @@ export default function App() {
   async function addChannel(event: FormEvent) {
     event.preventDefault();
     if (!supabase) return;
+    let streamUrl: URL;
+    try { streamUrl = new URL(channelForm.stream.trim()); } catch { notify("error", "La señal debe ser una URL HLS directa válida."); return; }
+    if (streamUrl.protocol !== "https:" || !/\\.m3u8$/i.test(streamUrl.pathname) || streamUrl.hash) {
+      notify("error", "Solo se aceptan señales HLS directas HTTPS terminadas en .m3u8; no páginas web ni enlaces de portales.");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("live_channels").insert({
       name: channelForm.name.trim(),
@@ -266,6 +273,14 @@ export default function App() {
 
   async function togglePublished(table: "movies" | "series" | "live_channels", id: string, published: boolean) {
     if (!supabase) return;
+    if (table === "live_channels" && !published) {
+      const { data, error: channelError } = await supabase.from("live_channels").select("stream_url,rights_note").eq("id", id).single();
+      if (channelError || !data) { notify("error", channelError?.message || "No se pudo revisar la señal."); return; }
+      let directHls = false;
+      try { const parsed = new URL(data.stream_url); directHls = parsed.protocol === "https:" && /\\.m3u8$/i.test(parsed.pathname) && !parsed.hash; } catch { directHls = false; }
+      if (!directHls) { notify("error", "No se puede publicar: el canal no tiene una URL HLS directa HTTPS."); return; }
+      if (!String(data.rights_note || "").trim()) { notify("error", "No se puede publicar: primero documenta la autorización o los derechos de esta señal."); return; }
+    }
     const { error } = await supabase.from(table).update({ is_published: !published }).eq("id", id);
     if (error) { notify("error", error.message); return; }
     notify("ok", published ? "Contenido retirado del catálogo público." : "Contenido publicado.");
@@ -364,6 +379,7 @@ export default function App() {
 
         {section !== "overview" && section !== "episodes" && section !== "sources" && section !== "storage" && section !== "profiles" && section !== "epg" && section !== "metadata" && <section className="content">
           <div className="list-toolbar"><div className="search-box"><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar en el catálogo…" /></div><button className="primary-btn" onClick={() => setModal(section === "movies" ? "movie" : section === "series" ? "series" : "channel")}><Plus size={17} /> Agregar {section === "movies" ? "película" : section === "series" ? "serie" : "canal"}</button></div>
+          {section === "channels" && <LiveChannelCandidates onSelect={(candidate: LiveChannelCandidate) => { setChannelForm({ name: candidate.name, stream: candidate.streamUrl, logo: "", category: candidate.category, country: candidate.countryCode, rights: "" }); setModal("channel"); }} />}
           {loading ? <div className="empty-state"><LoaderCircle className="spin" /> Cargando catálogo…</div> :
             section === "movies" ? <ContentTable title="Películas" rows={filteredMovies.map((m) => ({ id: m.id, title: m.title, detail: [m.release_year, sourceLabels[m.source_type] ?? m.source_type].filter(Boolean).join(" · "), published: m.is_published, table: "movies" as const }))} onToggle={togglePublished} onDelete={deleteItem} /> :
             section === "series" ? <ContentTable title="Series" rows={filteredSeries.map((m) => ({ id: m.id, title: m.title, detail: [m.release_year, sourceLabels[m.source_type] ?? m.source_type].filter(Boolean).join(" · "), published: m.is_published, table: "series" as const }))} onToggle={togglePublished} onDelete={deleteItem} /> :
