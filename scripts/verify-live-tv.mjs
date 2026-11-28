@@ -1,4 +1,4 @@
-// v28 Mexico-first live TV regression suite.
+// v29 Mexico-first live TV regression suite.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
@@ -31,9 +31,9 @@ assert.match(admin, /LiveChannelCandidates/, "Admin must expose the candidate li
 assert.match(viewer, /isDirectLiveStreamUrl\(item\.stream_url\)/, "Android must filter live TV to direct HLS URLs");
 assert.match(rokuCatalog, /function isDirectLiveStreamUrl[\s\S]*Right\(url, 5\) = "\.m3u8"/, "Roku must reject web pages and non-HLS URLs");
 assert.match(rokuCatalog, /item\.StreamFormat = "hls"/, "Roku must use HLS playback for live channels");
-assert.match(rokuManifest, /title=SEBAS PLAY 28\.0/);
-assert.match(rokuManifest, /major_version=28/);
-assert.match(androidConfig, /com\.eleazarcompany\.sebasplay\.v28\.cinematicintro20261128/);
-assert.match(androidConfig, /SEBAS PLAY 28\.0/);
+assert.match(rokuManifest, /title=SEBAS PLAY 29\.0/);
+assert.match(rokuManifest, /major_version=29/);
+assert.match(androidConfig, /com\.eleazarcompany\.sebasplay\.v29\.femaleneuralvoice20261128/);
+assert.match(androidConfig, /SEBAS PLAY 29\.0/);
 assert.match(rokuPlayer, /content\.StreamFormat = "hls"/, "Roku player must force HLS for live channels");
-console.log("PASS: v28 Mexico-first Spanish live-TV candidates are HTTPS HLS only, draft-only until rights review, and filtered for Android/Roku.");
+console.log("PASS: v29 Mexico-first Spanish live-TV candidates are HTTPS HLS only, draft-only until rights review, and filtered for Android/Roku.");
