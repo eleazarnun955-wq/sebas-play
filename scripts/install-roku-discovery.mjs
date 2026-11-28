@@ -99,7 +99,7 @@ public class RokuDiscoveryPlugin extends Plugin {
     String contentId=call.getString("contentId","");String mediaType=call.getString("mediaType","");
     if(!contentId.isEmpty())path+="?contentId="+URLEncoder.encode(contentId,"UTF-8")+"&mediaType="+URLEncoder.encode(mediaType,"UTF-8");
     HttpURLConnection c=(HttpURLConnection)new URL(path).openConnection();c.setRequestMethod("POST");c.setConnectTimeout(4000);c.setReadTimeout(5000);int status=c.getResponseCode();c.disconnect();
-    if(status>=200&&status<300)JSObject result=new JSObject();result.put("launched",true);call.resolve(result);else call.reject("Roku respondió HTTP "+status+".");
+    if(status>=200&&status<300){JSObject result=new JSObject();result.put("launched",true);call.resolve(result);}else{call.reject("Roku respondió HTTP "+status+".");}
    }catch(Exception e){call.reject("No se pudo abrir SEBAS PLAY en Roku: "+e.getMessage(),e);}
   });
  }
