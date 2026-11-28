@@ -32,10 +32,11 @@ export default function RokuDirectConnect(){
   try{
    const laptopUrl=localStorage.getItem("sebas_laptop_url")||"";
    const laptopToken=localStorage.getItem("sebas_laptop_token")||"";
-   await RokuDiscovery.launch({ip:device.ip,channelId:device.channelId||"dev",laptopUrl,laptopToken});
+   const launchResult=await RokuDiscovery.launch({ip:device.ip,channelId:device.channelId||"dev",laptopUrl,laptopToken});
+   if(!launchResult?.launched)throw new Error("Roku no confirmó la apertura de SEBAS PLAY. Comprueba que el canal esté instalado y vuelve a intentarlo.");
    setMessage(laptopUrl&&laptopToken
-    ?"SEBAS PLAY se está abriendo en "+device.name+". Envié la conexión de tu laptop y la biblioteca se actualizará en Roku."
-    :"SEBAS PLAY se está abriendo en "+device.name+". Conecta primero «Mi laptop» en Android para compartir tu biblioteca.");
+    ?"Roku confirmó la apertura de SEBAS PLAY en "+device.name+". Envié la conexión de tu laptop y la biblioteca se actualizará en Roku."
+     :"Roku confirmó la apertura de SEBAS PLAY en "+device.name+". Conecta primero «Mi laptop» en Android para compartir tu biblioteca.");
   }catch(e){setError(e instanceof Error?e.message:"No se pudo abrir SEBAS PLAY en Roku.");}
   finally{setBusy(false)}
  }
