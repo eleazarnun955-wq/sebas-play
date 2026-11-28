@@ -45,6 +45,7 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
    setItems(list);setConnected(true);
    localStorage.setItem("sebas_laptop_url",base);
    localStorage.setItem("sebas_laptop_token",token.trim());
+   window.dispatchEvent(new Event("sebas-laptop-updated"));
    setUrl(base);setError("");
   }catch(e){
    if(requestId!==requestSequence.current)return;
@@ -54,7 +55,7 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
    else setError(e instanceof Error?e.message:"No se pudo conectar con la laptop.");
   }finally{window.clearTimeout(timeout);if(requestId===requestSequence.current)setBusy(false)}
  }
- function disconnect(){requestSequence.current++;setBusy(false);setConnected(false);setItems([]);setPlaying(null);setToken("");localStorage.removeItem("sebas_laptop_token");setError("")}
+ function disconnect(){requestSequence.current++;setBusy(false);setConnected(false);setItems([]);setPlaying(null);setToken("");localStorage.removeItem("sebas_laptop_token");window.dispatchEvent(new Event("sebas-laptop-updated"));setError("")}
  function bytes(n:number){if(!Number.isFinite(n))return "";const u=["B","KB","MB","GB"];let v=n,i=0;while(v>=1024&&i<u.length-1){v/=1024;i++}return v.toFixed(i?1:0)+" "+u[i]}
  useEffect(()=>{const requestId=++requestSequence.current;const savedUrl=localStorage.getItem("sebas_laptop_url");const savedToken=localStorage.getItem("sebas_laptop_token");if(savedUrl&&savedToken)void (async()=>{try{const controller=new AbortController();const timeout=window.setTimeout(()=>controller.abort(),12000);try{const health=await fetch(savedUrl+"/health",{cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!health.ok)return;const status=await health.json();if(requestId!==requestSequence.current||!status.ok)return;const r=await fetch(savedUrl+"/api/catalog",{headers:{Accept:"application/json",Authorization:"Bearer "+savedToken},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!r.ok)return;const d=await r.json();if(requestId!==requestSequence.current)return;setItems((d.items||[]) as LaptopItem[]);setConnected(true)}finally{window.clearTimeout(timeout)}}catch{/* La laptop puede estar apagada o fuera de línea. */}})();return()=>{requestSequence.current++}},[]);
  return <section style={{position:"fixed",inset:0,zIndex:10000,background:"#080e19f5",color:"#f4f7fb",overflowY:"auto",padding:"max(18px,env(safe-area-inset-top)) 16px 28px"}}>
