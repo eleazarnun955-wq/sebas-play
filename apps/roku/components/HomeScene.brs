@@ -39,41 +39,66 @@ sub askLaptopUrl()
     dialog.text = m.laptopUrl
     dialog.buttons = ["Siguiente", "Cancelar"]
     dialog.ObserveField("buttonSelected", "onUrlEntered")
+    dialog.ObserveField("wasClosed", "onLaptopDialogClosed")
+    m.pendingDialogAction = ""
+    m.pendingLaptopUrl = ""
     m.top.dialog = dialog
     dialog.SetFocus(true)
 end sub
 
 sub onUrlEntered()
     dialog = m.top.dialog
-    if dialog = invalid or dialog.buttonSelected <> 0 then
-        dialog.close = true
-        m.top.dialog = invalid
-        return
+    if dialog = invalid then return
+    if dialog.buttonSelected <> 0
+        m.pendingDialogAction = "cancel-url"
+    else
+        enteredUrl = Trim(dialog.text)
+        while Len(enteredUrl) > 0 and Right(enteredUrl, 1) = "/"
+            enteredUrl = Left(enteredUrl, Len(enteredUrl) - 1)
+        end while
+        lowerUrl = LCase(enteredUrl)
+        if Left(lowerUrl, 7) <> "http://" and Left(lowerUrl, 8) <> "https://"
+            m.pendingDialogAction = "invalid-url"
+        else
+            if Right(lowerUrl, 12) = "/api/catalog"
+                enteredUrl = Left(enteredUrl, Len(enteredUrl) - 12)
+            else if Right(lowerUrl, 7) = "/health"
+                enteredUrl = Left(enteredUrl, Len(enteredUrl) - 7)
+            end if
+            m.pendingLaptopUrl = enteredUrl
+            m.pendingDialogAction = "accept-url"
+        end if
     end if
-    m.laptopUrl = Trim(dialog.text)
-    while Len(m.laptopUrl) > 0 and Right(m.laptopUrl, 1) = "/"
-        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 1)
-    end while
-    lowerUrl = LCase(m.laptopUrl)
-    if Left(lowerUrl, 7) <> "http://" and Left(lowerUrl, 8) <> "https://" then
-        m.status.text = "Escribe la dirección completa, empezando con http:// o https://"
-        dialog.close = true
-        m.top.dialog = invalid
-        return
-    end if
-    if Right(lowerUrl, 12) = "/api/catalog" then
-        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 12)
-    else if Right(lowerUrl, 7) = "/health" then
-        m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
-    end if
-    ' Close the keyboard dialog and return focus before opening the token dialog.
-    ' Opening a second keyboard dialog from the first dialog's button callback can
-    ' leave some Roku firmware versions stuck in the dialog transition.
+    ' Let Roku finish the native keyboard close animation. Do not remove the
+    ' dialog node from Scene.dialog inside its buttonSelected callback.
     dialog.close = true
+end sub
+
+sub onLaptopDialogClosed()
+    action = m.pendingDialogAction
+    m.pendingDialogAction = ""
     m.top.dialog = invalid
-    m.awaitingToken = true
-    m.connectButton.text = "Introducir token"
-    m.status.text = "Dirección aceptada. Pulsa Introducir token para continuar."
+    if action = "accept-url"
+        m.laptopUrl = m.pendingLaptopUrl
+        m.awaitingToken = true
+        m.connectButton.text = "Introducir token"
+        m.status.text = "Dirección aceptada. Pulsa Introducir token para continuar."
+    else if action = "invalid-url"
+        m.status.text = "Escribe la dirección completa, empezando con http:// o https://"
+    else if action = "accept-token"
+        m.laptopToken = m.pendingLaptopToken
+        m.awaitingToken = false
+        m.connectButton.text = "Conectar laptop"
+        if m.laptopToken = ""
+            m.status.text = "Falta el token privado. Pulsa Conectar laptop y pega el código de acceso."
+            return
+        end if
+        m.status.text = "Verificando dirección y token de la laptop..."
+        m.registry.Write("laptopUrl", m.laptopUrl)
+        m.registry.Write("laptopToken", m.laptopToken)
+        m.registry.Flush()
+        loadCatalog()
+    end if
 end sub
 
 sub askLaptopToken()
@@ -82,31 +107,23 @@ sub askLaptopToken()
     dialog.text = m.laptopToken
     dialog.buttons = ["Conectar", "Cancelar"]
     dialog.ObserveField("buttonSelected", "onTokenEntered")
+    dialog.ObserveField("wasClosed", "onLaptopDialogClosed")
+    m.pendingDialogAction = ""
+    m.pendingLaptopToken = ""
     m.top.dialog = dialog
     dialog.SetFocus(true)
 end sub
 
 sub onTokenEntered()
     dialog = m.top.dialog
-    if dialog = invalid or dialog.buttonSelected <> 0 then
-        dialog.close = true
-        m.top.dialog = invalid
-        return
+    if dialog = invalid then return
+    if dialog.buttonSelected <> 0
+        m.pendingDialogAction = "cancel-token"
+    else
+        m.pendingLaptopToken = Trim(dialog.text)
+        m.pendingDialogAction = "accept-token"
     end if
-    m.laptopToken = Trim(dialog.text)
     dialog.close = true
-    m.top.dialog = invalid
-    m.awaitingToken = false
-    m.connectButton.text = "Conectar laptop"
-    if m.laptopToken = ""
-        m.status.text = "Falta el token privado. Pulsa Conectar laptop y pega el código de acceso."
-        return
-    end if
-    m.status.text = "Verificando dirección y token de la laptop..."
-    m.registry.Write("laptopUrl", m.laptopUrl)
-    m.registry.Write("laptopToken", m.laptopToken)
-    m.registry.Flush()
-    loadCatalog()
 end sub
 
 sub loadCatalog()
