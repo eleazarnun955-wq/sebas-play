@@ -3,7 +3,7 @@ name: SEBAS PLAY 13.0 independiente Roku channel
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-13-0-independent-full-improvements-20261126]
+    branches: [sebas-play-13-0-independent-full-improvements-20261126, fix/roku-pairing-v16-20261127]
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
