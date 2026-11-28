@@ -20,12 +20,12 @@ const pkg=main.match(/^package\s+([\w.]+);/m)?.[1];
 if(!pkg)throw new Error("No se pudo detectar el paquete Android.");
 const dir=path.dirname(mainPath);
 if(!main.includes("RokuDiscoveryPlugin")){
- main=main.replace(/^(package\\s+[\\w.]+;\\s*)/m,"$1\\nimport "+pkg+".RokuDiscoveryPlugin;\\n");
- const onCreate=/(public\\s+void\\s+onCreate\\s*\\(\\s*(?:android\\.os\\.)?Bundle\\s+(\\w+)\\s*\\)\\s*\\{)/;
+ main=main.replace(/^(package\s+[\w.]+;\s*)/m,"$1\nimport "+pkg+".RokuDiscoveryPlugin;\n");
+ const onCreate=/(public\s+void\s+onCreate\s*\(\s*(?:android\.os\.)?Bundle\s+(\w+)\s*\)\s*\{)/;
  if(onCreate.test(main)){
-  main=main.replace(onCreate,"$1\\n        registerPlugin(RokuDiscoveryPlugin.class);");
+  main=main.replace(onCreate,"$1\n        registerPlugin(RokuDiscoveryPlugin.class);");
  }else{
-  main=main.replace(/(public\\s+class\\s+MainActivity\\s+extends\\s+BridgeActivity\\s*\\{)/,"$1\\n    @Override public void onCreate(android.os.Bundle state) {\\n        registerPlugin(RokuDiscoveryPlugin.class);\\n        super.onCreate(state);\\n    }");
+  main=main.replace(/(public\s+class\s+MainActivity\s+extends\s+BridgeActivity\s*\{)/,"$1\n    @Override public void onCreate(android.os.Bundle state) {\n        registerPlugin(RokuDiscoveryPlugin.class);\n        super.onCreate(state);\n    }");
  }
  fs.writeFileSync(mainPath,main);
 }
@@ -33,7 +33,8 @@ const java = String.raw`package ${pkg};
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
-import com.getcapacitor.Plugin;\nimport com.getcapacitor.JSObject;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
