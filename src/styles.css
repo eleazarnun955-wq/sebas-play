@@ -222,3 +222,15 @@
  .viewer-card{flex-basis:clamp(126px,39vw,158px)}
  .viewer-section{margin-top:23px}
 }
+
+
+/* SEBAS PLAY 28 cinematic spoken brand intro */
+.brand-intro{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 48%,#18313b 0%,#0a111b 42%,#030508 78%);color:#fff;animation:brandIntroFade 4.2s ease both}
+.brand-intro-orbit{position:absolute;width:min(78vw,560px);aspect-ratio:1;border:1px solid #b5f36b30;border-radius:50%;box-shadow:0 0 80px #9ee85a12,inset 0 0 60px #9ee85a0b;animation:brandOrbit 5s linear infinite}
+.brand-intro-orbit-two{width:min(58vw,410px);border-color:#7ce8f044;animation-direction:reverse}
+.brand-intro-mark{width:82px;height:82px;border-radius:25px;display:grid;place-items:center;background:linear-gradient(145deg,#d8ff9a,#8ecf45);color:#10180b;box-shadow:0 0 55px #a8f05a55;animation:brandLogoPop .8s cubic-bezier(.2,.8,.2,1) both}
+.brand-intro-name{font:700 clamp(36px,8vw,66px) 'Space Grotesk',sans-serif;letter-spacing:-2px;margin-top:24px;text-shadow:0 8px 35px #000}
+.brand-intro-name span{color:#b5f36b}.brand-intro-tagline{margin-top:12px;font-size:10px;letter-spacing:4px;color:#c4d2dd;text-align:center}
+.brand-intro-sound{margin-top:42px;font-size:9px;letter-spacing:3px;color:#a8f05a;animation:brandPulse 1.2s ease-in-out infinite}
+.brand-intro button{position:absolute;bottom:28px;border:1px solid #ffffff35;background:#ffffff10;color:#dce7ef;border-radius:30px;padding:9px 16px;font-size:10px}
+@keyframes brandIntroFade{0%,82%{opacity:1}100%{opacity:0;visibility:hidden}}@keyframes brandLogoPop{0%{opacity:0;transform:scale(.55) rotate(-12deg)}70%{transform:scale(1.08) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0)}}@keyframes brandOrbit{to{transform:rotate(360deg)}}@keyframes brandPulse{50%{opacity:.45}}
