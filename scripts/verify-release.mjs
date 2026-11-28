@@ -15,25 +15,25 @@ const pinHelper = read("supabase/functions/sebas-family-profiles/profile-securit
 const appId = capacitor.match(/appId:\s*"([^"]+)"/)?.[1];
 const appName = capacitor.match(/appName:\s*"([^"]+)"/)?.[1];
 assert.equal(appId, "com.eleazarcompany.sebasplay.v20.privatestream20261128", "Android 20.0 must retain its unique application ID");
-assert.equal(appName, "SEBAS PLAY 20.0", "Android app label must identify version 13.0");
+assert.equal(appName, "SEBAS PLAY 20.0", "Android app label must identify version 20.0");
 assert.notEqual(appId, "com.eleazarcompany.sebasplay.v12.independiente20261126", "13.0 must not replace 12.0");
 assert.notEqual(appId, "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125", "13.0 must not replace 11.0");
 
-assert.match(manifest, /^title=SEBAS PLAY 13\.0$/m);
-assert.match(manifest, /^major_version=13$/m);
+assert.ok(manifest.includes("title=SEBAS PLAY 20.0"),"Roku manifest must identify version 20.0");
+assert.ok(manifest.includes("major_version=20"),"Roku manifest must use major version 20");
 assert.match(manifest, /^minor_version=0$/m);
 for (const [name, source] of [["Roku HomeScene", home], ["Roku PlayerScene", player]]) {
-  assert.match(source, /roRegistrySection", "SEBASPLAY20"/, name + " must use the isolated 13.0 registry");
+  assert.match(source, /roRegistrySection", "SEBASPLAY20"/, name + " must use the isolated 20.0 registry");
   assert.doesNotMatch(source, /roRegistrySection", "SEBASPLAY"/, name + " must not reuse the legacy registry");
 }
-assert.match(androidWorkflow, /com\.eleazarcompany\.sebasplay\.v13\.independiente20261126/);
+assert.ok(androidWorkflow.includes("com.eleazarcompany.sebasplay.v20.privatestream20261128"));
 assert.match(rokuWorkflow, /SEBAS-PLAY-20-0-ROKU-INDEPENDIENTE/);
 assert.match(rokuSyncFunction, /pair-device/);
 assert.match(rokuSyncFunction, /revoke-device/);
 assert.match(rokuSyncFunction, /family_profile_watch_progress/);
 assert.match(familyFunction, /verify-profile-pin/);
 assert.match(pinHelper, /PBKDF2/);
-console.log("PASS: Android and Roku 13.0 retain independent package identity, labels, and Roku registry.");
+console.log("PASS: Android and Roku 20.0 retain independent package identity, labels, and Roku registry.");
 
 const viewer = read("src/ViewerApp.tsx");
 assert.match(viewer, /onPause=\{e=>\{const v=e\.currentTarget;if\(!v\.ended\)void saveProgress\("movie",selected\.item\.id,v\.currentTime,v\.duration,true\)\}\}/, "Pausing a movie must immediately flush watch progress");
