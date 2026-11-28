@@ -49,6 +49,6 @@ console.log("PASS: Roku catalog, account sync and playback progress transfers ha
 
 const syncFunction = read("supabase/functions/roku-device-sync/index.ts");
 assert.match(syncFunction, /access-control-allow-headers":"authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage"/, "Supabase function CORS must allow the headers sent by supabase-js browser clients");
-assert.match(home, /dialog\.SetFocus\(true\)/, "Roku URL and token dialogs must explicitly receive focus");
-assert.match(home, /m\.actions\.SetFocus\(true\)/, "Home actions must regain focus after closing the URL dialog");
+assert.doesNotMatch(home, /KeyboardDialog|askLaptopUrl|askLaptopToken/, "Roku must not open manual laptop keyboard dialogs");
+assert.match(home, /m\.actions\.SetFocus\(true\)/, "Roku home actions must receive focus on startup");
 console.log("PASS: Android pairing CORS headers and Roku dialog focus/fallback regression checks.");
