@@ -106,12 +106,13 @@ public class RokuDiscoveryPlugin extends Plugin {
   });
  }
  @PluginMethod public void launch(PluginCall call){
-  String ip=call.getString("ip"), id=call.getString("channelId","dev");
+  String ip=call.getString("ip");
+  final String channelIdValue=call.getString("channelId","dev");
+  final String channelId=(channelIdValue==null||channelIdValue.trim().isEmpty())?"dev":channelIdValue;
   if(ip==null||ip.trim().isEmpty()){call.reject("No se recibió la dirección del Roku.");return;}
-  if(id==null||id.trim().isEmpty())id="dev";
   worker.execute(()->{
    try{
-    String path="http://"+ip+":8060/launch/"+URLEncoder.encode(id,"UTF-8");
+    String path="http://"+ip+":8060/launch/"+URLEncoder.encode(channelId,"UTF-8");
     String contentId=call.getString("contentId","");String mediaType=call.getString("mediaType","");
     String laptopUrl=call.getString("laptopUrl","");String laptopToken=call.getString("laptopToken","");
     String separator="?";
@@ -119,7 +120,7 @@ public class RokuDiscoveryPlugin extends Plugin {
     if(!laptopUrl.isEmpty()) {path+=separator+"laptopUrl="+URLEncoder.encode(laptopUrl,"UTF-8");separator="&";}
     if(!laptopToken.isEmpty())path+=separator+"laptopToken="+URLEncoder.encode(laptopToken,"UTF-8");
     HttpURLConnection c=(HttpURLConnection)new URL(path).openConnection();c.setRequestMethod("POST");c.setConnectTimeout(5000);c.setReadTimeout(7000);int status=c.getResponseCode();c.disconnect();
-    if(status>=200&&status<300){JSObject result=new JSObject();result.put("launched",true);result.put("channelId",id);call.resolve(result);}else{call.reject("Roku respondió HTTP "+status+" al abrir SEBAS PLAY. Comprueba que el canal esté instalado.");}
+    if(status>=200&&status<300){JSObject result=new JSObject();result.put("launched",true);result.put("channelId",channelId);call.resolve(result);}else{call.reject("Roku respondió HTTP "+status+" al abrir SEBAS PLAY. Comprueba que el canal esté instalado.");}
    }catch(Exception e){call.reject("No se pudo abrir SEBAS PLAY en Roku: "+e.getMessage(),e);}
   });
  }
