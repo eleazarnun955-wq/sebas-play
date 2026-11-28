@@ -8,7 +8,7 @@ sub init()
     m.video.ObserveField("state", "onVideoState")
     m.saveTimer = m.top.FindNode("progressSaveTimer")
     m.saveTimer.ObserveField("fire", "savePlaybackPosition")
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY26")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY27")
     m.resumePosition = 0
     m.resumeApplied = false
     if m.top.resumeSeconds > m.resumePosition then m.resumePosition = m.top.resumeSeconds
