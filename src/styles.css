@@ -193,3 +193,32 @@
 /* SEBAS PLAY 23.0 — responsive category controls for the private Tubi-style catalog */
 .viewer-category-bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 0;margin:0 0 12px}.viewer-category-bar button{border:1px solid #34495b;background:#172431;color:#dbe5eb;border-radius:999px;padding:9px 16px;font-size:12px;font-weight:750}.viewer-category-bar button.active{background:#a8f05a;color:#10170a;border-color:#a8f05a}.viewer-filter-count{margin-left:auto;color:#9fb0bc;font-size:12px}
 @media(max-width:650px){.viewer-filter-count{width:100%;margin:2px 0 0}.viewer-category-bar{gap:7px}}
+
+/* SEBAS PLAY v23.0 — Tubi-inspired discovery experience */
+.viewer-shell{background:#080d13;color:#f4f7f9}
+.viewer-top{position:sticky;top:0;z-index:20;min-height:76px;padding:12px clamp(14px,4vw,54px);gap:18px}
+.viewer-search{max-width:520px;flex:1}
+.viewer-hero-netflix{min-height:360px;padding:clamp(24px,5vw,58px);margin-bottom:28px;background-position:center;background-size:cover;border-radius:16px;overflow:hidden}
+.viewer-hero-netflix .viewer-hero-copy{position:relative;z-index:1;max-width:620px}
+.viewer-hero-netflix h1{font-size:clamp(30px,5vw,58px);overflow-wrap:anywhere}
+.viewer-hero-netflix p{font-size:clamp(13px,1.4vw,16px);color:#d5e0e7}
+.viewer-counts{display:flex;flex-wrap:wrap;gap:8px 16px}
+.viewer-counts span{display:inline-flex;align-items:center;gap:7px;font-size:12px}
+.viewer-section{margin-top:30px}
+.viewer-section-head h2{display:flex;align-items:center;gap:10px}
+.viewer-grid{gap:15px}
+.viewer-card{background:transparent;border:0;color:#f4f7f9;min-width:0;flex:0 0 clamp(132px,15vw,184px);padding:0;text-align:left;display:flex;flex-direction:column;gap:7px}
+.viewer-poster{width:100%;aspect-ratio:2/3;display:block;overflow:hidden}
+.viewer-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.viewer-poster-fallback{width:100%;height:100%;min-height:150px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;color:#a8f05a;background:linear-gradient(145deg,#1a2a38,#0e151e)}
+.viewer-card-title{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer-card small{font-size:11px}
+.viewer-card:focus-visible{outline:2px solid #a8f05a;outline-offset:4px;border-radius:12px}
+.viewer-laptop-entry{position:relative;z-index:2}
+@media(max-width:650px){
+ .viewer-top{position:sticky;top:0;flex-wrap:wrap}
+ .viewer-search{order:3;flex-basis:100%;max-width:none}
+ .viewer-hero-netflix{min-height:320px;padding:22px 18px}
+ .viewer-card{flex-basis:clamp(126px,39vw,158px)}
+ .viewer-section{margin-top:23px}
+}
