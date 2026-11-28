@@ -20,7 +20,7 @@ assert.notEqual(appId, "com.eleazarcompany.sebasplay.v12.independiente20261126",
 assert.notEqual(appId, "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125", "13.0 must not replace 11.0");
 
 assert.ok(manifest.includes("title=SEBAS PLAY 21.0"),"Roku manifest must identify version 21.0");
-assert.ok(manifest.includes("major_version=21"),"Roku manifest must use major version 20");
+assert.ok(manifest.includes("major_version=21"),"Roku manifest must use major version 21");
 assert.match(manifest, /^minor_version=0$/m);
 for (const [name, source] of [["Roku HomeScene", home], ["Roku PlayerScene", player]]) {
   assert.match(source, /roRegistrySection", "SEBASPLAY21"/, name + " must use the isolated 21.0 registry");

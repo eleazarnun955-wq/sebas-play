@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate independent Roku 19.0 channel
+      - name: Validate independent Roku 21.0 channel
         run: |
           test -f apps/roku/manifest
           test -f apps/roku/source/main.brs
@@ -27,7 +27,7 @@ jobs:
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
           grep -q "title=SEBAS PLAY 21.0" apps/roku/manifest
-          grep -q "major_version=20" apps/roku/manifest
+          grep -q "major_version=21" apps/roku/manifest
           grep -q 'roRegistrySection", "SEBASPLAY21"' apps/roku/components/HomeScene.brs
           grep -q 'roRegistrySection", "SEBASPLAY21"' apps/roku/components/PlayerScene.brs
           ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/HomeScene.brs
