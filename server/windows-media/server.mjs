@@ -136,6 +136,20 @@ async function walk(dir, prefix = "", req) {
 function cleanMediaTitle(value) {
   return value.replace(/[._]+/g, " ").replace(/\s+/g, " ").replace(/\s*[-–—]\s*/g, " ").trim();
 }
+function classifyCategory(rel) {
+  const firstFolder = rel.split(/[\\\\/]/).filter(Boolean)[0] || "";
+  const key = firstFolder.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const aliases = {
+    peliculas:"Películas", pelicula:"Películas", movies:"Películas", movie:"Películas",
+    caricaturas:"Caricaturas", dibujos:"Caricaturas", cartoons:"Caricaturas", infantil:"Caricaturas",
+    series:"Series", serie:"Series", tv:"Series",
+    anime:"Anime", animacionjaponesa:"Anime",
+    documentales:"Documentales", documental:"Documentales", documentaries:"Documentales",
+    conciertos:"Conciertos", musica:"Música", music:"Música"
+  };
+  return aliases[key] || (firstFolder ? firstFolder : "Sin categoría");
+}
+
 function classifyMedia(rel, filename) {
   const base = path.basename(filename, path.extname(filename));
   const normalized = cleanMediaTitle(base);
@@ -154,7 +168,7 @@ function classifyMedia(rel, filename) {
     const episode = Number(explicitEpisode[3] || explicitEpisode[5] || explicitEpisode[7] || explicitEpisode[9]);
     const seriesTitle = cleanMediaTitle(explicitEpisode[1]) || seriesFromFolder;
     if (seriesTitle && episode > 0) {
-      return { media_type:"episode", series_title:seriesTitle, season_number:season, episode_number:episode, year:null };
+      return { media_type:"episode", category:classifyCategory(rel), series_title:seriesTitle, season_number:season, episode_number:episode, year:null };
     }
   }
   if (seasonFromFolder !== null) {
@@ -162,11 +176,11 @@ function classifyMedia(rel, filename) {
     const numberedEpisode = normalized.match(/^0*(\d{1,3})\s*[-–—.]\s*(.+)$/);
     const episode = Number(namedEpisode?.[1] || numberedEpisode?.[1] || 0);
     if (seriesFromFolder && episode > 0) {
-      return { media_type:"episode", series_title:seriesFromFolder, season_number:seasonFromFolder, episode_number:episode, year:null };
+      return { media_type:"episode", category:classifyCategory(rel), series_title:seriesFromFolder, season_number:seasonFromFolder, episode_number:episode, year:null };
     }
   }
   const yearMatch = normalized.match(/(?:^|\s)((?:19|20)\d{2})(?:\s|$)/);
-  return { media_type:"movie", series_title:null, season_number:null, episode_number:null, year:yearMatch ? Number(yearMatch[1]) : null };
+  return { media_type:"movie", category:classifyCategory(rel), series_title:null, season_number:null, episode_number:null, year:yearMatch ? Number(yearMatch[1]) : null };
 }
 
 function sendError(res, status, message) { json(res, status, { error:message }); }
