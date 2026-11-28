@@ -11,7 +11,7 @@ sub init()
     m.connectButton.text = "Conectar laptop"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar catálogo"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY18")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY19")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")
@@ -34,7 +34,7 @@ sub onActionSelected()
 end sub
 
 sub askLaptopUrl()
-    dialog = CreateObject("roSGNode", "KeyboardDialog")
+    dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
     dialog.title = "Dirección de tu laptop"
     dialog.text = m.laptopUrl
     dialog.buttons = ["Siguiente", "Cancelar"]
@@ -46,6 +46,8 @@ end sub
 sub onUrlEntered()
     dialog = m.top.dialog
     if dialog = invalid or dialog.buttonSelected <> 0 then
+        dialog.close = true
+        dialog.close = true
         m.top.dialog = invalid
         return
     end if
@@ -56,6 +58,7 @@ sub onUrlEntered()
     lowerUrl = LCase(m.laptopUrl)
     if Left(lowerUrl, 7) <> "http://" and Left(lowerUrl, 8) <> "https://" then
         m.status.text = "Escribe la dirección completa, empezando con http:// o https://"
+        dialog.close = true
         m.top.dialog = invalid
         return
     end if
@@ -67,6 +70,7 @@ sub onUrlEntered()
     ' Close the keyboard dialog and return focus before opening the token dialog.
     ' Opening a second KeyboardDialog from the first dialog's button callback can
     ' leave some Roku firmware versions stuck in the dialog transition.
+    dialog.close = true
     m.top.dialog = invalid
     m.awaitingToken = true
     m.connectButton.text = "Introducir token"
@@ -75,7 +79,7 @@ sub onUrlEntered()
 end sub
 
 sub askLaptopToken()
-    dialog = CreateObject("roSGNode", "KeyboardDialog")
+    dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
     dialog.title = "Pega el token privado (solo el código)"
     dialog.text = m.laptopToken
     dialog.buttons = ["Conectar", "Cancelar"]
@@ -87,17 +91,17 @@ end sub
 sub onTokenEntered()
     dialog = m.top.dialog
     if dialog = invalid or dialog.buttonSelected <> 0 then
+        dialog.close = true
         m.top.dialog = invalid
-        m.actions.SetFocus(true)
         return
     end if
     m.laptopToken = Trim(dialog.text)
+    dialog.close = true
     m.top.dialog = invalid
     m.awaitingToken = false
     m.connectButton.text = "Conectar laptop"
     if m.laptopToken = ""
         m.status.text = "Falta el token privado. Pulsa Conectar laptop y pega el código de acceso."
-        m.actions.SetFocus(true)
         return
     end if
     m.status.text = "Verificando dirección y token de la laptop..."
@@ -222,7 +226,7 @@ sub toggleFocusedFavorite()
 end sub
 
 sub askRokuPairCode()
-    dialog = CreateObject("roSGNode", "KeyboardDialog")
+    dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
     dialog.title = "Código de SEBAS PLAY en Android"
     dialog.text = ""
     dialog.buttons = ["Vincular", "Cancelar"]
