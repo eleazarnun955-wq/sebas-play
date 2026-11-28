@@ -1,10 +1,10 @@
-name: SEBAS PLAY 25.0 independiente Android APK
+name: SEBAS PLAY 26.0 independiente Android APK
 # Independent package: preserve 13.0 and all previous installs.
 
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-25-direct-live-tv-20261128]
+    branches: [feature/sebas-play-26-verified-spanish-live-tv-20261128]
     paths:
       - "src/**"
       - "public/**"
@@ -13,7 +13,7 @@ on:
       - "capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
   pull_request:
-    branches: [feature/sebas-play-16-netflix-visual-20261127]
+    branches: [main]
     paths:
       - "src/**"
       - "public/**"
@@ -44,6 +44,8 @@ jobs:
         run: npm install
       - name: Verify Android Roku pairing and preserve laptop entry
         run: node scripts/verify-android-pairing.mjs
+      - name: Verify direct Spanish live TV candidate rules
+        run: node scripts/verify-live-tv.mjs
       - name: Build web app
         run: npm run build
         env:
@@ -80,7 +82,7 @@ jobs:
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.v25.directlivetv20261128"
+          EXPECTED="com.eleazarcompany.sebasplay.v26.verifiedlivetv20261128"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
@@ -89,10 +91,10 @@ jobs:
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v13.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v12.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
-      - name: Upload SEBAS PLAY 25.0 APK
+      - name: Upload SEBAS PLAY 26.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-25-0-ANDROID-INDEPENDIENTE
+          name: SEBAS-PLAY-26-0-ANDROID-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
