@@ -1,3 +1,4 @@
+// v27 Mexico-first live TV regression suite.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
