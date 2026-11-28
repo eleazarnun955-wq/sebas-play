@@ -4,7 +4,7 @@ name: SEBAS PLAY 16.0 independiente Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-16-netflix-visual-20261127]
+    branches: [feature/sebas-play-16-netflix-visual-20261127, fix/android-roku-pairing-v16-20261127]
     paths:
       - "src/**"
       - "public/**"
@@ -13,7 +13,7 @@ on:
       - "capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
   pull_request:
-    branches: [fix/sebas-play-15-profile-creation-20261127]
+    branches: [feature/sebas-play-16-netflix-visual-20261127, fix/android-roku-pairing-v16-20261127]
     paths:
       - "src/**"
       - "public/**"
@@ -42,6 +42,8 @@ jobs:
           java-version: "21"
       - name: Install dependencies
         run: npm install
+      - name: Verify Android Roku pairing and preserve laptop entry
+        run: node scripts/verify-android-pairing.mjs
       - name: Build web app
         run: npm run build
         env:
