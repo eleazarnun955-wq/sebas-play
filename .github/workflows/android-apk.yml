@@ -13,7 +13,7 @@ on:
       - "capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
   pull_request:
-    branches: [feature/sebas-play-16-netflix-visual-20261127, fix/android-roku-pairing-v16-20261127]
+    branches: [feature/sebas-play-17-direct-roku-20261127]
     paths:
       - "src/**"
       - "public/**"
@@ -75,7 +75,7 @@ jobs:
             fi
           done
           exit 1
-      - name: Verify package ID is the new independent 16.0 one
+      - name: Verify package ID is the new independent 17.0 one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
