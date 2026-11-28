@@ -16,7 +16,7 @@ sub init()
     refreshButton.text = "Actualizar catálogo"
     pairButton = m.actions.CreateChild("Button")
     pairButton.text = "Vincular con Android"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY13")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY16")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")
@@ -250,6 +250,7 @@ sub askRokuPairCode()
     dialog.buttons = ["Vincular", "Cancelar"]
     dialog.ObserveField("buttonSelected", "onRokuPairCodeEntered")
     m.top.dialog = dialog
+    dialog.SetFocus(true)
 end sub
 
 sub onRokuPairCodeEntered()
@@ -260,11 +261,12 @@ sub onRokuPairCodeEntered()
     end if
     code = UCase(Trim(dialog.text))
     m.top.dialog = invalid
+    m.actions.SetFocus(true)
     if Len(code) <> 12
         m.status.text = "El código debe tener 12 caracteres. Genera uno nuevo en Android."
         return
     end if
-    m.status.text = "Vinculando Roku con tu cuenta SEBAS PLAY..."
+    m.status.text = "Validando el código con SEBAS PLAY... No apagues Roku."
     startSyncTask("pair-device", { code: code, device_name: "SEBAS PLAY Roku" })
 end sub
 
