@@ -16,18 +16,18 @@ const appId = capacitor.match(/appId:\s*"([^"]+)"/)?.[1];
 const appName = capacitor.match(/appName:\s*"([^"]+)"/)?.[1];
 assert.equal(appId, "com.eleazarcompany.sebasplay.v23.privatestream20261128", "Android 23.0 must retain its unique application ID");
 assert.equal(appName, "SEBAS PLAY 23.0", "Android app label must identify version 23.0");
-assert.notEqual(appId, "com.eleazarcompany.sebasplay.v12.independiente20261126", "13.0 must not replace 12.0");
-assert.notEqual(appId, "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125", "13.0 must not replace 11.0");
+assert.notEqual(appId, "com.eleazarcompany.sebasplay.v12.independiente20261126", "23.0 must not replace 12.0");
+assert.notEqual(appId, "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125", "23.0 must not replace 11.0");
 
 assert.ok(manifest.includes("title=SEBAS PLAY 23.0"),"Roku manifest must identify version 23.0");
-assert.ok(manifest.includes("major_version=23"),"Roku manifest must use major version 21");
+assert.ok(manifest.includes("major_version=23"),"Roku manifest must use major version 23");
 assert.match(manifest, /^minor_version=0$/m);
 for (const [name, source] of [["Roku HomeScene", home], ["Roku PlayerScene", player]]) {
   assert.match(source, /roRegistrySection", "SEBASPLAY23"/, name + " must use the isolated 23.0 registry");
   assert.doesNotMatch(source, /roRegistrySection", "SEBASPLAY"/, name + " must not reuse the legacy registry");
 }
 assert.ok(androidWorkflow.includes("com.eleazarcompany.sebasplay.v23.privatestream20261128"));
-assert.match(rokuWorkflow, /SEBAS-PLAY-22-0-ROKU-INDEPENDIENTE/);
+assert.match(rokuWorkflow, /SEBAS-PLAY-23-0-ROKU-INDEPENDIENTE/);
 assert.match(rokuSyncFunction, /pair-device/);
 assert.match(rokuSyncFunction, /revoke-device/);
 assert.match(rokuSyncFunction, /family_profile_watch_progress/);
