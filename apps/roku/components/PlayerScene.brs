@@ -8,7 +8,7 @@ sub init()
     m.video.ObserveField("state", "onVideoState")
     m.saveTimer = m.top.FindNode("progressSaveTimer")
     m.saveTimer.ObserveField("fire", "savePlaybackPosition")
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY20")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY21")
     m.resumePosition = 0
     m.resumeApplied = false
     if m.top.resumeSeconds > m.resumePosition then m.resumePosition = m.top.resumeSeconds
@@ -68,6 +68,7 @@ sub syncPlaybackProgress(position as dynamic, duration as dynamic)
     m.progressTask.contentId = m.top.contentId
     m.progressTask.positionSeconds = Int(position)
     if duration <> invalid and duration > 0 then m.progressTask.durationSeconds = Int(duration)
+    m.top.AppendChild(m.progressTask)
     m.progressTask.control = "RUN"
 end sub
 
