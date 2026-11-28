@@ -14,6 +14,8 @@ const main = read("apps/roku/source/main.brs");
 assert.match(home, /m\.connectButton\.text = "Conectar desde Android"/, "Roku must direct laptop setup through Android instead of asking for codes on TV");
 assert.match(home, /m\.top\.launchLaptopUrl/, "Roku scene must receive the laptop address from Android");
 assert.match(home, /m\.top\.launchLaptopToken/, "Roku scene must receive the laptop token from Android");
+assert.match(home, /ObserveField\("launchLaptopUrl", "onLaunchLaptopConnectionChanged"\)[\s\S]*ObserveField\("launchLaptopToken", "onLaunchLaptopConnectionChanged"\)/, "Roku must observe Android launch arguments even when they arrive after SceneGraph init");
+assert.match(home, /sub onLaunchLaptopConnectionChanged\(\)[\s\S]*loadCatalog\(\)/, "Receiving Android laptop settings must persist them and refresh the Roku library");
 assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Roku must persist the laptop connection received from Android");
 assert.match(main, /args\.DoesExist\("laptopUrl"\)[\s\S]*args\.DoesExist\("laptopToken"\)/, "Roku launch handler must pass Android laptop settings to HomeScene");
 assert.match(home, /else if index = 1\s+loadCatalog\(\)/, "Actualizar biblioteca must reload the laptop and public catalogs");
