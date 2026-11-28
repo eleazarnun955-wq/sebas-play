@@ -103,7 +103,10 @@ public class RokuDiscoveryPlugin extends Plugin {
    try{
     String path="http://"+ip+":8060/launch/"+URLEncoder.encode(id,"UTF-8");
     String contentId=call.getString("contentId","");String mediaType=call.getString("mediaType","");
-    if(!contentId.isEmpty())path+="?contentId="+URLEncoder.encode(contentId,"UTF-8")+"&mediaType="+URLEncoder.encode(mediaType,"UTF-8");
+    String laptopUrl=call.getString("laptopUrl","");String laptopToken=call.getString("laptopToken","");
+    String separator="?";
+    if(!contentId.isEmpty()){path+=separator+"contentId="+URLEncoder.encode(contentId,"UTF-8")+"&mediaType="+URLEncoder.encode(mediaType,"UTF-8");separator="&";}
+    if(!laptopUrl.isEmpty()&&!laptopToken.isEmpty()){path+=separator+"laptopUrl="+URLEncoder.encode(laptopUrl,"UTF-8")+"&laptopToken="+URLEncoder.encode(laptopToken,"UTF-8");}
     HttpURLConnection c=(HttpURLConnection)new URL(path).openConnection();c.setRequestMethod("POST");c.setConnectTimeout(4000);c.setReadTimeout(5000);int status=c.getResponseCode();c.disconnect();
     if(status>=200&&status<300){JSObject result=new JSObject();result.put("launched",true);call.resolve(result);}else{call.reject("Roku respondió HTTP "+status+".");}
    }catch(Exception e){call.reject("No se pudo abrir SEBAS PLAY en Roku: "+e.getMessage(),e);}
