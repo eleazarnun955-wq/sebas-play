@@ -23,6 +23,6 @@ assert.match(nativeInstaller,/channelId="dev"/,"Native discovery must attempt Ro
 assert.match(nativeInstaller,/laptopUrl=/,"Native ECP launch must transfer the laptop address");
 assert.match(nativeInstaller,/laptopToken=/,"Native ECP launch must transfer the laptop token");
 assert.match(config,/com\\.eleazarcompany\\.sebasplay\\.v20\\.privatestream20261128/,"v20 must use a new independent package ID");
-assert.match(config,/SEBAS PLAY 19\.0/,"Android app must display version 19.0");
+assert.match(config,/SEBAS PLAY 20\.0/,"Android app must display version 20.0");
 assert.doesNotMatch(viewer,/Vincular Roku/,"Old manual pairing-code entry must not be visible");
 console.log("PASS: v20 Android SSDP/ECP discovery, laptop handoff, separate package, Mi laptop and profiles preserved.");
