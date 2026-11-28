@@ -1,9 +1,9 @@
-name: SEBAS PLAY 13.0 release readiness
+name: SEBAS PLAY 20.0 release readiness
 
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-13-0-independent-full-improvements-20261126]
+    branches: [feature/sebas-play-20-private-tubi-style-20261128]
     paths:
       - "src/**"
       - "apps/roku/**"
@@ -61,19 +61,19 @@ jobs:
       - name: Validate and package Roku 13.0
         run: |
           test -f apps/roku/manifest
-          grep -q "^title=SEBAS PLAY 13.0$" apps/roku/manifest
-          grep -q "^major_version=13$" apps/roku/manifest
+          grep -q "^title=SEBAS PLAY 20.0$" apps/roku/manifest
+          grep -q "^major_version=20$" apps/roku/manifest
           python3 -m pip install --quiet Pillow
           cd apps/roku
           python3 generate-icons.py
           mkdir -p ../../dist/roku
-          zip -r ../../dist/roku/SEBAS-PLAY-Roku-13-0.zip . -x "*.DS_Store" "*.zip"
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-20-0.zip . -x "*.DS_Store" "*.zip"
           cd ../..
-          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-13-0.zip | grep -qx "manifest"
-          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-13-0.zip | grep -qx "source/main.brs"
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-20-0.zip | grep -qx "manifest"
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-20-0.zip | grep -qx "source/main.brs"
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-13-0-ROKU-RELEASE-CHECK
-          path: dist/roku/SEBAS-PLAY-Roku-13-0.zip
+          name: SEBAS-PLAY-20-0-ROKU-RELEASE-CHECK
+          path: dist/roku/SEBAS-PLAY-Roku-20-0.zip
           if-no-files-found: error
           retention-days: 14
