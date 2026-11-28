@@ -9,12 +9,17 @@ const catalogXml = read("apps/roku/components/CatalogTask.xml");
 const player = read("apps/roku/components/PlayerScene.brs");
 const playerXml = read("apps/roku/components/PlayerScene.xml");
 
-assert.match(home, /CreateObject\("roSGNode", "StandardKeyboardDialog"\)[\s\S]*dialog\.ObserveField\("buttonSelected", "onUrlEntered"\)/, "URL dialog must route its selection to onUrlEntered");
-assert.match(home, /m\.top\.dialog = invalid[\s\S]*m\.awaitingToken = true[\s\S]*m\.connectButton\.text = "Introducir token"/, "URL dialog must close before the separate token step is enabled");
-assert.doesNotMatch(home, /dialogTimer|dialogTransition|urlDialogPending/, "No chained keyboard-dialog timer transition may remain");
-assert.match(home, /if m\.awaitingToken then askLaptopToken\(\) else askLaptopUrl\(\)/, "Second press must open token entry rather than immediately opening another keyboard dialog");
-assert.match(home, /CreateObject\("roSGNode", "StandardKeyboardDialog"\)[\s\S]*dialog\.ObserveField\("buttonSelected", "onTokenEntered"\)/, "Token dialog must route its selection to onTokenEntered");
-assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Successful token entry must persist URL and token in the isolated registry");
+const main = read("apps/roku/source/main.brs");
+
+assert.match(home, /m\.connectButton\.text = "Conectar desde Android"/, "Roku must direct laptop setup through Android instead of asking for codes on TV");
+assert.match(home, /m\.top\.launchLaptopUrl/, "Roku scene must receive the laptop address from Android");
+assert.match(home, /m\.top\.launchLaptopToken/, "Roku scene must receive the laptop token from Android");
+assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Roku must persist the laptop connection received from Android");
+assert.match(main, /args\.DoesExist\("laptopUrl"\)[\s\S]*args\.DoesExist\("laptopToken"\)/, "Roku launch handler must pass Android laptop settings to HomeScene");
+assert.match(home, /else if index = 1\s+loadCatalog\(\)/, "Actualizar biblioteca must reload the laptop and public catalogs");
+assert.doesNotMatch(home, /askLaptopUrl|askLaptopToken/, "Roku must not require manual laptop address or token entry on TV");
+assert.doesNotMatch(home, /if m\.deviceToken <> "" then syncRokuAccount\(\) else loadCatalog\(\)/, "Library refresh must not be diverted into account-only sync");
+
 assert.match(catalogXml, /extends="Task"/, "Catalog network work must run in a SceneGraph Task");
 assert.match(catalog, /SetUrl\(baseUrl \+ "\/health"\)/, "Laptop connection must validate server health first");
 assert.match(catalog, /SetUrl\(baseUrl \+ "\/api\/catalog"\)[\s\S]*AddHeader\("Authorization", "Bearer " \+ token\)/, "Catalog token must be sent only in the Authorization header");
