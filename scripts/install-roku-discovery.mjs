@@ -72,7 +72,7 @@ public class RokuDiscoveryPlugin extends Plugin {
        String headers=new String(reply.getData(),0,reply.getLength(),StandardCharsets.UTF_8);
        Matcher m=Pattern.compile("(?im)^LOCATION:\\s*(http://[^\\r\\n]+)").matcher(headers);
        if(m.find()){String location=m.group(1).trim();String host=location.replaceFirst("^http://","").replaceFirst("/.*$","");devices.put(host,location);}
-      }catch(java.net.SocketTimeoutException timeout){break;}
+      }catch(java.net.SocketTimeoutException timeout){continue;}
      }
     }
     for(Map.Entry<String,String> entry:devices.entrySet()){
