@@ -1,9 +1,9 @@
-name: SEBAS PLAY 26.0 independiente Roku channel
+name: SEBAS PLAY 27.0 independiente Roku channel
 
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-26-verified-spanish-live-tv-20261128]
+    branches: [feature/sebas-play-27-mexico-live-tv-20261128]
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
@@ -21,17 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate independent Roku 26.0 channel
+      - name: Validate independent Roku 27.0 channel
         run: |
           test -f apps/roku/manifest
           test -f apps/roku/source/main.brs
           test -f apps/roku/components/HomeScene.xml
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
-          grep -q "title=SEBAS PLAY 26.0" apps/roku/manifest
+          grep -q "title=SEBAS PLAY 27.0" apps/roku/manifest
           grep -q "major_version=26" apps/roku/manifest
-          grep -q 'roRegistrySection", "SEBASPLAY26"' apps/roku/components/HomeScene.brs
-          grep -q 'roRegistrySection", "SEBASPLAY26"' apps/roku/components/PlayerScene.brs
+          grep -q 'roRegistrySection", "SEBASPLAY27"' apps/roku/components/HomeScene.brs
+          grep -q 'roRegistrySection", "SEBASPLAY27"' apps/roku/components/PlayerScene.brs
           ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/HomeScene.brs
           ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/PlayerScene.brs
       - name: Verify Roku connection and playback flow regression checks
@@ -61,17 +61,17 @@ jobs:
         run: |
           mkdir -p dist/roku
           cd apps/roku
-          zip -r ../../dist/roku/SEBAS-PLAY-Roku-26-0.zip . -x "*.DS_Store" "*.zip"
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-27-0.zip . -x "*.DS_Store" "*.zip"
           cd ../..
-          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-26-0.zip > dist/roku/package-files.txt
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-27-0.zip > dist/roku/package-files.txt
           grep -qx "manifest" dist/roku/package-files.txt
-          ! grep -q "SEBAS-PLAY-Roku-26-0.zip" dist/roku/package-files.txt
+          ! grep -q "SEBAS-PLAY-Roku-27-0.zip" dist/roku/package-files.txt
           grep -qx "source/main.brs" dist/roku/package-files.txt
           grep -qx "components/HomeScene.xml" dist/roku/package-files.txt
           echo "Verified: manifest is at ZIP root and no nested ZIP is present."
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-26-0-ROKU-INDEPENDIENTE
-          path: dist/roku/SEBAS-PLAY-Roku-26-0.zip
+          name: SEBAS-PLAY-27-0-ROKU-INDEPENDIENTE
+          path: dist/roku/SEBAS-PLAY-Roku-27-0.zip
           if-no-files-found: error
           retention-days: 14
