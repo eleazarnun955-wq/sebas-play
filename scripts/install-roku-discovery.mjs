@@ -112,7 +112,6 @@ public class RokuDiscoveryPlugin extends Plugin {
 `;
 fs.writeFileSync(path.join(dir,"RokuDiscoveryPlugin.java"),java);
 let manifest=fs.readFileSync(manifestPath,"utf8");
-if(!manifest.includes("android.permission.ACCESS_WIFI_STATE"))manifest=manifest.replace("<manifest","<manifest\\n    xmlns:android=\"http://schemas.android.com/apk/res/android\"");
 if(!manifest.includes("android.permission.INTERNET"))manifest=manifest.replace("<application","<uses-permission android:name=\"android.permission.INTERNET\" />\\n<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />\\n<uses-permission android:name=\"android.permission.CHANGE_WIFI_MULTICAST_STATE\" />\\n<application");
 fs.writeFileSync(manifestPath,manifest);
 console.log("Plugin nativo de descubrimiento SSDP/ECP de Roku integrado.");
