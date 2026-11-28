@@ -277,7 +277,9 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     for each entry in parsed
         entryUrl = safeString(entry.stream_url)
         if tableName = "movies" then entryUrl = safeString(entry.video_url)
-        if isDirectPlayableUrl(entryUrl) then
+        playableEntry = isDirectPlayableUrl(entryUrl)
+        if tableName = "live_channels" then playableEntry = isDirectLiveStreamUrl(entryUrl)
+        if playableEntry then
         item = section.CreateChild("ContentNode")
         if tableName = "live_channels"
             item.Title = safeString(entry.name)
@@ -302,6 +304,7 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
                 item.Description = "PRÓXIMO: " + upcomingProgram
             end if
             item.Url = safeString(entry.stream_url)
+            item.StreamFormat = "hls"
             item.HDPosterUrl = safeString(entry.logo_url)
             item.AddFields({ contentType: "channel", contentId: safeString(entry.id) })
         else
@@ -372,4 +375,13 @@ end function
     pathEnd = Instr(1, url, "?")
     if pathEnd > 0 then url = Left(url, pathEnd - 1)
     return Right(url, 5) = ".m3u8" or Right(url, 4) = ".mp4" or Right(url, 4) = ".m4v" or Right(url, 4) = ".mov" or Right(url, 5) = ".webm"
+end function
+
+function isDirectLiveStreamUrl(value as string) as boolean
+    url = LCase(Trim(value))
+    if Left(url, 7) <> "http://" and Left(url, 8) <> "https://" then return false
+    pathEnd = Instr(1, url, "?")
+    if pathEnd > 0 then url = Left(url, pathEnd - 1)
+    if Instr(1, url, "#") > 0 then return false
+    return Right(url, 5) = ".m3u8"
 end function
