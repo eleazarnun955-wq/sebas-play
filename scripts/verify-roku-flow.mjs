@@ -11,6 +11,10 @@ const playerXml = read("apps/roku/components/PlayerScene.xml");
 
 const main = read("apps/roku/source/main.brs");
 
+assert.match(homeXml, /brandIntroOverlay/,"Roku must show the branded intro overlay");
+assert.match(homeXml, /brandIntroAudio/,"Roku must include the intro audio player");
+assert.match(home, /pkg:\/audio\/sebas-play-intro\.wav/,"Roku must play the spoken brand audio");
+assert.match(home, /onBrandIntroFinished/,"Roku intro must close on its timer");
 assert.match(home, /m\.connectButton\.text = "Conectar desde Android"/, "Roku must direct laptop setup through Android instead of asking for codes on TV");
 assert.match(home, /m\.top\.launchLaptopUrl/, "Roku scene must receive the laptop address from Android");
 assert.match(home, /m\.top\.launchLaptopToken/, "Roku scene must receive the laptop token from Android");
