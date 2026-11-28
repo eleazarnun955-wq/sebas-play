@@ -27,7 +27,7 @@ jobs:
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
           grep -q "title=SEBAS PLAY 24.0" apps/roku/manifest
-          grep -q "major_version=23" apps/roku/manifest
+          grep -q "major_version=24" apps/roku/manifest
           grep -q 'roRegistrySection", "SEBASPLAY24"' apps/roku/components/HomeScene.brs
           grep -q 'roRegistrySection", "SEBASPLAY24"' apps/roku/components/PlayerScene.brs
           ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/HomeScene.brs
