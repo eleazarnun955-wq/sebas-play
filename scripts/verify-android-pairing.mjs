@@ -14,7 +14,6 @@ assert.match(viewer,/profiles\.map\(p=>/,"Family profiles must remain available"
 assert.match(viewer,/brand-intro/,"Animated brand intro must remain in Android viewer");
 assert.match(viewer,/sebas-play-intro\.mp3/,"Android viewer must play the generated spoken intro");
 assert.match(fs.readFileSync(".github/workflows/android-apk.yml","utf8"),/es-MX-DaliaNeural/,"Android build must generate the Mexican female neural voice");
-assert.match(fs.readFileSync(".github/workflows/android-apk.yml","utf8"),/es-MX-DaliaNeural/,"Android build must generate the Mexican female neural voice");
 assert.match(viewer,/onClick=\{dismissBrandIntro\}/,"Intro must offer a skip control");
 assert.match(laptop,/localStorage\.getItem\("sebas_laptop_token"\)/,"Existing laptop token persistence must remain unchanged");
 assert.match(direct,/RokuDiscovery\.discover\(\)/,"Android must discover Roku devices automatically");
