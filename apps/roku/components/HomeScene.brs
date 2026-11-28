@@ -225,6 +225,7 @@ sub startSyncTask(action as string, payload as object)
     m.syncTask.payload = payload
     m.syncTask.ObserveField("response", "onSyncTaskCompleted")
     m.syncTask.ObserveField("errorMessage", "onSyncTaskError")
+    m.top.AppendChild(m.syncTask)
     m.syncTask.control = "RUN"
 end sub
 
