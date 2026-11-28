@@ -7,22 +7,14 @@ sub loadCatalog()
     root.title = "SEBAS PLAY 19.0"
     laptopUrl = safeString(m.top.laptopUrl)
     laptopToken = safeString(m.top.laptopToken)
-    url = SebasPlaySupabaseUrl()
-    key = SebasPlayPublishableKey()
-    ' Prioritize the laptop connection so a slow optional catalog cannot hide its result.
-    if laptopUrl <> "" and laptopToken <> "" then
-        m.top.errorMessage = "Conectando con la laptop..."
-        loadLaptopCatalog(root, laptopUrl, laptopToken)
+    if laptopUrl = "" or laptopToken = "" then
+        m.top.errorMessage = "Conecta primero Mi laptop desde Android. Roku utiliza directamente la biblioteca de tu laptop."
         m.top.catalog = root
+        return
     end if
-    if key = "" or key = "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
-        if laptopUrl = "" or laptopToken = "" then m.top.errorMessage = "Configura Supabase o conecta tu laptop desde el botón superior."
-    else
-        loadCollection(root, url, key, "movies", "Películas", "id,title,synopsis,poster_url,release_year,age_rating,duration_minutes,video_url", "title")
-        loadCollection(root, url, key, "series", "Series", "id,title,synopsis,poster_url,release_year,age_rating", "title")
-        loadSeriesEpisodes(root, url, key)
-        loadCollection(root, url, key, "live_channels", "TV en vivo", "id,name,logo_url,category,country_code,stream_url", "name")
-    end if
+
+    m.top.errorMessage = "Conectando directamente con la biblioteca de tu laptop..."
+    loadLaptopCatalog(root, laptopUrl, laptopToken)
     m.top.catalog = root
 end sub
 
