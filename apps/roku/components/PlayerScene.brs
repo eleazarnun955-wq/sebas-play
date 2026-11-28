@@ -34,7 +34,11 @@ sub startPlayback()
     content = CreateObject("roSGNode", "ContentNode")
     content.Url = m.top.videoUrl
     content.Title = m.top.videoTitle
-    content.StreamFormat = "auto"
+    if m.top.contentType = "channel"
+        content.StreamFormat = "hls"
+    else
+        content.StreamFormat = "auto"
+    end if
     m.video.content = content
     m.video.control = "play"
 end sub
