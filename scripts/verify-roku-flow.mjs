@@ -47,6 +47,7 @@ assert.match(syncTask, /sub runSync\(\)[\s\S]*GetToString\(\)|PostFromString\(/,
 assert.match(home, /startSyncTask\("pair-device"/, "Pairing must use the background sync task");
 assert.match(home, /startSyncTask\("favorite"/, "Favorite writes must use the background sync task");
 assert.match(home, /startSyncTask\("sync"/, "Account refresh must use the background sync task");
+assert.match(home, /ObserveField\("errorMessage", "onSyncTaskError"\)[\s\S]*m\.top\.AppendChild\(m\.syncTask\)[\s\S]*m\.syncTask\.control = "RUN"/, "SyncTask must be attached before execution");
 assert.match(home, /ObserveField\("response", "onSyncTaskCompleted"\)[\s\S]*m\.top\.AppendChild\(m\.syncTask\)[\s\S]*m\.syncTask\.control = "RUN"/, "SyncTask must be attached to the SceneGraph before it starts");
 console.log("PASS: Roku account pairing, favorites and sync run off the UI thread.");
 
