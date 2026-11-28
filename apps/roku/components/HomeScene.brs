@@ -25,13 +25,19 @@ sub init()
     m.syncedFavorites = []
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
-    if m.laptopUrl <> "" and m.laptopToken <> ""\n        loadCatalog()\n    else\n        m.status.text = "Conecta Mi laptop en Android y pulsa Conectar a Roku para enviar tu biblioteca."\n    end if
+    if m.laptopUrl <> "" and m.laptopToken <> ""
+        loadCatalog()
+    else
+        m.status.text = "Conecta Mi laptop en Android y pulsa Conectar a Roku para enviar tu biblioteca."
+    end if
     m.actions.SetFocus(true)
 end sub
 
 sub onActionSelected()
     index = m.actions.buttonSelected
-    if index = 0\n        loadCatalog()\n    end if
+    if index = 0
+        loadCatalog()
+    end if
 end sub
 
 sub askLaptopUrl()
