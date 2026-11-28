@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { Activity, Clapperboard, Film, Radio, Search, Play, Tv2, X, LoaderCircle, AlertCircle, Heart, LogIn, LogOut, HardDrive, UserPlus } from "lucide-react";
+import { Activity, Clapperboard, Film, Search, Play, Tv2, X, LoaderCircle, AlertCircle, Heart, LogIn, LogOut, HardDrive, UserPlus } from "lucide-react";
 import { supabase } from "./lib/supabase";
 import { isNativeVlcAvailable, openNativeVlc } from "./lib/vlc-player";
 import StorageManager from "./StorageManager";
@@ -48,7 +48,6 @@ export default function ViewerApp(){
  const q=search.trim().toLocaleLowerCase();
  const fm=useMemo(()=>movies.filter(x=>(!q||[x.title,x.synopsis||"",...(x.genres||[])].join(" ").toLowerCase().includes(q))&&(activeGenre==="Todos"||(x.genres||[]).some(g=>g.toLocaleLowerCase()===activeGenre.toLocaleLowerCase()))),[movies,q,activeGenre]);
  const fs=useMemo(()=>series.filter(x=>(!q||[x.title,x.synopsis||"",...(x.genres||[])].join(" ").toLowerCase().includes(q))&&(activeGenre==="Todos"||(x.genres||[]).some(g=>g.toLocaleLowerCase()===activeGenre.toLocaleLowerCase()))),[series,q,activeGenre]);
- const fc=useMemo(()=>channels.filter(x=>(!q||[x.name,x.category||"",x.country_code||""].join(" ").toLowerCase().includes(q))&&(activeGenre==="Todos"||x.category===activeGenre)),[channels,q,activeGenre]);
  const categories=useMemo(()=>["Todos",...Array.from(new Set([...movies.flatMap(x=>x.genres||[]),...series.flatMap(x=>x.genres||[]),...channels.map(x=>x.category).filter((x):x is string=>Boolean(x))])).sort((a,b)=>a.localeCompare(b,"es"))],[movies,series,channels]);
  const novedades=useMemo(()=>[
   ...movies.map(item=>({kind:"movie" as const,item,date:item.created_at})),
