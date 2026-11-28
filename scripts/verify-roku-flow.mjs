@@ -9,20 +9,19 @@ const catalogXml = read("apps/roku/components/CatalogTask.xml");
 const player = read("apps/roku/components/PlayerScene.brs");
 const playerXml = read("apps/roku/components/PlayerScene.xml");
 
-assert.match(home, /dialog\.ObserveField\("buttonSelected", "onUrlEntered"\)/, "URL dialog must route its selection to onUrlEntered");
-assert.match(home, /m\.top\.dialog = invalid[\s\S]*m\.awaitingToken = true[\s\S]*m\.connectButton\.text = "Introducir token"/, "URL dialog must close before the separate token step is enabled");
-assert.doesNotMatch(home, /dialogTimer|dialogTransition|urlDialogPending/, "No chained keyboard-dialog timer transition may remain");
-assert.match(home, /if m\.awaitingToken then askLaptopToken\(\) else askLaptopUrl\(\)/, "Second press must open token entry rather than immediately opening another keyboard dialog");
-assert.match(home, /dialog\.ObserveField\("buttonSelected", "onTokenEntered"\)/, "Token dialog must route its selection to onTokenEntered");
-assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Successful token entry must persist URL and token in the isolated registry");
+assert.match(home, /m\.top\.launchLaptopUrl[\s\S]*m\.top\.launchLaptopToken/, "Roku must accept laptop credentials handed off from Android");
+assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Roku must persist the handed-off URL and token");
+assert.doesNotMatch(home, /askLaptopUrl\(\)|askLaptopToken\(\)/, "Roku must not require manual keyboard entry");
+assert.match(home, /Actualizar biblioteca de mi laptop/, "Roku must provide a refresh action");
 assert.match(catalogXml, /extends="Task"/, "Catalog network work must run in a SceneGraph Task");
 assert.match(catalog, /SetUrl\(baseUrl \+ "\/health"\)/, "Laptop connection must validate server health first");
 assert.match(catalog, /SetUrl\(baseUrl \+ "\/api\/catalog"\)[\s\S]*AddHeader\("Authorization", "Bearer " \+ token\)/, "Catalog token must be sent only in the Authorization header");
 assert.doesNotMatch(catalog, /api\/catalog\?token=/i, "Catalog token must never be placed in the URL");
+assert.doesNotMatch(catalog, /loadCollection\(root, url, key/, "Roku must not load remote catalogue sources");
 assert.match(playerXml, /<Video id="video"/, "Native Roku video player must exist");
 assert.match(player, /ObserveField\("state", "onVideoState"\)/, "Player must observe playback state");
 assert.match(player, /state = "error"[\s\S]*state = "finished"/, "Player must handle errors and normal completion");
-console.log("PASS: Roku URL → separate token step → authenticated catalog → playback flow regression checks.");
+console.log("PASS: Android handoff → saved laptop credentials → local catalog → playback regression checks.");
 
 const syncTask = read("apps/roku/components/SyncTask.brs");
 const syncTaskXml = read("apps/roku/components/SyncTask.xml");
