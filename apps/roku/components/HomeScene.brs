@@ -10,7 +10,7 @@ sub init()
     m.connectButton.text = "Conectar desde Android"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar biblioteca"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY19")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY20")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")
@@ -20,10 +20,13 @@ sub init()
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
     ' Android launch arguments may arrive just after SceneGraph init; observe both fields.
-    m.top.ObserveField("launchLaptopUrl", "onLaunchLaptopConnectionChanged")
-    m.top.ObserveField("launchLaptopToken", "onLaunchLaptopConnectionChanged")
-    if safeString(m.top.launchLaptopUrl) <> "" and safeString(m.top.launchLaptopToken) <> ""
+    m.top.ObserveField("launchConnection", "onLaunchLaptopConnectionChanged")
+    m.top.ObserveField("launchLaptopUrl", "onLegacyLaunchLaptopConnectionChanged")
+    m.top.ObserveField("launchLaptopToken", "onLegacyLaunchLaptopConnectionChanged")
+    if type(m.top.launchConnection) = "roAssociativeArray"
         onLaunchLaptopConnectionChanged()
+    else if safeString(m.top.launchLaptopUrl) <> "" and safeString(m.top.launchLaptopToken) <> ""
+        onLegacyLaunchLaptopConnectionChanged()
     else if m.deviceToken <> ""
         syncRokuAccount()
     else
@@ -33,8 +36,16 @@ sub init()
 end sub
 
 sub onLaunchLaptopConnectionChanged()
-    launchUrl = safeString(m.top.launchLaptopUrl)
-    launchToken = safeString(m.top.launchLaptopToken)
+    connection = m.top.launchConnection
+    if type(connection) <> "roAssociativeArray" then return
+    applyLaptopConnection(safeString(connection.laptopUrl), safeString(connection.laptopToken))
+end sub
+
+sub onLegacyLaunchLaptopConnectionChanged()
+    applyLaptopConnection(safeString(m.top.launchLaptopUrl), safeString(m.top.launchLaptopToken))
+end sub
+
+sub applyLaptopConnection(launchUrl as string, launchToken as string)
     if launchUrl = "" or launchToken = "" then return
     if launchUrl = m.laptopUrl and launchToken = m.laptopToken then return
     m.laptopUrl = launchUrl
