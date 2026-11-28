@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate independent Roku 13.0 channel
+      - name: Validate independent Roku 17.0 channel
         run: |
           test -f apps/roku/manifest
           test -f apps/roku/source/main.brs
@@ -45,17 +45,17 @@ jobs:
         run: |
           mkdir -p dist/roku
           cd apps/roku
-          zip -r ../../dist/roku/SEBAS-PLAY-Roku-13-0.zip . -x "*.DS_Store" "*.zip"
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-17-0.zip . -x "*.DS_Store" "*.zip"
           cd ../..
-          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-13-0.zip > dist/roku/package-files.txt
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-17-0.zip > dist/roku/package-files.txt
           grep -qx "manifest" dist/roku/package-files.txt
-          ! grep -q "SEBAS-PLAY-Roku-13-0.zip" dist/roku/package-files.txt
+          ! grep -q "SEBAS-PLAY-Roku-17-0.zip" dist/roku/package-files.txt
           grep -qx "source/main.brs" dist/roku/package-files.txt
           grep -qx "components/HomeScene.xml" dist/roku/package-files.txt
           echo "Verified: manifest is at ZIP root and no nested ZIP is present."
       - uses: actions/upload-artifact@v4
         with:
           name: SEBAS-PLAY-17-0-ROKU-INDEPENDIENTE
-          path: dist/roku/SEBAS-PLAY-Roku-13-0.zip
+          path: dist/roku/SEBAS-PLAY-Roku-17-0.zip
           if-no-files-found: error
           retention-days: 14
