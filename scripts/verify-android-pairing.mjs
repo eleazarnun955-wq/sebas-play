@@ -12,7 +12,7 @@ assert.match(viewer,/import LaptopConnection from "\.\/LaptopConnection"/,"Exist
 assert.match(viewer,/onClick=\{\(\)=>setLaptopOpen\(true\)\}[^>]*>[\s\S]*?Mi laptop/,"Mi laptop shortcut must remain visible in the main navigation");
 assert.match(viewer,/RokuDirectConnect/,"Direct Roku connection must be mounted in the main viewer");
 assert.match(viewer,/LaptopLibraryView/,"The main screen must display the laptop library");
-assert.doesNotMatch(viewer,/<FreePlatforms\\s*\\/>/,"External movie-platform links must not be shown");
+assert.doesNotMatch(viewer, /<FreePlatforms/, "External movie-platform links must not be shown");
 assert.match(localLibrary,/item\\.category\\|\\|"Sin categoría"/,"The Android library must group videos by folder category");
 assert.match(laptop,/sebas-laptop-updated/,"Connecting Mi laptop must refresh the main library");
 assert.match(viewer,/profiles\.map\(p=>/,"Family profiles must remain available");
