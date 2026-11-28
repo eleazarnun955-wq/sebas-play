@@ -129,3 +129,16 @@
 .viewer-auth-switch:hover{color:#fff}
 .viewer-feature-play:focus-visible,.viewer-feature-more:focus-visible,.viewer-play:focus-visible,.viewer-category-bar button:focus-visible,.viewer-admin:focus-visible,.viewer-profile-switch:focus-visible,.viewer-admin-storage:focus-visible{outline:2px solid #ff424a;outline-offset:3px}
 @media(max-width:650px){.viewer-category-bar{padding:10px 4vw;gap:7px}.viewer-category-bar button{padding:8px 13px;font-size:10px}.viewer-admin,.viewer-profile-switch,.viewer-admin-storage{padding:8px 11px}}
+
+/* SEBAS PLAY 20.0 — original Tubi-inspired private streaming look */
+.viewer-brand b,.viewer-kicker,.viewer-section-head h2 svg,.viewer-counts svg{color:#a8f05a}
+.viewer-hero-netflix{border:1px solid #293747;border-radius:16px;background-color:#111923;box-shadow:0 18px 55px #0008}
+.viewer-hero-netflix .viewer-kicker{color:#a8f05a}
+.viewer-hero-actions .viewer-feature-play{background:#a8f05a;color:#10170a;border:1px solid #a8f05a}
+.viewer-hero-actions .viewer-feature-more{background:#ffffff18;color:#fff;border:1px solid #ffffff38}
+.viewer-card{border-radius:12px;overflow:hidden}
+.viewer-poster{border-radius:10px;border:1px solid #263447;background:#111923;overflow:hidden}
+.viewer-card:hover .viewer-poster{border-color:#a8f05a;transform:translateY(-3px) scale(1.025);box-shadow:0 14px 30px #000b}
+.viewer-category-bar{background:#0d141e;border-bottom:1px solid #263447}
+.viewer-category-bar button.active{background:#a8f05a;color:#10170a;border-color:#a8f05a}
+.viewer-card:focus-visible,.viewer-feature-play:focus-visible,.viewer-feature-more:focus-visible,.viewer-nav a:focus-visible{outline:2px solid #a8f05a;outline-offset:3px}
