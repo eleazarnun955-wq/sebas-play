@@ -1,10 +1,10 @@
-name: SEBAS PLAY 28.0 independiente Android APK
+name: SEBAS PLAY 29.0 independiente Android APK
 # Independent package: preserve 13.0 and all previous installs.
 
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-28-cinematic-intro-20261128]
+    branches: [feature/sebas-play-29-female-neural-voice-20261128]
     paths:
       - "src/**"
       - "public/**"
@@ -46,13 +46,12 @@ jobs:
         run: node scripts/verify-android-pairing.mjs
       - name: Verify direct Spanish live TV candidate rules
         run: node scripts/verify-live-tv.mjs
-      - name: Generate original spoken SEBAS PLAY intro audio
+      - name: Generate natural Mexican female neural SEBAS PLAY voice
         run: |
-          sudo apt-get update
-          sudo apt-get install -y espeak
+          python3 -m pip install --quiet edge-tts
           mkdir -p public/audio
-          espeak -v es-la -s 135 -p 48 -a 180 -w public/audio/sebas-play-intro.wav "SEBAS PLAY"
-          test -s public/audio/sebas-play-intro.wav
+          edge-tts --voice es-MX-DaliaNeural --rate=-8% --pitch=+2Hz --text "SEBAS... PLAY" --write-media public/audio/sebas-play-intro.mp3
+          test -s public/audio/sebas-play-intro.mp3
       - name: Build web app
         run: npm run build
         env:
@@ -84,12 +83,12 @@ jobs:
             fi
           done
           exit 1
-      - name: Verify package ID is the new independent 28.0 one
+      - name: Verify package ID is the new independent 29.0 one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.v28.cinematicintro20261128"
+          EXPECTED="com.eleazarcompany.sebasplay.v29.femaleneuralvoice20261128"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
@@ -98,10 +97,10 @@ jobs:
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v13.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v12.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
-      - name: Upload SEBAS PLAY 28.0 APK
+      - name: Upload SEBAS PLAY 29.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-28-0-ANDROID-INDEPENDIENTE
+          name: SEBAS-PLAY-29-0-ANDROID-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
