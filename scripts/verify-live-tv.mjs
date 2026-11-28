@@ -19,7 +19,7 @@ for (const value of urls) {
 }
 assert.match(candidates, /Prueba técnica antes de publicar/, "Candidate UI must explain review-only status");
 assert.match(candidates, /Hls\.isSupported\(\)/, "Admin must offer an HLS playback probe");
-assert.match(candidates, /no concede derechos/, "Technical playback must not be confused with retransmission rights");
+assert.match(candidates, /ni concede derechos/, "Technical playback must not be confused with retransmission rights");
 assert.match(candidates, /Canal Catorce/);
 assert.match(candidates, /TV UNAM/);
 assert.match(candidates, /Canal 44 Chihuahua/);
