@@ -36,7 +36,7 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Verify Android and Roku 13.0 identities
+      - name: Verify Android and Roku 20.0 identities
         run: node scripts/verify-release.mjs
       - name: TypeScript and production web build
         run: npm run build
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate and package Roku 13.0
+      - name: Validate and package Roku 20.0
         run: |
           test -f apps/roku/manifest
           grep -q "^title=SEBAS PLAY 20.0$" apps/roku/manifest
