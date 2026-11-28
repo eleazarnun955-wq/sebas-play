@@ -33,7 +33,7 @@ assert.match(rokuCatalog, /function isDirectLiveStreamUrl[\s\S]*Right\(url, 5\) 
 assert.match(rokuCatalog, /item\.StreamFormat = "hls"/, "Roku must use HLS playback for live channels");
 assert.match(rokuManifest, /title=SEBAS PLAY 28\.0/);
 assert.match(rokuManifest, /major_version=28/);
-assert.match(androidConfig, /com\.eleazarcompany\.sebasplay\.v28\.mexicolivetv20261128/);
+assert.match(androidConfig, /com\.eleazarcompany\.sebasplay\.v28\.cinematicintro20261128/);
 assert.match(androidConfig, /SEBAS PLAY 28\.0/);
 assert.match(rokuPlayer, /content\.StreamFormat = "hls"/, "Roku player must force HLS for live channels");
 console.log("PASS: v28 Mexico-first Spanish live-TV candidates are HTTPS HLS only, draft-only until rights review, and filtered for Android/Roku.");
