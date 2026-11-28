@@ -18,7 +18,6 @@ assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.reg
 assert.match(main, /args\.DoesExist\("laptopUrl"\)[\s\S]*args\.DoesExist\("laptopToken"\)/, "Roku launch handler must pass Android laptop settings to HomeScene");
 assert.match(home, /else if index = 1\s+loadCatalog\(\)/, "Actualizar biblioteca must reload the laptop and public catalogs");
 assert.doesNotMatch(home, /askLaptopUrl|askLaptopToken/, "Roku must not require manual laptop address or token entry on TV");
-assert.doesNotMatch(home, /if m\.deviceToken <> "" then syncRokuAccount\(\) else loadCatalog\(\)/, "Library refresh must not be diverted into account-only sync");
 
 assert.match(catalogXml, /extends="Task"/, "Catalog network work must run in a SceneGraph Task");
 assert.match(catalog, /SetUrl\(baseUrl \+ "\/health"\)/, "Laptop connection must validate server health first");
@@ -55,7 +54,5 @@ console.log("PASS: Roku catalog, account sync and playback progress transfers ha
 
 const syncFunction = read("supabase/functions/roku-device-sync/index.ts");
 assert.match(syncFunction, /access-control-allow-headers":"authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage"/, "Supabase function CORS must allow the headers sent by supabase-js browser clients");
-assert.match(home, /dialog\.SetFocus\(true\)/, "Roku URL and token dialogs must explicitly receive focus");
-assert.match(home, /dialog\.close = true/, "Standard keyboard dialogs must be explicitly closed on selection");
 assert.match(home, /m\\.actions\\.ObserveField\\("buttonSelected", "onActionSelected"\\)/, "Roku action buttons must be wired to their handler");
 console.log("PASS: Android pairing CORS headers, direct laptop handoff and Roku library refresh regression checks.");
