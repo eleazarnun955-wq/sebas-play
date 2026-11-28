@@ -10,7 +10,7 @@ sub init()
     m.connectButton.text = "Conectar desde Android"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar biblioteca"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY20")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY21")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")
@@ -74,6 +74,7 @@ sub loadCatalog()
     m.task.laptopToken = m.laptopToken
     m.task.ObserveField("catalog", "onCatalogLoaded")
     m.task.ObserveField("errorMessage", "onCatalogError")
+    m.top.AppendChild(m.task)
     m.task.control = "RUN"
 end sub
 
