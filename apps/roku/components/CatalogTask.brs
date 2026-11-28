@@ -119,7 +119,11 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         if responseCode > 0
             m.top.errorMessage = "La laptop respondió con HTTP " + responseCode.ToStr() + ". Revisa el servidor."
         else
-            if catalogResult.timedOut\n            m.top.errorMessage = "La biblioteca tardó más de 45 segundos en responder. Revisa que el servidor de Windows siga activo y pulsa Actualizar biblioteca."\n        else\n            m.top.errorMessage = "No se pudo completar la solicitud del catálogo. Comprueba la red y vuelve a intentarlo."\n        end if
+            if catalogResult.timedOut
+                m.top.errorMessage = "La biblioteca tardó más de 45 segundos en responder. Revisa que el servidor de Windows siga activo y pulsa Actualizar biblioteca."
+            else
+                m.top.errorMessage = "No se pudo completar la solicitud del catálogo. Comprueba la red y vuelve a intentarlo."
+            end if
         end if
         return
     end if
