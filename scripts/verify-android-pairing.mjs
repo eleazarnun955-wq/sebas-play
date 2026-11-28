@@ -25,4 +25,4 @@ assert.match(nativeInstaller,/laptopToken=/,"Native ECP launch must transfer the
 assert.match(config,/com\.eleazarcompany\.sebasplay\.v19\.directroku20261128/,"v19 must use a new independent package ID");
 assert.match(config,/SEBAS PLAY 19\.0/,"Android app must display version 19.0");
 assert.doesNotMatch(viewer,/Vincular Roku/,"Old manual pairing-code entry must not be visible");
-console.log("PASS: v19 Android SSDP/ECP discovery, laptop handoff, separate package, Mi laptop and profiles preserved.");
+console.log("PASS: v20 Android SSDP/ECP discovery, laptop handoff, separate package, Mi laptop and profiles preserved.");
