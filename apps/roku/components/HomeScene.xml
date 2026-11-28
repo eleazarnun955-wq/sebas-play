@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="HomeScene" extends="Scene">
-  <interface><field id="selectedVideo" type="node" /></interface>
+  <interface>
+    <field id="selectedVideo" type="node" />
+    <field id="launchLaptopUrl" type="string" />
+    <field id="launchLaptopToken" type="string" />
+  </interface>
   <script type="text/brightscript" uri="HomeScene.brs" />
   <children>
     <Rectangle width="1920" height="1080" color="0x080D1AFF" />
