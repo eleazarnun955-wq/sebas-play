@@ -366,4 +366,10 @@ function safeString(value as dynamic) as string
     if value = invalid then return ""
     return value.ToStr()
 end function
-\nfunction isDirectPlayableUrl(value as string) as boolean\n    url = LCase(Trim(value))\n    if Left(url, 7) <> "http://" and Left(url, 8) <> "https://" then return false\n    pathEnd = Instr(1, url, "?")\n    if pathEnd > 0 then url = Left(url, pathEnd - 1)\n    return Right(url, 5) = ".m3u8" or Right(url, 4) = ".mp4" or Right(url, 4) = ".m4v" or Right(url, 4) = ".mov" or Right(url, 5) = ".webm"\nend function\n
+\nfunction isDirectPlayableUrl(value as string) as boolean
+    url = LCase(Trim(value))
+    if Left(url, 7) <> "http://" and Left(url, 8) <> "https://" then return false
+    pathEnd = Instr(1, url, "?")
+    if pathEnd > 0 then url = Left(url, pathEnd - 1)
+    return Right(url, 5) = ".m3u8" or Right(url, 4) = ".mp4" or Right(url, 4) = ".m4v" or Right(url, 4) = ".mov" or Right(url, 5) = ".webm"
+end function
