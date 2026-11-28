@@ -59,3 +59,11 @@ assert.match(syncFunction, /access-control-allow-headers":"authorization, x-clie
 assert.match(home, /dialog\.SetFocus\(true\)/, "Roku URL and token dialogs must explicitly receive focus");
 assert.match(home, /if m\.dialogTimer = invalid[\s\S]*askLaptopToken\(\)/, "Laptop setup must fall back to token entry if the transition timer is unavailable");
 console.log("PASS: Android pairing CORS headers and Roku dialog focus/fallback regression checks.");
+
+const manifest = read("apps/roku/manifest");
+assert.match(manifest, /^title=SEBAS PLAY 16\.0$/m, "Roku manifest must identify the v16.0 channel");
+assert.match(manifest, /^major_version=16$/m, "Roku manifest major version must be 16");
+assert.match(homeXml, /text="SEBAS PLAY 16\.0"/, "Roku home screen must show v16.0 branding");
+assert.match(home, /roRegistrySection", "SEBASPLAY16"/, "HomeScene must use an isolated v16 registry");
+assert.match(player, /roRegistrySection", "SEBASPLAY16"/, "PlayerScene must use the same isolated v16 registry");
+console.log("PASS: Roku package identity, isolated v16 registry and branding.");
