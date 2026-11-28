@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { registerPlugin } from "@capacitor/core";
 import { Radio, Tv, LoaderCircle, CheckCircle2 } from "lucide-react";
+import "./roku-direct-connect.css";
 
 type RokuDevice={ip:string;name:string;channelId:string;sebasPlayInstalled:boolean};
 type RokuBridge={discover:()=>Promise<{devices:RokuDevice[]}>;launch:(args:{ip:string;channelId:string})=>Promise<{launched:boolean}>};
