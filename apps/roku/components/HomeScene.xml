@@ -8,10 +8,18 @@
   <script type="text/brightscript" uri="HomeScene.brs" />
   <children>
     <Rectangle width="1920" height="1080" color="0x080D1AFF" />
-    <Label id="brand" text="SEBAS PLAY 24.0" translation="[100,55]" width="1000" height="90" color="0xFFFFFFFF" />
+    <Label id="brand" text="SEBAS PLAY 28.0" translation="[100,55]" width="1000" height="90" color="0xFFFFFFFF" />
     <Label id="subtitle" text="Tu biblioteca privada desde Mi laptop   |   Pulsa * para guardar o quitar favoritos" translation="[105,145]" width="1000" height="50" color="0xC8D5E8FF" />
     <Label id="status" text="Conectando con tu catálogo..." translation="[105,220]" width="1500" height="55" color="0xFFFFFFFF" />
     <ButtonGroup id="topActions" translation="[100,285]" itemSpacings="[24]" />
     <RowList id="catalogRows" translation="[90,390]" itemSize="[1740,350]" rowItemSize="[[300,300]]" numRows="3" rowFocusAnimationStyle="fixedFocus" showRowLabel="true" />
+    <Audio id="brandIntroAudio" />
+    <Timer id="brandIntroTimer" duration="3.4" repeat="false" />
+    <Group id="brandIntroOverlay">
+      <Rectangle width="1920" height="1080" color="0x05080FFF" />
+      <Label text="SEBAS PLAY" translation="[0,425]" width="1920" height="130" horizAlign="center" vertAlign="center" font="font:LargeBoldSystemFont" color="0xB8F36BFF" />
+      <Label text="TU ENTRETENIMIENTO COMIENZA AQUÍ" translation="[0,565]" width="1920" height="55" horizAlign="center" color="0xDCE7EFFF" />
+      <Label text="PRESENTANDO" translation="[0,680]" width="1920" height="35" horizAlign="center" color="0xA8F05AFF" />
+    </Group>
   </children>
 </component>
