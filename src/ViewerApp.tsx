@@ -18,7 +18,7 @@ type FamilyProfile={id:string;display_name:string;pin_enabled:boolean};
 type WatchProgress={content_type:string;content_id:string;position_seconds:number;duration_seconds:number|null;updated_at:string};
 type LaptopItem={id:string;title:string;file:string;size_bytes:number;mime_type:string;stream_url:string};
 const MIN_CURRENT_CATALOG_YEAR=2023;
-function isDirectPlayableUrl(value:string|null|undefined){if(!value)return false;try{const url=new URL(value);if(url.protocol!=="https:"&&url.protocol!=="http:")return false;return /\\.(m3u8|mp4|m4v|mov|webm)$/i.test(url.pathname)}catch{return false}}
+function isDirectPlayableUrl(value:string|null|undefined){if(!value)return false;try{const url=new URL(value);if(url.protocol!=="https:"&&url.protocol!=="http:")return false;return /\.(m3u8|mp4|m4v|mov|webm)$/i.test(url.pathname)}catch{return false}}
 export default function ViewerApp(){
  const [movies,setMovies]=useState<Movie[]>([]),[series,setSeries]=useState<Series[]>([]),[channels,setChannels]=useState<Channel[]>([]);
  const [channelPrograms,setChannelPrograms]=useState<ChannelProgram[]>([]);const [libraryFilter,setLibraryFilter]=useState<"all"|"movies"|"series">("all");const [selectedGenre,setSelectedGenre]=useState("Todos");const [laptopItems,setLaptopItems]=useState<LaptopItem[]>(()=>{try{return JSON.parse(localStorage.getItem("sebas_laptop_catalog")||"[]") as LaptopItem[]}catch{return []}});const [selectedLaptop,setSelectedLaptop]=useState<LaptopItem|null>(null);
