@@ -31,6 +31,7 @@ assert.match(home, /else if index = 1\s+loadCatalog\(\)/, "Actualizar biblioteca
 assert.doesNotMatch(home, /askLaptopUrl|askLaptopToken/, "Roku must not require manual laptop address or token entry on TV");
 
 assert.match(catalogXml, /extends="Task"/, "Catalog network work must run in a SceneGraph Task");
+assert.match(home, /ObserveField\("catalog", "onCatalogLoaded"\)[\s\S]*m\.top\.AppendChild\(m\.task\)[\s\S]*m\.task\.control = "RUN"/, "CatalogTask must be attached to the SceneGraph before it starts");
 assert.match(catalog, /SetUrl\(baseUrl \+ "\/health"\)/, "Laptop connection must validate server health first");
 assert.match(catalog, /SetUrl\(baseUrl \+ "\/api\/catalog"\)[\s\S]*AddHeader\("Authorization", "Bearer " \+ token\)/, "Catalog token must be sent only in the Authorization header");
 assert.doesNotMatch(catalog, /api\/catalog\?token=/i, "Catalog token must never be placed in the URL");
@@ -46,12 +47,14 @@ assert.match(syncTask, /sub runSync\(\)[\s\S]*GetToString\(\)|PostFromString\(/,
 assert.match(home, /startSyncTask\("pair-device"/, "Pairing must use the background sync task");
 assert.match(home, /startSyncTask\("favorite"/, "Favorite writes must use the background sync task");
 assert.match(home, /startSyncTask\("sync"/, "Account refresh must use the background sync task");
+assert.match(home, /ObserveField\("response", "onSyncTaskCompleted"\)[\s\S]*m\.top\.AppendChild\(m\.syncTask\)[\s\S]*m\.syncTask\.control = "RUN"/, "SyncTask must be attached to the SceneGraph before it starts");
 console.log("PASS: Roku account pairing, favorites and sync run off the UI thread.");
 
 const progressTask = read("apps/roku/components/ProgressTask.brs");
 const progressTaskXml = read("apps/roku/components/ProgressTask.xml");
 assert.match(progressTaskXml, /extends="Task"/, "Playback progress network writes must run in a SceneGraph Task");
 assert.match(player, /CreateObject\("roSGNode", "ProgressTask"\)/, "Player must delegate cloud progress writes to ProgressTask");
+assert.match(player, /m\.top\.AppendChild\(m\.progressTask\)[\s\S]*m\.progressTask\.control = "RUN"/, "ProgressTask must be attached to the SceneGraph before it starts");
 assert.doesNotMatch(player, /syncTransfer\.PostFromString/, "Player UI thread must not perform blocking cloud progress writes");
 assert.match(progressTask, /PostFromString\(FormatJson\(payload\)\)/, "ProgressTask must persist playback position to the sync endpoint");
 console.log("PASS: playback progress uploads run off the Roku UI thread.");
