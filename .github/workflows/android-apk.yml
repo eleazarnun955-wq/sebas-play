@@ -4,7 +4,7 @@ name: SEBAS PLAY 17.0 independiente Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-16-netflix-visual-20261127, fix/android-roku-pairing-v16-20261127]
+    branches: [feature/sebas-play-17-direct-roku-20261127]
     paths:
       - "src/**"
       - "public/**"
