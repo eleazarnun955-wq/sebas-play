@@ -8,7 +8,7 @@ const card:React.CSSProperties={background:"#17243a",border:"1px solid #2b3d58",
 const field:React.CSSProperties={width:"100%",boxSizing:"border-box",padding:"12px 14px",borderRadius:10,border:"1px solid #42536d",background:"#0d1728",color:"#fff",fontSize:15,marginTop:7};
 const action:React.CSSProperties={border:0,borderRadius:10,padding:"12px 15px",background:"#20a4a0",color:"#fff",fontWeight:700,fontSize:14,display:"inline-flex",alignItems:"center",gap:8};
 
-export default function LaptopConnection({onClose}:{onClose:()=>void}){
+export default function LaptopConnection({onClose,onLibraryChange}:{onClose:()=>void;onLibraryChange?:(items:LaptopItem[],connected:boolean)=>void}){
  const [url,setUrl]=useState(()=>localStorage.getItem("sebas_laptop_url")||"");
  const [token,setToken]=useState(()=>localStorage.getItem("sebas_laptop_token")||"");
  const [items,setItems]=useState<LaptopItem[]>([]);
@@ -42,7 +42,7 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
    if(response.status===404)throw new Error("RUTA NO ENCONTRADA: escribe la dirección base del servidor, sin /health ni /api/catalog.");
    if(!response.ok)throw new Error(data.error||("Error HTTP "+response.status));
    const list=(data.items||[]) as LaptopItem[];
-   setItems(list);setConnected(true);
+   setItems(list);onLibraryChange?.(list,true);setConnected(true);
    localStorage.setItem("sebas_laptop_url",base);
    localStorage.setItem("sebas_laptop_token",token.trim());
    setUrl(base);setError("");
@@ -54,9 +54,9 @@ export default function LaptopConnection({onClose}:{onClose:()=>void}){
    else setError(e instanceof Error?e.message:"No se pudo conectar con la laptop.");
   }finally{window.clearTimeout(timeout);if(requestId===requestSequence.current)setBusy(false)}
  }
- function disconnect(){requestSequence.current++;setBusy(false);setConnected(false);setItems([]);setPlaying(null);setToken("");localStorage.removeItem("sebas_laptop_token");setError("")}
+ function disconnect(){requestSequence.current++;setBusy(false);setConnected(false);setItems([]);onLibraryChange?.([],false);setPlaying(null);setToken("");localStorage.removeItem("sebas_laptop_token");setError("")}
  function bytes(n:number){if(!Number.isFinite(n))return "";const u=["B","KB","MB","GB"];let v=n,i=0;while(v>=1024&&i<u.length-1){v/=1024;i++}return v.toFixed(i?1:0)+" "+u[i]}
- useEffect(()=>{const requestId=++requestSequence.current;const savedUrl=localStorage.getItem("sebas_laptop_url");const savedToken=localStorage.getItem("sebas_laptop_token");if(savedUrl&&savedToken)void (async()=>{try{const controller=new AbortController();const timeout=window.setTimeout(()=>controller.abort(),12000);try{const health=await fetch(savedUrl+"/health",{cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!health.ok)return;const status=await health.json();if(requestId!==requestSequence.current||!status.ok)return;const r=await fetch(savedUrl+"/api/catalog",{headers:{Accept:"application/json",Authorization:"Bearer "+savedToken},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!r.ok)return;const d=await r.json();if(requestId!==requestSequence.current)return;setItems((d.items||[]) as LaptopItem[]);setConnected(true)}finally{window.clearTimeout(timeout)}}catch{/* La laptop puede estar apagada o fuera de línea. */}})();return()=>{requestSequence.current++}},[]);
+ useEffect(()=>{const requestId=++requestSequence.current;const savedUrl=localStorage.getItem("sebas_laptop_url");const savedToken=localStorage.getItem("sebas_laptop_token");if(savedUrl&&savedToken)void (async()=>{try{const controller=new AbortController();const timeout=window.setTimeout(()=>controller.abort(),12000);try{const health=await fetch(savedUrl+"/health",{cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!health.ok)return;const status=await health.json();if(requestId!==requestSequence.current||!status.ok)return;const r=await fetch(savedUrl+"/api/catalog",{headers:{Accept:"application/json",Authorization:"Bearer "+savedToken},cache:"no-store",mode:"cors",credentials:"omit",signal:controller.signal});if(requestId!==requestSequence.current||!r.ok)return;const d=await r.json();if(requestId!==requestSequence.current)return;setItems((d.items||[]) as LaptopItem[]);onLibraryChange?.((d.items||[]) as LaptopItem[],true);setConnected(true)}finally{window.clearTimeout(timeout)}}catch{/* La laptop puede estar apagada o fuera de línea. */}})();return()=>{requestSequence.current++}},[]);
  return <section style={{position:"fixed",inset:0,zIndex:10000,background:"#080e19f5",color:"#f4f7fb",overflowY:"auto",padding:"max(18px,env(safe-area-inset-top)) 16px 28px"}}>
   <div style={{maxWidth:760,margin:"0 auto"}}>
    <header style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,marginBottom:18}}>
