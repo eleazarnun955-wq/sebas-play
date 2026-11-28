@@ -11,6 +11,9 @@ assert.match(viewer,/import LaptopConnection from "\.\/LaptopConnection"/,"Exist
 assert.match(viewer,/onClick=\{\(\)=>setLaptopOpen\(true\)\}[^>]*>[\s\S]*?Mi laptop/,"Mi laptop shortcut must remain visible in the main navigation");
 assert.match(viewer,/RokuDirectConnect/,"Direct Roku connection must remain mounted in the main viewer");
 assert.match(viewer,/profiles\.map\(p=>/,"Family profiles must remain available");
+assert.match(viewer,/brand-intro/,"Animated brand intro must remain in Android viewer");
+assert.match(viewer,/sebas-play-intro\.wav/,"Android viewer must play the generated spoken intro");
+assert.match(viewer,/onClick=\{dismissBrandIntro\}/,"Intro must offer a skip control");
 assert.match(laptop,/localStorage\.getItem\("sebas_laptop_token"\)/,"Existing laptop token persistence must remain unchanged");
 assert.match(direct,/RokuDiscovery\.discover\(\)/,"Android must discover Roku devices automatically");
 assert.match(direct,/localStorage\.getItem\("sebas_laptop_url"\)/,"Android must pass the saved laptop address to Roku");
@@ -24,10 +27,10 @@ assert.match(nativeInstaller,/CHANGE_WIFI_MULTICAST_STATE/,"Android manifest mus
 assert.match(nativeInstaller,/channelId="dev"/,"Native discovery must attempt Roku developer-mode sideloads when app listing omits them");
 assert.match(nativeInstaller,/laptopUrl=/,"Native ECP launch must transfer the laptop address");
 assert.match(nativeInstaller,/laptopToken=/,"Native ECP launch must transfer the laptop token");
-assert.ok(config.includes("com.eleazarcompany.sebasplay.v27.mexicolivetv20261128"),"v27 must use a new independent package ID");
-assert.ok(config.includes("SEBAS PLAY 27.0"),"Android app must display version 27.0");
+assert.ok(config.includes("com.eleazarcompany.sebasplay.v28.mexicolivetv20261128"),"v28 must use a new independent package ID");
+assert.ok(config.includes("SEBAS PLAY 28.0"),"Android app must display version 27.0");
 assert.doesNotMatch(viewer,/Vincular Roku/,"Old manual pairing-code entry must not be visible");
 assert.match(viewer,/release_year",MIN_CURRENT_CATALOG_YEAR/,"Android catalog must request recent releases only");
 assert.match(viewer,/isDirectPlayableUrl\(item\.video_url\)/,"Android movies must require a direct playable media URL");
 assert.match(viewer,/isDirectLiveStreamUrl\(item\.stream_url\)/,"Android live channels must require direct HLS streams");
-console.log("PASS: v27 Android SSDP/ECP discovery, recent catalog, direct media URLs, separate package, Mi laptop and profiles preserved.");
+console.log("PASS: v28 Android SSDP/ECP discovery, recent catalog, direct media URLs, separate package, Mi laptop and profiles preserved.");
