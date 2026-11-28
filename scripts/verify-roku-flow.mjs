@@ -68,6 +68,9 @@ assert.match(catalog, /loadCollection\(root, supabaseUrl, publicKey, "movies"/, 
 assert.match(catalog, /loadSeriesEpisodes\(root, supabaseUrl, publicKey\)/, "Roku must show published series episodes");
 assert.match(catalog, /loadCollection\(root, supabaseUrl, publicKey, "live_channels"/, "Roku must show published live channels");
 assert.match(catalog, /is_published=eq\.true/, "Roku catalog queries must exclude unpublished content");
+assert.match(catalog, /release_year=gte\.2023/, "Roku must exclude older movies and series");
+assert.match(catalog, /isDirectPlayableUrl\(entryUrl\)/, "Roku movies and channels must require direct media URLs");
+assert.match(catalog, /isDirectPlayableUrl\(safeString\(episode\.video_url\)\)/, "Roku episodes must require direct media URLs");
 assert.match(catalog, /item\.Url = safeString\(entry\.video_url\)/, "Movies must use their direct video URL field");
 assert.match(catalog, /item\.Url = safeString\(entry\.stream_url\)/, "Live channels must use their direct stream URL field");
 console.log("PASS: Roku combines published SEBAS PLAY discovery catalog with the optional private laptop library.");
