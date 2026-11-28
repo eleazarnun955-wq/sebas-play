@@ -5,8 +5,8 @@ sub init()
     m.introTimer = m.top.FindNode("brandIntroTimer")
     m.introTimer.ObserveField("fire", "onBrandIntroFinished")
     introContent = CreateObject("roSGNode", "ContentNode")
-    introContent.url = "pkg:/audio/sebas-play-intro.wav"
-    introContent.streamFormat = "wav"
+    introContent.url = "pkg:/audio/sebas-play-intro.mp3"
+    introContent.streamFormat = "mp3"
     m.introAudio.content = introContent
     m.introAudio.control = "play"
     m.status = m.top.FindNode("status")
