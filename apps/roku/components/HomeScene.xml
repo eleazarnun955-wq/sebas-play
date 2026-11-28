@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <component name="HomeScene" extends="Scene">
-  <interface><field id="selectedVideo" type="node" /></interface>
+  <interface><field id="selectedVideo" type="node" /><field id="launchLaptopUrl" type="string" /><field id="launchLaptopToken" type="string" /></interface>
   <script type="text/brightscript" uri="HomeScene.brs" />
   <children>
     <Rectangle width="1920" height="1080" color="0x080D1AFF" />
     <Label id="brand" text="SEBAS PLAY 18.0" translation="[100,55]" width="1000" height="90" color="0xFFFFFFFF" />
-    <Label id="subtitle" text="Películas • Series • TV en vivo   |   Pulsa * para guardar o quitar favoritos" translation="[105,145]" width="1000" height="50" color="0xC8D5E8FF" />
+    <Label id="subtitle" text="Películas • Caricaturas • Series • Anime • Documentales   |   Pulsa * para guardar o quitar favoritos" translation="[105,145]" width="1000" height="50" color="0xC8D5E8FF" />
     <Label id="status" text="Conectando con tu catálogo..." translation="[105,220]" width="1500" height="55" color="0xFFFFFFFF" />
     <ButtonGroup id="topActions" translation="[100,285]" itemSpacings="[24]" />
     <RowList id="catalogRows" translation="[90,390]" itemSize="[1740,350]" rowItemSize="[[300,300]]" numRows="3" rowFocusAnimationStyle="fixedFocus" showRowLabel="true" />
