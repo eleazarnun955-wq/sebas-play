@@ -1,5 +1,14 @@
 sub init()
     m.rows = m.top.FindNode("catalogRows")
+    m.introOverlay = m.top.FindNode("brandIntroOverlay")
+    m.introAudio = m.top.FindNode("brandIntroAudio")
+    m.introTimer = m.top.FindNode("brandIntroTimer")
+    m.introTimer.ObserveField("fire", "onBrandIntroFinished")
+    introContent = CreateObject("roSGNode", "ContentNode")
+    introContent.url = "pkg:/audio/sebas-play-intro.wav"
+    introContent.streamFormat = "wav"
+    m.introAudio.content = introContent
+    m.introAudio.control = "play"
     m.status = m.top.FindNode("status")
     m.actions = m.top.FindNode("topActions")
     m.rows.ObserveField("rowItemSelected", "onItemSelected")
@@ -30,6 +39,11 @@ sub init()
         loadCatalog()
     end if
     m.actions.SetFocus(true)
+    m.introTimer.control = "start"
+end sub
+
+sub onBrandIntroFinished()
+    if m.introOverlay <> invalid then m.introOverlay.visible = false
 end sub
 
 sub onLaunchLaptopConnectionChanged()
