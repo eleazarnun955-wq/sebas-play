@@ -16,6 +16,6 @@ assert.match(direct,/RokuDiscovery\.discover\(\)/,"Android must discover Roku de
 assert.match(direct,/RokuDiscovery\.launch\(/,"Android must open SEBAS PLAY on the selected Roku");
 assert.match(nativeInstaller,/M-SEARCH/,"Native Android plugin must perform SSDP discovery");
 assert.match(nativeInstaller,/CHANGE_WIFI_MULTICAST_STATE/,"Android manifest must allow multicast discovery");
-assert.match(config,/com\.eleazarcompany\.sebasplay\.v18\.directroku20261127/,"v17 must use a package ID independent from previous installs");
+assert.match(config,/com\.eleazarcompany\.sebasplay\.v18\.localibrary20261128/,"v18 must use a package ID independent from previous installs");
 assert.doesNotMatch(viewer,/Vincular Roku/,"Old manual pairing-code entry must not remain visible");
-console.log("PASS: v17 direct Roku discovery, separate Android package, profiles and Mi laptop preservation.");
+console.log("PASS: v18 direct Roku discovery, separate Android package, profiles and Mi laptop preservation.");
