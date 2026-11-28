@@ -142,8 +142,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         m.top.errorMessage = "La respuesta de la laptop no contiene un catálogo válido."
         return
     end if
-    section = CreateObject("roSGNode", "ContentNode")
-    section.Title = "Películas de mi laptop"
+    categoryRows = {}
     playableCount = 0
     unsupportedCount = 0
     for each entry in parsed.items
@@ -151,13 +150,19 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         streamUrl = safeString(entry.stream_url)
         transcodeUrl = safeString(entry.transcode_url)
         mediaType = safeString(entry.media_type)
+        category = safeString(entry.category)
+        if category = "" then category = "Sin categoría"
         if mediaType = "episode"
             if Right(fileName, 4) <> ".mp4" and transcodeUrl = "" then unsupportedCount = unsupportedCount + 1
         else
             playUrl = streamUrl
             if Right(fileName, 4) <> ".mp4" then playUrl = transcodeUrl
             if playUrl <> ""
-                item = section.CreateChild("ContentNode")
+                if not categoryRows.DoesExist(category)
+                    categoryRows[category] = CreateObject("roSGNode", "ContentNode")
+                    categoryRows[category].Title = category
+                end if
+                item = categoryRows[category].CreateChild("ContentNode")
                 item.Title = safeString(entry.title)
                 if Right(fileName, 4) = ".mp4"
                     item.Description = safeString(entry.file) + " · MP4 para Roku"
@@ -173,7 +178,9 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
             end if
         end if
     end for
-    if section.GetChildCount() > 0 then root.AppendChild(section)
+    for each categoryName in categoryRows
+        root.AppendChild(categoryRows[categoryName])
+    end for
 
     ' The Windows scanner groups detected SxxExx files by series and season.
     ' Add compatible MP4 episodes to Roku as separate season rows.
@@ -186,7 +193,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
                 for each season in show.seasons
                     seasonNumber = safeString(season.season_number)
                     seasonRow = CreateObject("roSGNode", "ContentNode")
-                    seasonRow.Title = showTitle + " · Temporada " + seasonNumber
+                    seasonRow.Title = safeString(show.category) + " · " + showTitle + " · Temporada " + seasonNumber
                     if type(season.episodes) = "roArray"
                         for each episode in season.episodes
                             episodeFile = LCase(safeString(episode.file))
