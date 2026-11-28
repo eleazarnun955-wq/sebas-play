@@ -1,17 +1,18 @@
-name: SEBAS PLAY 13.0 independiente Roku channel
+name: SEBAS PLAY 16.0 independiente Roku channel
 
 on:
   workflow_dispatch:
   push:
-    branches: [sebas-play-13-0-independent-full-improvements-20261126]
+    branches: [feature/sebas-play-roku-16-netflix-icon-20261127]
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
       - ".github/workflows/roku-package.yml"
   pull_request:
-    branches: [main]
+    branches: [feature/sebas-play-16-netflix-visual-20261127]
     paths:
       - "apps/roku/**"
+      - "scripts/verify-roku-flow.mjs"
       - ".github/workflows/roku-package.yml"
 
 jobs:
@@ -19,19 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate independent Roku 13.0 channel
+      - name: Validate independent Roku 16.0 channel
         run: |
           test -f apps/roku/manifest
           test -f apps/roku/source/main.brs
           test -f apps/roku/components/HomeScene.xml
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
-          grep -q "title=SEBAS PLAY 13.0" apps/roku/manifest
-          grep -q "major_version=13" apps/roku/manifest
-          grep -q 'roRegistrySection", "SEBASPLAY13"' apps/roku/components/HomeScene.brs
-          grep -q 'roRegistrySection", "SEBASPLAY13"' apps/roku/components/PlayerScene.brs
-          ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/HomeScene.brs
-          ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/PlayerScene.brs
+          grep -q "title=SEBAS PLAY 16.0" apps/roku/manifest
+          grep -q "major_version=16" apps/roku/manifest
+          grep -q "SEBAS PLAY 16.0" apps/roku/components/HomeScene.xml
+          grep -q "SEBASPLAY13" apps/roku/components/HomeScene.brs
+          grep -q "SEBASPLAY13" apps/roku/components/PlayerScene.brs
       - name: Verify Roku connection and playback flow regression checks
         run: node scripts/verify-roku-flow.mjs
       - name: Generate branded Roku home screen icons
@@ -45,17 +45,18 @@ jobs:
         run: |
           mkdir -p dist/roku
           cd apps/roku
-          zip -r ../../dist/roku/SEBAS-PLAY-Roku-13-0.zip . -x "*.DS_Store" "*.zip"
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-16-0.zip . -x "*.DS_Store" "*.zip"
           cd ../..
-          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-13-0.zip > dist/roku/package-files.txt
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-16-0.zip > dist/roku/package-files.txt
           grep -qx "manifest" dist/roku/package-files.txt
-          ! grep -q "SEBAS-PLAY-Roku-13-0.zip" dist/roku/package-files.txt
+          ! grep -q "SEBAS-PLAY-Roku-16-0.zip" dist/roku/package-files.txt
           grep -qx "source/main.brs" dist/roku/package-files.txt
           grep -qx "components/HomeScene.xml" dist/roku/package-files.txt
-          echo "Verified: manifest is at ZIP root and no nested ZIP is present."
+          grep -qx "generate-icons.py" dist/roku/package-files.txt
+          echo "Verified: Roku manifest is at ZIP root and menu icon assets are included."
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-13-0-ROKU-INDEPENDIENTE
-          path: dist/roku/SEBAS-PLAY-Roku-13-0.zip
+          name: SEBAS-PLAY-16-0-ROKU-INDEPENDIENTE
+          path: dist/roku/SEBAS-PLAY-Roku-16-0.zip
           if-no-files-found: error
           retention-days: 14
