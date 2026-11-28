@@ -32,6 +32,8 @@ const syncTask = read("apps/roku/components/SyncTask.brs");
 const syncTaskXml = read("apps/roku/components/SyncTask.xml");
 assert.match(syncTaskXml, /extends="Task"/, "Account sync and pairing must run in a SceneGraph Task");
 assert.match(syncTask, /sub runSync\(\)[\s\S]*GetToString\(\)|PostFromString\(/, "SyncTask must perform network requests off the UI thread");
+assert.match(home, /dialog.ObserveField\("buttonSelected", "onRokuPairCodeEntered"\)[\s\S]*m.top.dialog = dialog[\s\S]*dialog.SetFocus\(true\)/, "Roku pairing keyboard dialog must receive focus before accepting the code");
+assert.match(home, /m.status.text = "Validando el código con SEBAS PLAY\.\.\."/ , "Pairing must show a non-blocking validation status");
 assert.match(home, /startSyncTask\("pair-device"/, "Pairing must use the background sync task");
 assert.match(home, /startSyncTask\("favorite"/, "Favorite writes must use the background sync task");
 assert.match(home, /startSyncTask\("sync"/, "Account refresh must use the background sync task");
