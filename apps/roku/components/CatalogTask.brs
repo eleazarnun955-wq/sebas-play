@@ -369,7 +369,8 @@ function safeString(value as dynamic) as string
     if value = invalid then return ""
     return value.ToStr()
 end function
-\nfunction isDirectPlayableUrl(value as string) as boolean
+
+function isDirectPlayableUrl(value as string) as boolean
     url = LCase(Trim(value))
     if Left(url, 7) <> "http://" and Left(url, 8) <> "https://" then return false
     pathEnd = Instr(1, url, "?")
