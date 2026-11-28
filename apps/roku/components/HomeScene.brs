@@ -7,8 +7,8 @@ sub init()
     m.rows.ObserveField("rowItemFocused", "onItemFocused")
     m.actions.ObserveField("buttonSelected", "onActionSelected")
     m.focusedItem = invalid
-    connectButton = m.actions.CreateChild("Button")
-    connectButton.text = "Conectar laptop"
+    m.connectButton = m.actions.CreateChild("Button")
+    m.connectButton.text = "Conectar laptop"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar catálogo"
     m.registry = CreateObject("roRegistrySection", "SEBASPLAY17")
@@ -69,7 +69,8 @@ sub onUrlEntered()
     ' leave some Roku firmware versions stuck in the dialog transition.
     m.top.dialog = invalid
     m.awaitingToken = true
-    m.status.text = "Dirección aceptada. Pulsa Conectar laptop otra vez para introducir el token."
+    m.connectButton.text = "Introducir token"
+    m.status.text = "Dirección aceptada. Pulsa Introducir token para continuar."
     m.actions.SetFocus(true)
 end sub
 
@@ -93,6 +94,7 @@ sub onTokenEntered()
     m.laptopToken = Trim(dialog.text)
     m.top.dialog = invalid
     m.awaitingToken = false
+    m.connectButton.text = "Conectar laptop"
     if m.laptopToken = ""
         m.status.text = "Falta el token privado. Pulsa Conectar laptop y pega el código de acceso."
         m.actions.SetFocus(true)
