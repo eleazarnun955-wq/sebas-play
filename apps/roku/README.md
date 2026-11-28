@@ -1,6 +1,6 @@
-# SEBAS PLAY para Roku 13.0
+# SEBAS PLAY para Roku 20.0
 
-Canal Roku SceneGraph independiente de SEBAS PLAY 12.0, 11.0 y del APK Android.
+Canal Roku SceneGraph independiente de SEBAS PLAY 19.0, 18.0 y del APK Android.
 
 ## Catálogo y laptop
 - El canal consulta películas, series y canales publicados en Supabase.
@@ -16,16 +16,14 @@ El workflow de .github/workflows/roku-package.yml crea un ZIP para modo desarrol
 
 Publica únicamente contenido propio o con autorización/licencia para distribuirlo.
 
-## Vinculación y sincronización Android
-1. Inicia sesión en SEBAS PLAY 13.0 en Android.
-2. Abre **Vincular Roku** y genera el código temporal.
-3. En Roku, selecciona **Vincular con Android** e introduce el código de 12 caracteres antes de que venza (5 minutos).
-4. El canal guarda el token del dispositivo en el registro local de Roku. No vuelvas a compartir ese token.
-5. **Actualizar catálogo** también vuelve a consultar favoritos y progreso de la cuenta.
+## Conexión directa Android → Roku
 
-El canal muestra la fila **Mi lista sincronizada** cuando existen favoritos publicados que coinciden con el catálogo. El avance de películas y episodios publicados se consulta al vincular/actualizar y se envía periódicamente durante la reproducción. Si desvinculas el Roku desde Android, sus solicitudes posteriores dejan de estar autorizadas.
+1. Enciende el servidor multimedia en la laptop y conecta el teléfono a esa biblioteca desde **Mi laptop**.
+2. Asegúrate de que Roku y laptop estén en la misma red local.
+3. Pulsa **Conectar directamente a Roku** en Android. La dirección y el token se envían juntos mediante ECP.
+4. El canal admite tanto el inicio en frío como la recepción de una conexión cuando ya está abierto (`supports_input_launch` + `roInputEvent`).
+5. La carga del catálogo se ejecuta en un Task de SceneGraph, con límites de espera y mensajes de error; la interfaz no debe bloquearse esperando a la laptop.
 
-## Guía EPG
-Cuando un administrador publica horarios en la sección Guía EPG de Android, Roku consulta los programas vigentes/próximos y los muestra en la descripción del canal en TV en vivo.
+El catálogo de Roku procede exclusivamente de la biblioteca privada de la laptop. No se muestran enlaces externos de canales.
 
-La sincronización depende de conexión a internet, una sesión Android válida para generar el código y que el contenido tenga el mismo ID publicado en Supabase. El progreso de archivos locales de la laptop que no tengan un ID del catálogo no se sincroniza.
+Publica únicamente contenido propio o con autorización/licencia para distribuirlo.
