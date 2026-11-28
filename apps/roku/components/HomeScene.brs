@@ -11,7 +11,7 @@ sub init()
     m.connectButton.text = "Conectar laptop"
     refreshButton = m.actions.CreateChild("Button")
     refreshButton.text = "Actualizar catálogo"
-    m.registry = CreateObject("roRegistrySection", "SEBASPLAY17")
+    m.registry = CreateObject("roRegistrySection", "SEBASPLAY18")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
     m.deviceToken = m.registry.Read("rokuDeviceToken")
