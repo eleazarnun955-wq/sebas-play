@@ -4,7 +4,7 @@ import { Radio, Tv, LoaderCircle, CheckCircle2 } from "lucide-react";
 import "./roku-direct-connect.css";
 
 type RokuDevice={ip:string;name:string;channelId:string;sebasPlayInstalled:boolean};
-type RokuBridge={discover:()=>Promise<{devices:RokuDevice[]}>;launch:(args:{ip:string;channelId:string})=>Promise<{launched:boolean}>};
+type RokuBridge={discover:()=>Promise<{devices:RokuDevice[]}>;launch:(args:{ip:string;channelId:string;laptopUrl?:string;laptopToken?:string})=>Promise<{launched:boolean}>};
 const RokuDiscovery=registerPlugin<RokuBridge>("RokuDiscovery");
 
 export default function RokuDirectConnect(){
@@ -25,7 +25,7 @@ export default function RokuDirectConnect(){
  async function connect(device:RokuDevice){
   if(!device.sebasPlayInstalled||!device.channelId)return;
   setBusy(true);setError("");
-  try{await RokuDiscovery.launch({ip:device.ip,channelId:device.channelId});setMessage("SEBAS PLAY se está abriendo en "+device.name+".")}
+  try{const laptopUrl=localStorage.getItem("sebas_laptop_url")||"";const laptopToken=localStorage.getItem("sebas_laptop_token")||"";if(!laptopUrl||!laptopToken)throw new Error("Primero conecta Mi laptop en Android y guarda la dirección y el token.");await RokuDiscovery.launch({ip:device.ip,channelId:device.channelId,laptopUrl,laptopToken});setMessage("SEBAS PLAY se está abriendo en "+device.name+" y recibirá la biblioteca de tu laptop.")}
   catch(e){setError(e instanceof Error?e.message:"No se pudo abrir SEBAS PLAY en Roku.")}
   finally{setBusy(false)}
  }
