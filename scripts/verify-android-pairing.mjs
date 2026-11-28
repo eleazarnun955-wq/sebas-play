@@ -2,14 +2,19 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 
 const viewer=fs.readFileSync("src/ViewerApp.tsx","utf8");
-const laptop=fs.readFileSync("src/LaptopConnection.tsx","utf8");\nconst localLibrary=fs.readFileSync("src/LaptopLibraryView.tsx","utf8");
+const laptop=fs.readFileSync("src/LaptopConnection.tsx","utf8");
+const localLibrary=fs.readFileSync("src/LaptopLibraryView.tsx","utf8");
 const direct=fs.readFileSync("src/RokuDirectConnect.tsx","utf8");
 const nativeInstaller=fs.readFileSync("scripts/install-roku-discovery.mjs","utf8");
 const config=fs.readFileSync("capacitor.config.ts","utf8");
 
 assert.match(viewer,/import LaptopConnection from "\.\/LaptopConnection"/,"Existing laptop connection module must remain imported");
 assert.match(viewer,/onClick=\{\(\)=>setLaptopOpen\(true\)\}[^>]*>[\s\S]*?Mi laptop/,"Mi laptop shortcut must remain visible in the main navigation");
-assert.match(viewer,/RokuDirectConnect/,"Direct Roku connection must be mounted in the main viewer");\nassert.match(viewer,/LaptopLibraryView/,"The main screen must display the laptop library");\nassert.doesNotMatch(viewer,/<FreePlatforms\\s*\\/>/,"External movie-platform links must not be shown");\nassert.match(localLibrary,/item\\.category\\|\\|"Sin categoría"/,"The Android library must group videos by folder category");\nassert.match(laptop,/sebas-laptop-updated/,"Connecting Mi laptop must refresh the main library");
+assert.match(viewer,/RokuDirectConnect/,"Direct Roku connection must be mounted in the main viewer");
+assert.match(viewer,/LaptopLibraryView/,"The main screen must display the laptop library");
+assert.doesNotMatch(viewer,/<FreePlatforms\\s*\\/>/,"External movie-platform links must not be shown");
+assert.match(localLibrary,/item\\.category\\|\\|"Sin categoría"/,"The Android library must group videos by folder category");
+assert.match(laptop,/sebas-laptop-updated/,"Connecting Mi laptop must refresh the main library");
 assert.match(viewer,/profiles\.map\(p=>/,"Family profiles must remain available");
 assert.match(laptop,/localStorage\.getItem\("sebas_laptop_token"\)/,"Laptop token persistence must remain unchanged");
 assert.match(direct,/RokuDiscovery\.discover\(\)/,"Android must discover Roku devices automatically");
