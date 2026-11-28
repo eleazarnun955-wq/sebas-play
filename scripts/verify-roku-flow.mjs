@@ -63,7 +63,11 @@ assert.match(syncFunction, /access-control-allow-headers":"authorization, x-clie
 assert.ok(home.includes('m.actions.ObserveField("buttonSelected", "onActionSelected")'), "Roku action buttons must be wired to their handler");
 console.log("PASS: Android pairing CORS headers, direct laptop handoff and Roku library refresh regression checks.");
 
-assert.ok(catalog.includes('if laptopUrl = "" or laptopToken = "" then') && catalog.includes('m.top.catalog = root') && catalog.includes('        return'), "Roku must stop cleanly until Android passes the laptop connection");
-assert.ok(catalog.includes("loadLaptopCatalog(root, laptopUrl, laptopToken)"), "Roku must load its only catalog from the laptop");
-assert.doesNotMatch(catalog.slice(0, catalog.indexOf("sub loadSeriesEpisodes")), /SebasPlaySupabaseUrl|live_channels|loadCollection/, "Roku home catalog must not load external channel feeds");
-console.log("PASS: Roku uses only the private laptop library; no external TV/channel feeds.");
+assert.ok(catalog.includes('if laptopUrl <> "" and laptopToken <> ""') && catalog.includes('loadLaptopCatalog(root, laptopUrl, laptopToken)'), "Roku must add the private laptop library when Android passes its saved connection");
+assert.match(catalog, /loadCollection\(root, supabaseUrl, publicKey, "movies"/, "Roku must show the published SEBAS PLAY movie catalog");
+assert.match(catalog, /loadSeriesEpisodes\(root, supabaseUrl, publicKey\)/, "Roku must show published series episodes");
+assert.match(catalog, /loadCollection\(root, supabaseUrl, publicKey, "live_channels"/, "Roku must show published live channels");
+assert.match(catalog, /is_published=eq\.true/, "Roku catalog queries must exclude unpublished content");
+assert.match(catalog, /item\.Url = safeString\(entry\.video_url\)/, "Movies must use their direct video URL field");
+assert.match(catalog, /item\.Url = safeString\(entry\.stream_url\)/, "Live channels must use their direct stream URL field");
+console.log("PASS: Roku combines published SEBAS PLAY discovery catalog with the optional private laptop library.");
