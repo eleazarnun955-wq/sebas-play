@@ -329,8 +329,14 @@ end function
 
 function normalizeBaseUrl(value as string) as string
     cleaned = Trim(value)
-    while Len(cleaned) > 0 and Right(cleaned, 1) = "/"
-        cleaned = Left(cleaned, Len(cleaned) - 1)
+    ' Remove punctuation accidentally copied with the address, e.g. http://192.168.1.15:8787.
+    while Len(cleaned) > 0
+        lastChar = Right(cleaned, 1)
+        if lastChar = "/" or lastChar = "." or lastChar = "," or lastChar = ";"
+            cleaned = Left(cleaned, Len(cleaned) - 1)
+        else
+            exit while
+        end if
     end while
     return cleaned
 end function
