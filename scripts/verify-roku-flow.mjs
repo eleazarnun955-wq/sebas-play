@@ -73,6 +73,8 @@ assert.match(catalog, /playableEntry = isDirectPlayableUrl\(entryUrl\)[\s\S]*if 
 assert.match(catalog, /function isDirectLiveStreamUrl[\s\S]*Right\(url, 5\) = "\.m3u8"/, "Roku live TV must reject web pages and non-HLS URLs");
 assert.match(catalog, /item\.StreamFormat = "hls"/, "Roku must play direct live channels as HLS");
 assert.match(catalog, /isDirectPlayableUrl\(safeString\(episode\.video_url\)\)/, "Roku episodes must require direct media URLs");
+assert.match(catalog, /if tableName = "live_channels" then playableEntry = isDirectLiveStreamUrl\(entryUrl\)/, "Roku live TV must use strict HLS-only validation");
+assert.match(catalog, /item\.StreamFormat = "hls"/, "Roku live TV must use the HLS player mode");
 assert.match(catalog, /item\.Url = safeString\(entry\.video_url\)/, "Movies must use their direct video URL field");
 assert.match(catalog, /item\.Url = safeString\(entry\.stream_url\)/, "Live channels must use their direct stream URL field");
 console.log("PASS: Roku combines published SEBAS PLAY discovery catalog with the optional private laptop library.");
