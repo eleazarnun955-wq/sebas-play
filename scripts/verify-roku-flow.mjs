@@ -11,10 +11,8 @@ const playerXml = read("apps/roku/components/PlayerScene.xml");
 
 assert.match(home, /dialog\.ObserveField\("buttonSelected", "onUrlEntered"\)/, "URL dialog must route its selection to onUrlEntered");
 assert.match(home, /m\.top\.dialog = invalid[\s\S]*m\.awaitingToken = true[\s\S]*m\.connectButton\.text = "Introducir token"/, "URL dialog must close before the separate token step is enabled");
+assert.doesNotMatch(home, /dialogTimer|dialogTransition|urlDialogPending/, "No chained keyboard-dialog timer transition may remain");
 assert.match(home, /if m\.awaitingToken then askLaptopToken\(\) else askLaptopUrl\(\)/, "Second press must open token entry rather than immediately opening another keyboard dialog");
-assert.match(home, /m\.dialogTransition = "token"[\s\S]*m\.dialogTimer\.control = "stop"[\s\S]*m\.dialogTimer\.control = "start"/, "URL acceptance must restart a clean token-dialog timer");
-assert.match(home, /m\.urlDialogPending = true[\s\S]*m\.top\.dialog = invalid/, "URL handoff must lock repeated dialog callbacks before closing the URL dialog");
-assert.match(home, /m\.dialogTransition = ""[\s\S]*m\.urlDialogPending = false[\s\S]*askLaptopToken\(\)/, "Token dialog must open only after the pending handoff completes");
 assert.match(home, /dialog\.ObserveField\("buttonSelected", "onTokenEntered"\)/, "Token dialog must route its selection to onTokenEntered");
 assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Successful token entry must persist URL and token in the isolated registry");
 assert.match(catalogXml, /extends="Task"/, "Catalog network work must run in a SceneGraph Task");
@@ -53,5 +51,5 @@ console.log("PASS: Roku catalog, account sync and playback progress transfers ha
 const syncFunction = read("supabase/functions/roku-device-sync/index.ts");
 assert.match(syncFunction, /access-control-allow-headers":"authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage"/, "Supabase function CORS must allow the headers sent by supabase-js browser clients");
 assert.match(home, /dialog\.SetFocus\(true\)/, "Roku URL and token dialogs must explicitly receive focus");
-assert.match(home, /if m\.dialogTimer = invalid[\s\S]*askLaptopToken\(\)/, "Laptop setup must fall back to token entry if the transition timer is unavailable");
+assert.match(home, /m\.actions\.SetFocus\(true\)/, "Home actions must regain focus after closing the URL dialog");
 console.log("PASS: Android pairing CORS headers and Roku dialog focus/fallback regression checks.");
