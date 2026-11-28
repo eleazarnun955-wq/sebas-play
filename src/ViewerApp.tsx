@@ -50,11 +50,6 @@ export default function ViewerApp(){
  const fm=useMemo(()=>movies.filter(x=>(!q||[x.title,x.synopsis||"",...(x.genres||[]),String(x.release_year||""),x.age_rating||"",x.duration_minutes?String(x.duration_minutes):""].join(" ").toLocaleLowerCase().includes(q))&&(activeGenre==="Todos"||(x.genres||[]).some(g=>g.toLocaleLowerCase()===activeGenre.toLocaleLowerCase()))),[movies,q,activeGenre]);
  const fs=useMemo(()=>series.filter(x=>(!q||[x.title,x.synopsis||"",...(x.genres||[]),String(x.release_year||""),x.age_rating||""].join(" ").toLocaleLowerCase().includes(q))&&(activeGenre==="Todos"||(x.genres||[]).some(g=>g.toLocaleLowerCase()===activeGenre.toLocaleLowerCase()))),[series,q,activeGenre]);
  const categories=useMemo(()=>["Todos",...Array.from(new Set([...movies.flatMap(x=>x.genres||[]),...series.flatMap(x=>x.genres||[]),...channels.map(x=>x.category).filter((x):x is string=>Boolean(x))])).sort((a,b)=>a.localeCompare(b,"es"))],[movies,series,channels]);
- const novedades=useMemo(()=>[
-  ...movies.map(item=>({kind:"movie" as const,item,date:item.created_at})),
-  ...series.map(item=>({kind:"series" as const,item,date:item.created_at})),
-  ...channels.map(item=>({kind:"channel" as const,item,date:item.created_at}))
- ].sort((a,b)=>new Date(b.date).getTime()-new Date(a.date).getTime()).slice(0,12),[movies,series,channels]);
  async function playNativeContent(url:string,title:string,type:"movie"|"episode",id:string){
   let progressContext: {supabaseUrl:string;anonKey:string;accessToken:string;userId:string;contentType:"movie"|"episode";contentId:string;profileId:string|null}|undefined;
   if(supabase&&user){
