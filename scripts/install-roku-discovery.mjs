@@ -24,7 +24,7 @@ if(!main.includes("RokuDiscoveryPlugin")){
  main=main.replace(/(public\s+class\s+MainActivity\s+extends\s+BridgeActivity\s*\{)/,"$1\n    @Override public void onCreate(android.os.Bundle state) {\n        registerPlugin(RokuDiscoveryPlugin.class);\n        super.onCreate(state);\n    }");
  fs.writeFileSync(mainPath,main);
 }
-const java = `package ${pkg};
+const java = String.raw`package ${pkg};
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
@@ -62,7 +62,7 @@ public class RokuDiscoveryPlugin extends Plugin {
     Map<String,String> devices=new LinkedHashMap<>();
     try(MulticastSocket socket=new MulticastSocket()){
      socket.setReuseAddress(true);socket.setSoTimeout(450);
-     byte[] request=("M-SEARCH * HTTP/1.1\\r\\nHOST: 239.255.255.250:1900\\r\\nMAN: \"ssdp:discover\"\\r\\nMX: 2\\r\\nST: roku:ecp\\r\\n\\r\\n").getBytes(StandardCharsets.US_ASCII);
+     byte[] request=("M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 2\r\nST: roku:ecp\r\n\r\n").getBytes(StandardCharsets.US_ASCII);
      DatagramPacket packet=new DatagramPacket(request,request.length,InetAddress.getByName("239.255.255.250"),1900);
      socket.send(packet);
      long until=System.currentTimeMillis()+4500;
