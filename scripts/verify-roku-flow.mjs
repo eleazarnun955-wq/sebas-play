@@ -18,7 +18,7 @@ assert.match(home, /ObserveField\("launchLaptopUrl", "onLaunchLaptopConnectionCh
 assert.match(home, /sub onLaunchLaptopConnectionChanged\(\)[\s\S]*loadCatalog\(\)/, "Receiving Android laptop settings must persist them and refresh the Roku library");
 assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Roku must persist the laptop connection received from Android");
 assert.match(main, /args\.DoesExist\("laptopUrl"\)[\s\S]*args\.DoesExist\("laptopToken"\)/, "Roku launch handler must pass Android laptop settings to HomeScene");
-assert.match(home, /else if index = 1\s+loadCatalog\(\)/, "Actualizar biblioteca must reload the laptop and public catalogs");
+assert.match(home, /else if index = 1\s+loadCatalog\(\)/, "Actualizar biblioteca must reload the laptop library");
 assert.doesNotMatch(home, /askLaptopUrl|askLaptopToken/, "Roku must not require manual laptop address or token entry on TV");
 
 assert.match(catalogXml, /extends="Task"/, "Catalog network work must run in a SceneGraph Task");
@@ -59,7 +59,7 @@ assert.match(syncFunction, /access-control-allow-headers":"authorization, x-clie
 assert.ok(home.includes('m.actions.ObserveField("buttonSelected", "onActionSelected")'), "Roku action buttons must be wired to their handler");
 console.log("PASS: Android pairing CORS headers, direct laptop handoff and Roku library refresh regression checks.");
 
-assert.match(catalog, /if laptopUrl = "" or laptopToken = "" then[\\s\\S]*m\.top\.catalog = root[\\s\\S]*return/, "Roku must stop cleanly until Android passes the laptop connection");
-assert.match(catalog, /loadLaptopCatalog\\(root, laptopUrl, laptopToken\\)/, "Roku must load its only catalog from the laptop");
+assert.ok(catalog.includes('if laptopUrl = "" or laptopToken = "" then') && catalog.includes('m.top.catalog = root') && catalog.includes('        return'), "Roku must stop cleanly until Android passes the laptop connection");
+assert.ok(catalog.includes("loadLaptopCatalog(root, laptopUrl, laptopToken)"), "Roku must load its only catalog from the laptop");
 assert.doesNotMatch(catalog.slice(0, catalog.indexOf("sub loadSeriesEpisodes")), /SebasPlaySupabaseUrl|live_channels|loadCollection/, "Roku home catalog must not load external channel feeds");
 console.log("PASS: Roku uses only the private laptop library; no external TV/channel feeds.");
