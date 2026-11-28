@@ -3,6 +3,10 @@ sub Main(args as dynamic)
     port = CreateObject("roMessagePort")
     screen.SetMessagePort(port)
     scene = screen.CreateScene("HomeScene")
+    if type(args) = "roAssociativeArray"
+        if args.DoesExist("laptopUrl") then scene.launchLaptopUrl = args.laptopUrl
+        if args.DoesExist("laptopToken") then scene.launchLaptopToken = args.laptopToken
+    end if
     if type(args) = "roAssociativeArray" and args.DoesExist("contentId")
         scene.launchContentId = args.contentId
         scene.launchMediaType = args.mediaType
