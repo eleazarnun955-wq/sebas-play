@@ -27,7 +27,7 @@ assert.doesNotMatch(catalog, /api\/catalog\?token=/i, "Catalog token must never 
 assert.match(playerXml, /<Video id="video"/, "Native Roku video player must exist");
 assert.match(player, /ObserveField\("state", "onVideoState"\)/, "Player must observe playback state");
 assert.match(player, /state = "error"[\s\S]*state = "finished"/, "Player must handle errors and normal completion");
-console.log("PASS: Roku URL → separate token step → authenticated catalog → playback flow regression checks.");
+console.log("PASS: Android-to-Roku direct laptop handoff and working library refresh.");
 
 const syncTask = read("apps/roku/components/SyncTask.brs");
 const syncTaskXml = read("apps/roku/components/SyncTask.xml");
