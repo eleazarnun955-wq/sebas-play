@@ -82,14 +82,23 @@ public class RokuDiscoveryPlugin extends Plugin {
      }
     }
     for(Map.Entry<String,String> entry:devices.entrySet()){
-     try{
-      String info=httpGet(entry.getValue().replaceAll("/+$","")+"/query/device-info");
-      String apps=httpGet(entry.getValue().replaceAll("/+$","")+"/query/apps");
-      String name=xmlTag(info,"user-device-name");if(name.isEmpty())name=xmlTag(info,"friendly-device-name");if(name.isEmpty())name="Roku "+entry.getKey();
-      String channelId="";Matcher app=Pattern.compile("(?is)<app\\b[^>]*id=\"([^\"]+)\"[^>]*>(.*?)</app>").matcher(apps);
-      while(app.find()){if(app.group(2).trim().equalsIgnoreCase("SEBAS PLAY")||app.group(2).toUpperCase().contains("SEBAS PLAY")){channelId=app.group(1);break;}}
-      JSONObject row=new JSONObject();row.put("ip",entry.getKey());row.put("name",name);row.put("channelId",channelId);row.put("sebasPlayInstalled",!channelId.isEmpty());found.put(row);
-     }catch(Exception ignored){}
+     String info="";String apps="";
+     try{info=httpGet(entry.getValue().replaceAll("/+$","")+"/query/device-info");}catch(Exception ignored){}
+     try{apps=httpGet(entry.getValue().replaceAll("/+$","")+"/query/apps");}catch(Exception ignored){}
+     String name=xmlTag(info,"user-device-name");
+     if(name.isEmpty())name=xmlTag(info,"friendly-device-name");
+     if(name.isEmpty())name="Roku "+entry.getKey();
+     String channelId="";
+     Matcher app=Pattern.compile("(?is)<app\\b[^>]*id=\"([^\"]+)\"[^>]*>(.*?)</app>").matcher(apps);
+     while(app.find()){
+      String title=app.group(2).replaceAll("<[^>]+>","").trim().replace("&amp;","&");
+      if(title.toUpperCase().contains("SEBAS PLAY")){channelId=app.group(1);break;}
+     }
+     boolean installed=!channelId.isEmpty();
+     // Roku developer-mode sideloads use the ECP channel id "dev".
+     // Try it when the app list omits the sideloaded channel; the launch response confirms success.
+     if(channelId.isEmpty())channelId="dev";
+     JSONObject row=new JSONObject();row.put("ip",entry.getKey());row.put("name",name);row.put("channelId",channelId);row.put("sebasPlayInstalled",installed);found.put(row);
     }
     JSObject result=new JSObject();result.put("devices",found);call.resolve(result);
    }catch(Exception e){call.reject("No se pudieron buscar dispositivos Roku en la red local: "+e.getMessage(),e);}
@@ -97,15 +106,20 @@ public class RokuDiscoveryPlugin extends Plugin {
   });
  }
  @PluginMethod public void launch(PluginCall call){
-  String ip=call.getString("ip"), id=call.getString("channelId");
-  if(ip==null||id==null||ip.trim().isEmpty()||id.trim().isEmpty()){call.reject("No se encontró SEBAS PLAY instalado en ese Roku.");return;}
+  String ip=call.getString("ip"), id=call.getString("channelId","dev");
+  if(ip==null||ip.trim().isEmpty()){call.reject("No se recibió la dirección del Roku.");return;}
+  if(id==null||id.trim().isEmpty())id="dev";
   worker.execute(()->{
    try{
     String path="http://"+ip+":8060/launch/"+URLEncoder.encode(id,"UTF-8");
     String contentId=call.getString("contentId","");String mediaType=call.getString("mediaType","");
-    if(!contentId.isEmpty())path+="?contentId="+URLEncoder.encode(contentId,"UTF-8")+"&mediaType="+URLEncoder.encode(mediaType,"UTF-8");
-    HttpURLConnection c=(HttpURLConnection)new URL(path).openConnection();c.setRequestMethod("POST");c.setConnectTimeout(4000);c.setReadTimeout(5000);int status=c.getResponseCode();c.disconnect();
-    if(status>=200&&status<300){JSObject result=new JSObject();result.put("launched",true);call.resolve(result);}else{call.reject("Roku respondió HTTP "+status+".");}
+    String laptopUrl=call.getString("laptopUrl","");String laptopToken=call.getString("laptopToken","");
+    String separator="?";
+    if(!contentId.isEmpty()){path+=separator+"contentId="+URLEncoder.encode(contentId,"UTF-8")+"&mediaType="+URLEncoder.encode(mediaType,"UTF-8");separator="&";}
+    if(!laptopUrl.isEmpty()) {path+=separator+"laptopUrl="+URLEncoder.encode(laptopUrl,"UTF-8");separator="&";}
+    if(!laptopToken.isEmpty())path+=separator+"laptopToken="+URLEncoder.encode(laptopToken,"UTF-8");
+    HttpURLConnection c=(HttpURLConnection)new URL(path).openConnection();c.setRequestMethod("POST");c.setConnectTimeout(5000);c.setReadTimeout(7000);int status=c.getResponseCode();c.disconnect();
+    if(status>=200&&status<300){JSObject result=new JSObject();result.put("launched",true);result.put("channelId",id);call.resolve(result);}else{call.reject("Roku respondió HTTP "+status+" al abrir SEBAS PLAY. Comprueba que el canal esté instalado.");}
    }catch(Exception e){call.reject("No se pudo abrir SEBAS PLAY en Roku: "+e.getMessage(),e);}
   });
  }
@@ -118,7 +132,7 @@ public class RokuDiscoveryPlugin extends Plugin {
 `;
 fs.writeFileSync(path.join(dir,"RokuDiscoveryPlugin.java"),java);
 let manifest=fs.readFileSync(manifestPath,"utf8");
-for (const permission of ["android.permission.INTERNET","android.permission.ACCESS_WIFI_STATE","android.permission.CHANGE_WIFI_MULTICAST_STATE"]) {
+for (const permission of ["android.permission.INTERNET","android.permission.ACCESS_NETWORK_STATE","android.permission.ACCESS_WIFI_STATE","android.permission.CHANGE_WIFI_MULTICAST_STATE"]) {
  if (!manifest.includes(permission)) manifest=manifest.replace("<application", '    <uses-permission android:name="'+permission+'" />\n    <application');
 }
 fs.writeFileSync(manifestPath,manifest);
