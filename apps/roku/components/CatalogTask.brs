@@ -34,7 +34,8 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
     seriesRequest.AddHeader("apikey", key)
     seriesRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     seriesRequest.AddHeader("Accept", "application/json")
-    seriesResponse = seriesRequest.GetToString()
+    seriesResult = getTransferResponse(seriesRequest, 10000)
+    seriesResponse = seriesResult.body
     if seriesResponse = invalid or seriesResponse = "" then return
     shows = ParseJson(seriesResponse)
     if type(shows) <> "roArray" then return
@@ -51,7 +52,8 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
             seasonRequest.AddHeader("apikey", key)
             seasonRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
             seasonRequest.AddHeader("Accept", "application/json")
-            seasonResponse = seasonRequest.GetToString()
+            seasonResult = getTransferResponse(seasonRequest, 10000)
+            seasonResponse = seasonResult.body
             if seasonResponse <> invalid and seasonResponse <> ""
                 seasons = ParseJson(seasonResponse)
                 if type(seasons) = "roArray"
@@ -69,7 +71,8 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
                             episodeRequest.AddHeader("apikey", key)
                             episodeRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
                             episodeRequest.AddHeader("Accept", "application/json")
-                            episodeResponse = episodeRequest.GetToString()
+                            episodeResult = getTransferResponse(episodeRequest, 10000)
+                            episodeResponse = episodeResult.body
                             if episodeResponse <> invalid and episodeResponse <> ""
                                 episodeList = ParseJson(episodeResponse)
                                 if type(episodeList) = "roArray" and episodeList.Count() > 0
@@ -241,7 +244,8 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     request.AddHeader("apikey", key)
     request.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     request.AddHeader("Accept", "application/json")
-    response = request.GetToString()
+    collectionResult = getTransferResponse(request, 10000)
+    response = collectionResult.body
     if response = invalid or response = "" then return
     parsed = ParseJson(response)
     if type(parsed) <> "roArray" then return
@@ -256,7 +260,8 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
         epgRequest.AddHeader("apikey", key)
         epgRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
         epgRequest.AddHeader("Accept", "application/json")
-        epgResponse = epgRequest.GetToString()
+        epgResult = getTransferResponse(epgRequest, 10000)
+        epgResponse = epgResult.body
         if epgResponse <> invalid and epgResponse <> ""
             parsedEpg = ParseJson(epgResponse)
             if type(parsedEpg) = "roArray" then epgPrograms = parsedEpg
