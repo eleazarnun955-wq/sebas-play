@@ -35,9 +35,9 @@ export default function ViewerApp(){
    supabase.from("live_channels").select("*").eq("is_published",true).not("stream_url","is",null).order("created_at",{ascending:false}).limit(40),
   ]);
   if(!alive||requestId!==catalogLoadSequence.current)return;
-  setMovies((movieResult.data||[]) as Movie[]);
-  setSeries((seriesResult.data||[]) as Series[]);
-  setChannels((channelResult.data||[]) as Channel[]);
+  setMovies(((movieResult.data||[]) as Movie[]).filter(item=>Number(item.release_year)>=MIN_CURRENT_CATALOG_YEAR&&isDirectPlayableUrl(item.video_url)));
+  setSeries(((seriesResult.data||[]) as Series[]).filter(item=>Number(item.release_year)>=MIN_CURRENT_CATALOG_YEAR));
+  setChannels(((channelResult.data||[]) as Channel[]).filter(item=>isDirectPlayableUrl(item.stream_url)));
   const catalogError=movieResult.error||seriesResult.error||channelResult.error;
   if(catalogError)setError("No se pudo actualizar todo el catálogo: "+catalogError.message);
   else setError("");
