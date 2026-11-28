@@ -5,6 +5,7 @@ const admin = fs.readFileSync("src/App.tsx", "utf8");
 const candidates = fs.readFileSync("src/LiveChannelCandidates.tsx", "utf8");
 const viewer = fs.readFileSync("src/ViewerApp.tsx", "utf8");
 const rokuCatalog = fs.readFileSync("apps/roku/components/CatalogTask.brs", "utf8");
+const rokuPlayer = fs.readFileSync("apps/roku/components/PlayerScene.brs", "utf8");
 const rokuManifest = fs.readFileSync("apps/roku/manifest", "utf8");
 const androidConfig = fs.readFileSync("capacitor.config.ts", "utf8");
 
@@ -33,4 +34,5 @@ assert.match(rokuManifest, /title=SEBAS PLAY 27\.0/);
 assert.match(rokuManifest, /major_version=27/);
 assert.match(androidConfig, /com\.eleazarcompany\.sebasplay\.v27\.mexicolivetv20261128/);
 assert.match(androidConfig, /SEBAS PLAY 27\.0/);
-assert.match(rsPlayerPlaceholder, /content.StreamFormat = "hls"/);
+assert.match(rokuPlayer, /content\.StreamFormat = "hls"/, "Roku player must force HLS for live channels");
+console.log("PASS: v27 Mexico-first Spanish live-TV candidates are HTTPS HLS only, draft-only until rights review, and filtered for Android/Roku.");
