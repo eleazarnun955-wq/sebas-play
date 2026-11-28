@@ -1,0 +1,33 @@
+import fs from "node:fs";
+import assert from "node:assert/strict";
+
+const viewer=fs.readFileSync("src/ViewerApp.tsx","utf8");
+const laptop=fs.readFileSync("src/LaptopConnection.tsx","utf8");
+const direct=fs.readFileSync("src/RokuDirectConnect.tsx","utf8");
+const nativeInstaller=fs.readFileSync("scripts/install-roku-discovery.mjs","utf8");
+const config=fs.readFileSync("capacitor.config.ts","utf8");
+
+assert.match(viewer,/import LaptopConnection from "\.\/LaptopConnection"/,"Existing laptop connection module must remain imported");
+assert.match(viewer,/onClick=\{\(\)=>setLaptopOpen\(true\)\}[^>]*>[\s\S]*?Mi laptop/,"Mi laptop shortcut must remain visible in the main navigation");
+assert.match(viewer,/RokuDirectConnect/,"Direct Roku connection must remain mounted in the main viewer");
+assert.match(viewer,/profiles\.map\(p=>/,"Family profiles must remain available");
+assert.match(laptop,/localStorage\.getItem\("sebas_laptop_token"\)/,"Existing laptop token persistence must remain unchanged");
+assert.match(direct,/RokuDiscovery\.discover\(\)/,"Android must discover Roku devices automatically");
+assert.match(direct,/localStorage\.getItem\("sebas_laptop_url"\)/,"Android must pass the saved laptop address to Roku");
+assert.match(direct,/localStorage\.getItem\("sebas_laptop_token"\)/,"Android must pass the saved laptop token to Roku");
+assert.match(direct,/const launchResult=await RokuDiscovery\.launch\(\{ip:device\.ip,channelId:device\.channelId\|\|"dev",laptopUrl,laptopToken\}\)/,"Android must launch Roku with laptop connection details");
+assert.match(direct,/if\(!launchResult\?\.launched\)throw new Error/,"Android must require Roku launch confirmation");
+assert.match(direct,/Roku confirmó la apertura de SEBAS PLAY/,"Success message must follow Roku launch confirmation");
+assert.match(nativeInstaller,/M-SEARCH/,"Native Android plugin must perform SSDP discovery");
+assert.match(nativeInstaller,/new URL\(location\)\.getHost\(\)/,"SSDP LOCATION parsing must strip the ECP port before building the Roku address");
+assert.match(nativeInstaller,/CHANGE_WIFI_MULTICAST_STATE/,"Android manifest must allow multicast discovery");
+assert.match(nativeInstaller,/channelId="dev"/,"Native discovery must attempt Roku developer-mode sideloads when app listing omits them");
+assert.match(nativeInstaller,/laptopUrl=/,"Native ECP launch must transfer the laptop address");
+assert.match(nativeInstaller,/laptopToken=/,"Native ECP launch must transfer the laptop token");
+assert.ok(config.includes("com.eleazarcompany.sebasplay.v25.directlivetv20261128"),"v25 must use a new independent package ID");
+assert.ok(config.includes("SEBAS PLAY 25.0"),"Android app must display version 25.0");
+assert.doesNotMatch(viewer,/Vincular Roku/,"Old manual pairing-code entry must not be visible");
+assert.match(viewer,/release_year",MIN_CURRENT_CATALOG_YEAR/,"Android catalog must request recent releases only");
+assert.match(viewer,/isDirectPlayableUrl\(item\.video_url\)/,"Android movies must require a direct playable media URL");
+assert.match(viewer,/isDirectLiveStreamUrl\(item\.stream_url\)/,"Android live channels must require direct HLS streams");
+console.log("PASS: v25 Android SSDP/ECP discovery, recent catalog, direct media URLs, separate package, Mi laptop and profiles preserved.");

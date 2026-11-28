@@ -1,7 +1,8 @@
-title=SEBAS PLAY 13.0
-major_version=13
+title=SEBAS PLAY 25.0
+major_version=25
 minor_version=0
 build_version=00001
 ui_resolutions=fhd,hd
-mm_icon_focus_hd=images/icon_focus_hd.png
-mm_icon_side_hd=images/icon_side_hd.png
+mm_icon_focus_fhd=pkg:/images/icon_focus_fhd.png
+mm_icon_focus_hd=pkg:/images/icon_focus_hd.png
+mm_icon_side_hd=pkg:/images/icon_side_hd.png

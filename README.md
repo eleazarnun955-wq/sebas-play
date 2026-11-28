@@ -65,3 +65,8 @@ La rama `sebas-play-hybrid-storage-android-roku` añade un panel de almacenamien
 La carpeta `server/windows-media` incluye un servidor local de streaming para que la laptop sea el almacenamiento principal de videos. Lee archivos MP4/M4V/MOV/WebM desde `Peliculas`, genera URLs firmadas y soporta HTTP Range para búsqueda/reanudación. Android y Roku continúan leyendo el mismo catálogo Supabase; cada ficha publicada debe guardar en `video_url` la URL firmada generada por la laptop. No se suben los archivos de película a Supabase Storage.
 
 Consulta `docs/WINDOWS-MEDIA-SERVER.md` para instalarlo. Para acceso desde fuera de casa se requiere un hostname HTTPS estable (por ejemplo, Cloudflare Tunnel) configurado en la laptop. La clave de administración y el secreto de firma permanecen exclusivamente en `server-config.bat`, nunca en Android, Roku ni Supabase.
+
+
+## SEBAS PLAY 20.0 — streaming privado inspirado en Tubi
+
+La rama `feature/sebas-play-20-private-tubi-style-20261128` parte de la versión 19.0 y conserva intacto `src/LaptopConnection.tsx` y su botón visible **Mi laptop**. Incluye identidad Android independiente (`com.eleazarcompany.sebasplay.v20.privatestream20261128`), canal Roku versión 20, catálogo visual oscuro con acentos verdes y las funciones ya presentes en el visor: búsqueda, categorías, destacados, fichas, favoritos, perfiles familiares, temporadas/episodios y continuar viendo. No incorpora anuncios ni suscripciones. Publica únicamente videos propios o autorizados; los metadatos o pósteres no otorgan derechos de reproducción. Los workflows de Android APK y Roku ZIP generan artefactos separados y deben finalizar correctamente antes de entregar instaladores. La conexión Roku sigue pendiente de validación en el dispositivo físico.

@@ -14,28 +14,30 @@ const pinHelper = read("supabase/functions/sebas-family-profiles/profile-securit
 
 const appId = capacitor.match(/appId:\s*"([^"]+)"/)?.[1];
 const appName = capacitor.match(/appName:\s*"([^"]+)"/)?.[1];
-assert.equal(appId, "com.eleazarcompany.sebasplay.v13.independiente20261126", "Android 13.0 must retain its unique application ID");
-assert.equal(appName, "SEBAS PLAY 13.0", "Android app label must identify version 13.0");
-assert.notEqual(appId, "com.eleazarcompany.sebasplay.v12.independiente20261126", "13.0 must not replace 12.0");
-assert.notEqual(appId, "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125", "13.0 must not replace 11.0");
+assert.equal(appId, "com.eleazarcompany.sebasplay.v25.directlivetv20261128", "Android 25.0 must retain its unique application ID");
+assert.equal(appName, "SEBAS PLAY 25.0", "Android app label must identify version 25.0");
+assert.notEqual(appId, "com.eleazarcompany.sebasplay.v12.independiente20261126", "25.0 must not replace 12.0");
+assert.notEqual(appId, "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125", "25.0 must not replace 11.0");
 
-assert.match(manifest, /^title=SEBAS PLAY 13\.0$/m);
-assert.match(manifest, /^major_version=13$/m);
+assert.ok(manifest.includes("title=SEBAS PLAY 25.0"),"Roku manifest must identify version 25.0");
+assert.ok(manifest.includes("major_version=25"),"Roku manifest must use major version 25");
 assert.match(manifest, /^minor_version=0$/m);
 for (const [name, source] of [["Roku HomeScene", home], ["Roku PlayerScene", player]]) {
-  assert.match(source, /roRegistrySection", "SEBASPLAY13"/, name + " must use the isolated 13.0 registry");
+  assert.match(source, /roRegistrySection", "SEBASPLAY25"/, name + " must use the isolated 25.0 registry");
   assert.doesNotMatch(source, /roRegistrySection", "SEBASPLAY"/, name + " must not reuse the legacy registry");
 }
-assert.match(androidWorkflow, /com\.eleazarcompany\.sebasplay\.v13\.independiente20261126/);
-assert.match(rokuWorkflow, /SEBAS-PLAY-13-0-ROKU-INDEPENDIENTE/);
+assert.ok(androidWorkflow.includes("com.eleazarcompany.sebasplay.v25.directlivetv20261128"));
+assert.match(rokuWorkflow, /SEBAS-PLAY-25-0-ROKU-INDEPENDIENTE/);
 assert.match(rokuSyncFunction, /pair-device/);
 assert.match(rokuSyncFunction, /revoke-device/);
 assert.match(rokuSyncFunction, /family_profile_watch_progress/);
 assert.match(familyFunction, /verify-profile-pin/);
 assert.match(pinHelper, /PBKDF2/);
-console.log("PASS: Android and Roku 13.0 retain independent package identity, labels, and Roku registry.");
+console.log("PASS: Android and Roku 25.0 retain independent package identity, labels, and Roku registry.");
 
 const viewer = read("src/ViewerApp.tsx");
+assert.match(viewer, /isDirectLiveStreamUrl[\s\S]*\.m3u8/, "Android live TV must accept only direct HLS manifests");
+assert.match(viewer, /setChannels\(\(\(channelResult\.data\|\|\[\]\) as Channel\[\]\)\.filter\(item=>isDirectLiveStreamUrl\(item\.stream_url\)\)\)/, "Android must hide channel pages and non-HLS URLs");
 assert.match(viewer, /onPause=\{e=>\{const v=e\.currentTarget;if\(!v\.ended\)void saveProgress\("movie",selected\.item\.id,v\.currentTime,v\.duration,true\)\}\}/, "Pausing a movie must immediately flush watch progress");
 assert.match(viewer, /onPause=\{e=>\{const v=e\.currentTarget;if\(!v\.ended\)void saveProgress\("episode",episode\.id,v\.currentTime,v\.duration,true\)\}\}/, "Pausing an episode must immediately flush watch progress");
 console.log("PASS: movie and episode pause events immediately persist playback progress.");

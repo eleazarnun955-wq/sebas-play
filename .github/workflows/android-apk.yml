@@ -1,10 +1,10 @@
-name: SEBAS PLAY 16.0 independiente Android APK
+name: SEBAS PLAY 25.0 independiente Android APK
 # Independent package: preserve 13.0 and all previous installs.
 
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-16-netflix-visual-20261127]
+    branches: [feature/sebas-play-25-direct-live-tv-20261128]
     paths:
       - "src/**"
       - "public/**"
@@ -13,7 +13,7 @@ on:
       - "capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
   pull_request:
-    branches: [fix/sebas-play-15-profile-creation-20261127]
+    branches: [feature/sebas-play-16-netflix-visual-20261127]
     paths:
       - "src/**"
       - "public/**"
@@ -42,6 +42,8 @@ jobs:
           java-version: "21"
       - name: Install dependencies
         run: npm install
+      - name: Verify Android Roku pairing and preserve laptop entry
+        run: node scripts/verify-android-pairing.mjs
       - name: Build web app
         run: npm run build
         env:
@@ -55,6 +57,8 @@ jobs:
         run: node scripts/enable-android-local-http.mjs
       - name: Integrate native VLC media engine for Android
         run: node scripts/install-vlc-android.mjs
+      - name: Integrate native Roku local discovery and ECP control
+        run: node scripts/install-roku-discovery.mjs
       - name: Generate SEBAS PLAY Android launcher icons
         run: node scripts/generate-android-icons.mjs
       - name: Build APK for separate installation
@@ -71,12 +75,12 @@ jobs:
             fi
           done
           exit 1
-      - name: Verify package ID is the new independent 16.0 one
+      - name: Verify package ID is the new independent 25.0 one
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)/aapt"
           ACTUAL=$("$AAPT" dump badging "$APK" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p" | head -n 1)
-          EXPECTED="com.eleazarcompany.sebasplay.v16.independiente20261127"
+          EXPECTED="com.eleazarcompany.sebasplay.v25.directlivetv20261128"
           echo "APK package ID: $ACTUAL"
           test -n "$ACTUAL"
           test "$ACTUAL" = "$EXPECTED"
@@ -85,10 +89,10 @@ jobs:
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v13.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v12.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
-      - name: Upload SEBAS PLAY 16.0 APK
+      - name: Upload SEBAS PLAY 25.0 APK
         uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-16-0-ANDROID-INDEPENDIENTE
+          name: SEBAS-PLAY-25-0-ANDROID-INDEPENDIENTE
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14

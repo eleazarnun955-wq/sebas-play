@@ -129,3 +129,96 @@
 .viewer-auth-switch:hover{color:#fff}
 .viewer-feature-play:focus-visible,.viewer-feature-more:focus-visible,.viewer-play:focus-visible,.viewer-category-bar button:focus-visible,.viewer-admin:focus-visible,.viewer-profile-switch:focus-visible,.viewer-admin-storage:focus-visible{outline:2px solid #ff424a;outline-offset:3px}
 @media(max-width:650px){.viewer-category-bar{padding:10px 4vw;gap:7px}.viewer-category-bar button{padding:8px 13px;font-size:10px}.viewer-admin,.viewer-profile-switch,.viewer-admin-storage{padding:8px 11px}}
+
+/* SEBAS PLAY 20.0 — original Tubi-inspired private streaming look */
+.viewer-brand b,.viewer-kicker,.viewer-section-head h2 svg,.viewer-counts svg{color:#a8f05a}
+.viewer-hero-netflix{border:1px solid #293747;border-radius:16px;background-color:#111923;box-shadow:0 18px 55px #0008}
+.viewer-hero-netflix .viewer-kicker{color:#a8f05a}
+.viewer-hero-actions .viewer-feature-play{background:#a8f05a;color:#10170a;border:1px solid #a8f05a}
+.viewer-hero-actions .viewer-feature-more{background:#ffffff18;color:#fff;border:1px solid #ffffff38}
+.viewer-card{border-radius:12px;overflow:hidden}
+.viewer-poster{border-radius:10px;border:1px solid #263447;background:#111923;overflow:hidden}
+.viewer-card:hover .viewer-poster{border-color:#a8f05a;transform:translateY(-3px) scale(1.025);box-shadow:0 14px 30px #000b}
+.viewer-category-bar{background:#0d141e;border-bottom:1px solid #263447}
+.viewer-category-bar button.active{background:#a8f05a;color:#10170a;border-color:#a8f05a}
+.viewer-card:focus-visible,.viewer-feature-play:focus-visible,.viewer-feature-more:focus-visible,.viewer-nav a:focus-visible{outline:2px solid #a8f05a;outline-offset:3px}
+
+
+/* SEBAS PLAY 20.0 — Tubi-inspired horizontal catalog rails */
+.viewer-shell{background:#080d13;color:#f4f7f9}
+.viewer-top{background:rgba(8,13,19,.96);border-bottom:1px solid #263342;backdrop-filter:blur(16px)}
+.viewer-logo{background:#a8f05a;color:#10170a;border-radius:8px}
+.viewer-search{background:#121d28;border:1px solid #2a3a4b;border-radius:10px}
+.viewer-search:focus-within{border-color:#a8f05a;box-shadow:0 0 0 3px #a8f05a20}
+.viewer-admin{background:#172431;border:1px solid #334658;color:#f2f6f8}
+.viewer-admin:hover{background:#203342;border-color:#a8f05a}
+.viewer-nav{background:#0b131c;border-bottom:1px solid #253545}
+.viewer-nav a{color:#d8e1e7}
+.viewer-nav a:hover{color:#a8f05a}
+.viewer-category-bar{background:#0d1721;border-bottom:1px solid #273848}
+.viewer-category-bar button{background:#172431;border:1px solid #34495b;color:#dbe5eb}
+.viewer-category-bar button:hover{background:#203342;border-color:#a8f05a}
+.viewer-category-bar button.active{background:#a8f05a;border-color:#a8f05a;color:#10170a;box-shadow:0 5px 18px #a8f05a25}
+.viewer-section-head h2{color:#f3f7f9}
+.viewer-section-head>span{background:#172431;border-color:#34495b;color:#c6d2d9}
+.viewer-grid{display:flex;gap:14px;overflow-x:auto;overflow-y:hidden;padding:4px 4px 16px;scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:#526a7c transparent}
+.viewer-grid::-webkit-scrollbar{height:6px}
+.viewer-grid::-webkit-scrollbar-thumb{background:#526a7c;border-radius:8px}
+.viewer-card-wrap{position:relative;flex:0 0 clamp(138px,16vw,190px);min-width:0;scroll-snap-align:start}
+.viewer-card{width:100%;text-align:left;gap:8px}
+.viewer-poster{border-radius:11px;border:1px solid #2a3d4e;background:#111d29;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.viewer-card:hover .viewer-poster{border-color:#a8f05a;transform:translateY(-3px) scale(1.025);box-shadow:0 14px 30px #000b}
+.viewer-card-title{color:#f4f7f9}
+.viewer-card small{color:#9fb0bc}
+.viewer-heart{background:#101b25e8;border:1px solid #405366;color:#e8f1f5}
+.viewer-heart.active{color:#a8f05a;border-color:#a8f05a}
+.viewer-hero-netflix{background-color:#111d29;border:1px solid #2d4051}
+.viewer-hero-netflix .viewer-kicker{color:#a8f05a}
+.viewer-feature-play{background:#a8f05a;color:#10170a;border:1px solid #a8f05a}
+.viewer-feature-play:hover{background:#c0ff78;color:#10170a}
+.viewer-feature-more{background:#172431;color:#edf4f7;border:1px solid #526a7c}
+.viewer-history button,.viewer-favs button{background:#14212d;border-color:#33495b;color:#f2f6f8}
+.viewer-history button:hover,.viewer-favs button:hover{border-color:#a8f05a}
+.viewer-detail,.viewer-auth-card,.viewer-admin-storage{background:#101b26;border:1px solid #33495b;color:#f4f7f9}
+.viewer-detail h2,.viewer-auth-card h2{color:#fff}
+.viewer-detail p,.viewer-auth-card p{color:#c0cdd5}
+.viewer-play{background:#a8f05a;border-color:#a8f05a;color:#10170a}
+.viewer-play:hover{background:#c0ff78}
+.viewer-detail-fav{background:#172431;border:1px solid #40566a;color:#eaf2f5}
+.viewer-detail-fav.active{color:#a8f05a;border-color:#a8f05a}
+.viewer-footer{color:#8da1af;border-top:1px solid #263847}
+.viewer-alert{background:#2b1e20;border-color:#794448;color:#ffe8e8}
+@media(max-width:650px){.viewer-grid{gap:11px;padding-bottom:12px}.viewer-card-wrap{flex-basis:clamp(128px,39vw,160px)}.viewer-section{margin-top:24px}}
+
+/* SEBAS PLAY 23.0 — responsive category controls for the private Tubi-style catalog */
+.viewer-category-bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px 0;margin:0 0 12px}.viewer-category-bar button{border:1px solid #34495b;background:#172431;color:#dbe5eb;border-radius:999px;padding:9px 16px;font-size:12px;font-weight:750}.viewer-category-bar button.active{background:#a8f05a;color:#10170a;border-color:#a8f05a}.viewer-filter-count{margin-left:auto;color:#9fb0bc;font-size:12px}
+@media(max-width:650px){.viewer-filter-count{width:100%;margin:2px 0 0}.viewer-category-bar{gap:7px}}
+
+/* SEBAS PLAY v23.0 — Tubi-inspired discovery experience */
+.viewer-shell{background:#080d13;color:#f4f7f9}
+.viewer-top{position:sticky;top:0;z-index:20;min-height:76px;padding:12px clamp(14px,4vw,54px);gap:18px}
+.viewer-search{max-width:520px;flex:1}
+.viewer-hero-netflix{min-height:360px;padding:clamp(24px,5vw,58px);margin-bottom:28px;background-position:center;background-size:cover;border-radius:16px;overflow:hidden}
+.viewer-hero-netflix .viewer-hero-copy{position:relative;z-index:1;max-width:620px}
+.viewer-hero-netflix h1{font-size:clamp(30px,5vw,58px);overflow-wrap:anywhere}
+.viewer-hero-netflix p{font-size:clamp(13px,1.4vw,16px);color:#d5e0e7}
+.viewer-counts{display:flex;flex-wrap:wrap;gap:8px 16px}
+.viewer-counts span{display:inline-flex;align-items:center;gap:7px;font-size:12px}
+.viewer-section{margin-top:30px}
+.viewer-section-head h2{display:flex;align-items:center;gap:10px}
+.viewer-grid{gap:15px}
+.viewer-card{background:transparent;border:0;color:#f4f7f9;min-width:0;flex:0 0 clamp(132px,15vw,184px);padding:0;text-align:left;display:flex;flex-direction:column;gap:7px}
+.viewer-poster{width:100%;aspect-ratio:2/3;display:block;overflow:hidden}
+.viewer-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.viewer-poster-fallback{width:100%;height:100%;min-height:150px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;color:#a8f05a;background:linear-gradient(145deg,#1a2a38,#0e151e)}
+.viewer-card-title{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer-card small{font-size:11px}
+.viewer-card:focus-visible{outline:2px solid #a8f05a;outline-offset:4px;border-radius:12px}
+.viewer-laptop-entry{position:relative;z-index:2}
+@media(max-width:650px){
+ .viewer-top{position:sticky;top:0;flex-wrap:wrap}
+ .viewer-search{order:3;flex-basis:100%;max-width:none}
+ .viewer-hero-netflix{min-height:320px;padding:22px 18px}
+ .viewer-card{flex-basis:clamp(126px,39vw,158px)}
+ .viewer-section{margin-top:23px}
+}

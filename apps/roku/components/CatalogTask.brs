@@ -4,24 +4,23 @@ end sub
 
 sub loadCatalog()
     root = CreateObject("roSGNode", "ContentNode")
-    root.title = "SEBAS PLAY 13.0"
-    laptopUrl = safeString(m.top.laptopUrl)
+    root.title = "SEBAS PLAY 25.0"
+    laptopUrl = normalizeBaseUrl(safeString(m.top.laptopUrl))
     laptopToken = safeString(m.top.laptopToken)
-    url = SebasPlaySupabaseUrl()
-    key = SebasPlayPublishableKey()
-    ' Prioritize the laptop connection so a slow optional catalog cannot hide its result.
-    if laptopUrl <> "" and laptopToken <> "" then
-        m.top.errorMessage = "Conectando con la laptop..."
+
+    ' Build the Roku discovery catalog from the same published SEBAS PLAY
+    ' database used by Android. All network work stays inside this Task node.
+    supabaseUrl = SebasPlaySupabaseUrl()
+    publicKey = SebasPlayPublishableKey()
+    loadCollection(root, supabaseUrl, publicKey, "movies", "Películas recientes 2023–2026", "id,title,synopsis,release_year,age_rating,duration_minutes,poster_url,video_url", "release_year")
+    loadSeriesEpisodes(root, supabaseUrl, publicKey)
+    loadCollection(root, supabaseUrl, publicKey, "live_channels", "Televisión en vivo", "id,name,category,stream_url,logo_url,age_rating", "created_at")
+
+    if laptopUrl <> "" and laptopToken <> ""
+        m.top.errorMessage = "Catálogo SEBAS PLAY cargado. Conectando también con Mi laptop..."
         loadLaptopCatalog(root, laptopUrl, laptopToken)
-        m.top.catalog = root
-    end if
-    if key = "" or key = "REPLACE_WITH_SUPABASE_PUBLISHABLE_KEY"
-        if laptopUrl = "" or laptopToken = "" then m.top.errorMessage = "Configura Supabase o conecta tu laptop desde el botón superior."
     else
-        loadCollection(root, url, key, "movies", "Películas", "id,title,synopsis,poster_url,release_year,age_rating,duration_minutes,video_url", "title")
-        loadCollection(root, url, key, "series", "Series", "id,title,synopsis,poster_url,release_year,age_rating", "title")
-        loadSeriesEpisodes(root, url, key)
-        loadCollection(root, url, key, "live_channels", "TV en vivo", "id,name,logo_url,category,country_code,stream_url", "name")
+        m.top.errorMessage = "Explora el catálogo gratuito de SEBAS PLAY. Para añadir tus archivos, conecta Mi laptop desde Android."
     end if
     m.top.catalog = root
 end sub
@@ -31,11 +30,12 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
     seriesRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
     seriesRequest.InitClientCertificates()
     seriesRequest.SetMinimumTransferRate(1, 20)
-    seriesRequest.SetUrl(baseUrl + "/rest/v1/series?select=id,title&is_published=eq.true&order=created_at.desc&limit=40")
+    seriesRequest.SetUrl(baseUrl + "/rest/v1/series?select=id,title,release_year&is_published=eq.true&release_year=gte.2023&order=release_year.desc&limit=40")
     seriesRequest.AddHeader("apikey", key)
     seriesRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     seriesRequest.AddHeader("Accept", "application/json")
-    seriesResponse = seriesRequest.GetToString()
+    seriesResult = getTransferResponse(seriesRequest, 10000)
+    seriesResponse = seriesResult.body
     if seriesResponse = invalid or seriesResponse = "" then return
     shows = ParseJson(seriesResponse)
     if type(shows) <> "roArray" then return
@@ -52,7 +52,8 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
             seasonRequest.AddHeader("apikey", key)
             seasonRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
             seasonRequest.AddHeader("Accept", "application/json")
-            seasonResponse = seasonRequest.GetToString()
+            seasonResult = getTransferResponse(seasonRequest, 10000)
+            seasonResponse = seasonResult.body
             if seasonResponse <> invalid and seasonResponse <> ""
                 seasons = ParseJson(seasonResponse)
                 if type(seasons) = "roArray"
@@ -66,23 +67,26 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
                             episodeRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
                             episodeRequest.InitClientCertificates()
     episodeRequest.SetMinimumTransferRate(1, 20)
-                            episodeRequest.SetUrl(baseUrl + "/rest/v1/episodes?select=id,title,episode_number,synopsis,duration_minutes,video_url&season_id=eq." + seasonId + "&is_published=eq.true&order=episode_number.asc")
+                            episodeRequest.SetUrl(baseUrl + "/rest/v1/episodes?select=id,title,episode_number,synopsis,duration_minutes,video_url&season_id=eq." + seasonId + "&is_published=eq.true&video_url=not.is.null&order=episode_number.asc")
                             episodeRequest.AddHeader("apikey", key)
                             episodeRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
                             episodeRequest.AddHeader("Accept", "application/json")
-                            episodeResponse = episodeRequest.GetToString()
+                            episodeResult = getTransferResponse(episodeRequest, 10000)
+                            episodeResponse = episodeResult.body
                             if episodeResponse <> invalid and episodeResponse <> ""
                                 episodeList = ParseJson(episodeResponse)
                                 if type(episodeList) = "roArray" and episodeList.Count() > 0
                                     section = CreateObject("roSGNode", "ContentNode")
                                     section.Title = showTitle + " · " + seasonTitle
                                     for each episode in episodeList
+                                        if isDirectPlayableUrl(safeString(episode.video_url)) then
                                         item = section.CreateChild("ContentNode")
                                         item.Title = safeString(episode.episode_number) + ". " + safeString(episode.title)
                                         item.Description = safeString(episode.synopsis)
                                         item.Url = safeString(episode.video_url)
                                         item.StreamFormat = "auto"
                                         item.AddFields({ contentType: "episode", contentId: safeString(episode.id), seriesId: showId, seasonId: seasonId })
+                                        end if
                                     end for
                                     if section.GetChildCount() > 0 then root.AppendChild(section)
                                 end if
@@ -100,16 +104,17 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     healthRequest = CreateObject("roUrlTransfer")
     healthRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
     healthRequest.InitClientCertificates()
-    healthRequest.SetMinimumTransferRate(1, 20)
+    healthRequest.SetMinimumTransferRate(1, 5)
     healthRequest.SetUrl(baseUrl + "/health")
     healthRequest.AddHeader("Accept", "application/json")
-    healthResponse = healthRequest.GetToString()
-    healthCode = healthRequest.GetResponseCode()
+    healthResult = getTransferResponse(healthRequest, 12000)
+    healthResponse = healthResult.body
+    healthCode = healthResult.code
     if healthCode <> 200
         if healthCode > 0
             m.top.errorMessage = "La dirección respondió HTTP " + healthCode.ToStr() + ". Comprueba la dirección base y que el servidor esté encendido."
         else
-            m.top.errorMessage = "No se pudo contactar la laptop. Comprueba que ambos dispositivos tengan internet y que el servidor esté activo."
+            m.top.errorMessage = "La laptop no respondió en 12 segundos. Comprueba que Roku y la laptop estén en la misma red Wi-Fi y que el servidor esté activo."
         end if
         return
     end if
@@ -122,12 +127,13 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     request = CreateObject("roUrlTransfer")
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
-    request.SetMinimumTransferRate(1, 20)
+    request.SetMinimumTransferRate(1, 5)
     request.SetUrl(baseUrl + "/api/catalog")
     request.AddHeader("Authorization", "Bearer " + token)
     request.AddHeader("Accept", "application/json")
-    response = request.GetToString()
-    responseCode = request.GetResponseCode()
+    catalogResult = getTransferResponse(request, 45000)
+    response = catalogResult.body
+    responseCode = catalogResult.code
     if responseCode = 401
         m.top.errorMessage = "TOKEN INCORRECTO: vuelve a conectar y pega el código privado de la laptop."
         return
@@ -138,7 +144,11 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         if responseCode > 0
             m.top.errorMessage = "La laptop respondió con HTTP " + responseCode.ToStr() + ". Revisa el servidor."
         else
-            m.top.errorMessage = "La laptop dejó de responder al solicitar el catálogo. Inténtalo de nuevo."
+            if catalogResult.timedOut
+                m.top.errorMessage = "La biblioteca tardó más de 45 segundos en responder. Revisa que el servidor de Windows siga activo y pulsa Actualizar biblioteca."
+            else
+                m.top.errorMessage = "No se pudo completar la solicitud del catálogo. Comprueba la red y vuelve a intentarlo."
+            end if
         end if
         return
     end if
@@ -232,11 +242,15 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
     request.SetMinimumTransferRate(1, 20)
-    request.SetUrl(baseUrl + "/rest/v1/" + tableName + "?select=" + fields + "&is_published=eq.true&order=created_at.desc&limit=40")
+    extraFilter = ""
+    if tableName = "movies" then extraFilter = "&release_year=gte.2023&video_url=not.is.null"
+    if tableName = "live_channels" then extraFilter = "&stream_url=not.is.null"
+    request.SetUrl(baseUrl + "/rest/v1/" + tableName + "?select=" + fields + "&is_published=eq.true" + extraFilter + "&order=" + sortField + ".desc&limit=40")
     request.AddHeader("apikey", key)
     request.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     request.AddHeader("Accept", "application/json")
-    response = request.GetToString()
+    collectionResult = getTransferResponse(request, 10000)
+    response = collectionResult.body
     if response = invalid or response = "" then return
     parsed = ParseJson(response)
     if type(parsed) <> "roArray" then return
@@ -251,7 +265,8 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
         epgRequest.AddHeader("apikey", key)
         epgRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
         epgRequest.AddHeader("Accept", "application/json")
-        epgResponse = epgRequest.GetToString()
+        epgResult = getTransferResponse(epgRequest, 10000)
+        epgResponse = epgResult.body
         if epgResponse <> invalid and epgResponse <> ""
             parsedEpg = ParseJson(epgResponse)
             if type(parsedEpg) = "roArray" then epgPrograms = parsedEpg
@@ -260,6 +275,11 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     section = CreateObject("roSGNode", "ContentNode")
     section.Title = sectionTitle
     for each entry in parsed
+        entryUrl = safeString(entry.stream_url)
+        if tableName = "movies" then entryUrl = safeString(entry.video_url)
+        playableEntry = isDirectPlayableUrl(entryUrl)
+        if tableName = "live_channels" then playableEntry = isDirectLiveStreamUrl(entryUrl)
+        if playableEntry then
         item = section.CreateChild("ContentNode")
         if tableName = "live_channels"
             item.Title = safeString(entry.name)
@@ -284,6 +304,7 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
                 item.Description = "PRÓXIMO: " + upcomingProgram
             end if
             item.Url = safeString(entry.stream_url)
+            item.StreamFormat = "hls"
             item.HDPosterUrl = safeString(entry.logo_url)
             item.AddFields({ contentType: "channel", contentId: safeString(entry.id) })
         else
@@ -305,11 +326,63 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
             if tableName = "movies" then item.Url = safeString(entry.video_url)
         end if
         item.AddFields({ ageRating: safeString(entry.age_rating) })
+        end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
 end sub
 
+' All server requests are asynchronous so a slow scan or unreachable host
+' cannot freeze the Roku SceneGraph task forever.
+' Wait for an asynchronous Roku URL event with a hard timeout.
+function getTransferResponse(transfer as object, timeoutMs as integer) as object
+    port = CreateObject("roMessagePort")
+    transfer.SetMessagePort(port)
+    started = transfer.AsyncGetToString()
+    if not started
+        return { code: 0, body: "", timedOut: false }
+    end if
+
+    event = Wait(timeoutMs, port)
+    if event = invalid
+        transfer.AsyncCancel()
+        return { code: 0, body: "", timedOut: true }
+    end if
+
+    return { code: event.GetResponseCode(), body: event.GetString(), timedOut: false }
+end function
+
+function normalizeBaseUrl(value as string) as string
+    cleaned = Trim(value)
+    ' Remove punctuation accidentally copied with the address, e.g. http://192.168.1.15:8787.
+    while Len(cleaned) > 0
+        lastChar = Right(cleaned, 1)
+        if lastChar = "/" or lastChar = "." or lastChar = "," or lastChar = ";"
+            cleaned = Left(cleaned, Len(cleaned) - 1)
+        else
+            exit while
+        end if
+    end while
+    return cleaned
+end function
+
 function safeString(value as dynamic) as string
     if value = invalid then return ""
     return value.ToStr()
+end function
+
+function isDirectPlayableUrl(value as string) as boolean
+    url = LCase(Trim(value))
+    if Left(url, 7) <> "http://" and Left(url, 8) <> "https://" then return false
+    pathEnd = Instr(1, url, "?")
+    if pathEnd > 0 then url = Left(url, pathEnd - 1)
+    return Right(url, 5) = ".m3u8" or Right(url, 4) = ".mp4" or Right(url, 4) = ".m4v" or Right(url, 4) = ".mov" or Right(url, 5) = ".webm"
+end function
+
+function isDirectLiveStreamUrl(value as string) as boolean
+    url = LCase(Trim(value))
+    if Left(url, 7) <> "http://" and Left(url, 8) <> "https://" then return false
+    pathEnd = Instr(1, url, "?")
+    if pathEnd > 0 then url = Left(url, pathEnd - 1)
+    if Instr(1, url, "#") > 0 then return false
+    return Right(url, 5) = ".m3u8"
 end function
