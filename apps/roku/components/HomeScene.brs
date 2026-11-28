@@ -1,16 +1,15 @@
 sub init()
     m.rows = m.top.FindNode("catalogRows")
     m.status = m.top.FindNode("status")
-    m.awaitingToken = false
     m.actions = m.top.FindNode("topActions")
     m.rows.ObserveField("rowItemSelected", "onItemSelected")
     m.rows.ObserveField("rowItemFocused", "onItemFocused")
     m.actions.ObserveField("buttonSelected", "onActionSelected")
     m.focusedItem = invalid
     m.connectButton = m.actions.CreateChild("Button")
-    m.connectButton.text = "Conectar laptop"
+    m.connectButton.text = "Conectar desde Android"
     refreshButton = m.actions.CreateChild("Button")
-    refreshButton.text = "Actualizar catálogo"
+    refreshButton.text = "Actualizar biblioteca"
     m.registry = CreateObject("roRegistrySection", "SEBASPLAY19")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
@@ -20,6 +19,16 @@ sub init()
     m.syncedFavorites = []
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
+    launchUrl = safeString(m.top.launchLaptopUrl)
+    launchToken = safeString(m.top.launchLaptopToken)
+    if launchUrl <> "" and launchToken <> ""
+        m.laptopUrl = launchUrl
+        m.laptopToken = launchToken
+        m.registry.Write("laptopUrl", m.laptopUrl)
+        m.registry.Write("laptopToken", m.laptopToken)
+        m.registry.Flush()
+        m.status.text = "Android conectado. Cargando la biblioteca de tu laptop..."
+    end if
     if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
     m.actions.SetFocus(true)
 end sub
@@ -27,103 +36,10 @@ end sub
 sub onActionSelected()
     index = m.actions.buttonSelected
     if index = 0
-        if m.awaitingToken then askLaptopToken() else askLaptopUrl()
+        m.status.text = "Para conectar tu laptop, abre SEBAS PLAY en Android y pulsa Conectar directamente a Roku."
     else if index = 1
-        if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
-    end if
-end sub
-
-sub askLaptopUrl()
-    dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
-    dialog.title = "Dirección de tu laptop"
-    dialog.text = m.laptopUrl
-    dialog.buttons = ["Siguiente", "Cancelar"]
-    dialog.ObserveField("buttonSelected", "onUrlEntered")
-    dialog.ObserveField("wasClosed", "onLaptopDialogClosed")
-    m.pendingDialogAction = ""
-    m.pendingLaptopUrl = ""
-    m.top.dialog = dialog
-    dialog.SetFocus(true)
-end sub
-
-sub onUrlEntered()
-    dialog = m.top.dialog
-    if dialog = invalid then return
-    if dialog.buttonSelected <> 0
-        m.pendingDialogAction = "cancel-url"
-    else
-        enteredUrl = Trim(dialog.text)
-        while Len(enteredUrl) > 0 and Right(enteredUrl, 1) = "/"
-            enteredUrl = Left(enteredUrl, Len(enteredUrl) - 1)
-        end while
-        lowerUrl = LCase(enteredUrl)
-        if Left(lowerUrl, 7) <> "http://" and Left(lowerUrl, 8) <> "https://"
-            m.pendingDialogAction = "invalid-url"
-        else
-            if Right(lowerUrl, 12) = "/api/catalog"
-                enteredUrl = Left(enteredUrl, Len(enteredUrl) - 12)
-            else if Right(lowerUrl, 7) = "/health"
-                enteredUrl = Left(enteredUrl, Len(enteredUrl) - 7)
-            end if
-            m.pendingLaptopUrl = enteredUrl
-            m.pendingDialogAction = "accept-url"
-        end if
-    end if
-    ' Let Roku finish the native keyboard close animation. Do not remove the
-    ' dialog node from Scene.dialog inside its buttonSelected callback.
-    dialog.close = true
-end sub
-
-sub onLaptopDialogClosed()
-    action = m.pendingDialogAction
-    m.pendingDialogAction = ""
-    m.top.dialog = invalid
-    if action = "accept-url"
-        m.laptopUrl = m.pendingLaptopUrl
-        m.awaitingToken = true
-        m.connectButton.text = "Introducir token"
-        m.status.text = "Dirección aceptada. Pulsa Introducir token para continuar."
-    else if action = "invalid-url"
-        m.status.text = "Escribe la dirección completa, empezando con http:// o https://"
-    else if action = "accept-token"
-        m.laptopToken = m.pendingLaptopToken
-        m.awaitingToken = false
-        m.connectButton.text = "Conectar laptop"
-        if m.laptopToken = ""
-            m.status.text = "Falta el token privado. Pulsa Conectar laptop y pega el código de acceso."
-            return
-        end if
-        m.status.text = "Verificando dirección y token de la laptop..."
-        m.registry.Write("laptopUrl", m.laptopUrl)
-        m.registry.Write("laptopToken", m.laptopToken)
-        m.registry.Flush()
         loadCatalog()
     end if
-end sub
-
-sub askLaptopToken()
-    dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
-    dialog.title = "Pega el token privado (solo el código)"
-    dialog.text = m.laptopToken
-    dialog.buttons = ["Conectar", "Cancelar"]
-    dialog.ObserveField("buttonSelected", "onTokenEntered")
-    dialog.ObserveField("wasClosed", "onLaptopDialogClosed")
-    m.pendingDialogAction = ""
-    m.pendingLaptopToken = ""
-    m.top.dialog = dialog
-    dialog.SetFocus(true)
-end sub
-
-sub onTokenEntered()
-    dialog = m.top.dialog
-    if dialog = invalid then return
-    if dialog.buttonSelected <> 0
-        m.pendingDialogAction = "cancel-token"
-    else
-        m.pendingLaptopToken = Trim(dialog.text)
-        m.pendingDialogAction = "accept-token"
-    end if
-    dialog.close = true
 end sub
 
 sub loadCatalog()
