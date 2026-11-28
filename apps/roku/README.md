@@ -1,4 +1,4 @@
-# SEBAS PLAY para Roku 13.0
+# SEBAS PLAY para Roku 20.0
 
 Canal Roku SceneGraph independiente de SEBAS PLAY 12.0, 11.0 y del APK Android.
 
@@ -17,7 +17,7 @@ El workflow de .github/workflows/roku-package.yml crea un ZIP para modo desarrol
 Publica únicamente contenido propio o con autorización/licencia para distribuirlo.
 
 ## Vinculación y sincronización Android
-1. Inicia sesión en SEBAS PLAY 13.0 en Android.
+1. Inicia sesión en SEBAS PLAY 20.0 en Android.
 2. Abre **Vincular Roku** y genera el código temporal.
 3. En Roku, selecciona **Vincular con Android** e introduce el código de 12 caracteres antes de que venza (5 minutos).
 4. El canal guarda el token del dispositivo en el registro local de Roku. No vuelvas a compartir ese token.
