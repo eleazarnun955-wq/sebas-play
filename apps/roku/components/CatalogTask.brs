@@ -4,7 +4,7 @@ end sub
 
 sub loadCatalog()
     root = CreateObject("roSGNode", "ContentNode")
-    root.title = "SEBAS PLAY 23.0"
+    root.title = "SEBAS PLAY 24.0"
     laptopUrl = normalizeBaseUrl(safeString(m.top.laptopUrl))
     laptopToken = safeString(m.top.laptopToken)
 
@@ -12,7 +12,7 @@ sub loadCatalog()
     ' database used by Android. All network work stays inside this Task node.
     supabaseUrl = SebasPlaySupabaseUrl()
     publicKey = SebasPlayPublishableKey()
-    loadCollection(root, supabaseUrl, publicKey, "movies", "Películas para descubrir", "id,title,synopsis,release_year,age_rating,duration_minutes,poster_url,video_url", "created_at")
+    loadCollection(root, supabaseUrl, publicKey, "movies", "Películas recientes 2023–2026", "id,title,synopsis,release_year,age_rating,duration_minutes,poster_url,video_url", "release_year")
     loadSeriesEpisodes(root, supabaseUrl, publicKey)
     loadCollection(root, supabaseUrl, publicKey, "live_channels", "Televisión en vivo", "id,name,category,stream_url,logo_url,age_rating", "created_at")
 
@@ -30,7 +30,7 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
     seriesRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
     seriesRequest.InitClientCertificates()
     seriesRequest.SetMinimumTransferRate(1, 20)
-    seriesRequest.SetUrl(baseUrl + "/rest/v1/series?select=id,title&is_published=eq.true&order=created_at.desc&limit=40")
+    seriesRequest.SetUrl(baseUrl + "/rest/v1/series?select=id,title,release_year&is_published=eq.true&release_year=gte.2023&order=release_year.desc&limit=40")
     seriesRequest.AddHeader("apikey", key)
     seriesRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     seriesRequest.AddHeader("Accept", "application/json")
@@ -67,7 +67,7 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
                             episodeRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
                             episodeRequest.InitClientCertificates()
     episodeRequest.SetMinimumTransferRate(1, 20)
-                            episodeRequest.SetUrl(baseUrl + "/rest/v1/episodes?select=id,title,episode_number,synopsis,duration_minutes,video_url&season_id=eq." + seasonId + "&is_published=eq.true&order=episode_number.asc")
+                            episodeRequest.SetUrl(baseUrl + "/rest/v1/episodes?select=id,title,episode_number,synopsis,duration_minutes,video_url&season_id=eq." + seasonId + "&is_published=eq.true&video_url=not.is.null&order=episode_number.asc")
                             episodeRequest.AddHeader("apikey", key)
                             episodeRequest.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
                             episodeRequest.AddHeader("Accept", "application/json")
@@ -240,7 +240,7 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
     request.SetMinimumTransferRate(1, 20)
-    request.SetUrl(baseUrl + "/rest/v1/" + tableName + "?select=" + fields + "&is_published=eq.true&order=created_at.desc&limit=40")
+    request.SetUrl(baseUrl + "/rest/v1/" + tableName + "?select=" + fields + "&is_published=eq.true" + (if tableName = "movies" then "&release_year=gte.2023&video_url=not.is.null" else if tableName = "live_channels" then "&stream_url=not.is.null" else "") + "&order=" + sortField + ".desc&limit=40")
     request.AddHeader("apikey", key)
     request.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     request.AddHeader("Accept", "application/json")
@@ -357,3 +357,4 @@ function safeString(value as dynamic) as string
     if value = invalid then return ""
     return value.ToStr()
 end function
+\nfunction isDirectPlayableUrl(value as string) as boolean\n    url = LCase(Trim(value))\n    if Left(url, 7) <> "http://" and Left(url, 8) <> "https://" then return false\n    pathEnd = Instr(1, url, "?")\n    if pathEnd > 0 then url = Left(url, pathEnd - 1)\n    return Right(url, 5) = ".m3u8" or Right(url, 4) = ".mp4" or Right(url, 4) = ".m4v" or Right(url, 4) = ".mov" or Right(url, 5) = ".webm"\nend function\n
