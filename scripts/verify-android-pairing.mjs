@@ -30,4 +30,4 @@ assert.doesNotMatch(viewer,/Vincular Roku/,"Old manual pairing-code entry must n
 assert.match(viewer,/release_year",MIN_CURRENT_CATALOG_YEAR/,"Android catalog must request recent releases only");
 assert.match(viewer,/isDirectPlayableUrl\(item\.video_url\)/,"Android movies must require a direct playable media URL");
 assert.match(viewer,/isDirectLiveStreamUrl\(item\.stream_url\)/,"Android live channels must require direct HLS streams");
-console.log("PASS: v25 Android SSDP/ECP discovery, recent catalog, direct media URLs, separate package, Mi laptop and profiles preserved.");
+console.log("PASS: v26 Android SSDP/ECP discovery, recent catalog, direct media URLs, separate package, Mi laptop and profiles preserved.");
