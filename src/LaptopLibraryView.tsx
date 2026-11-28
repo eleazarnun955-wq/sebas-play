@@ -10,7 +10,7 @@ export default function LaptopLibraryView(){
  const [connected,setConnected]=useState(false);
  const [playing,setPlaying]=useState<LaptopItem|null>(null);
  const load=useCallback(async()=>{
-  const base=(localStorage.getItem("sebas_laptop_url")||"").replace(/\\/+$/,"");
+  const base=(localStorage.getItem("sebas_laptop_url")||"").replace(/\/+$/,"");
   const token=localStorage.getItem("sebas_laptop_token")||"";
   if(!base||!token){setConnected(false);setItems([]);setError("Conecta Mi laptop para mostrar aquí tus películas y videos.");return}
   setBusy(true);setError("");
