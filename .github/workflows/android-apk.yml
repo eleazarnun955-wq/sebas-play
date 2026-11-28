@@ -89,7 +89,7 @@ jobs:
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v13.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v12.independiente20261126"
           test "$ACTUAL" != "com.eleazarcompany.sebasplay.v11.miLaptopVlc20261125"
-      - name: Upload SEBAS PLAY 17.0 APK
+      - name: Upload SEBAS PLAY 18.0 APK
         uses: actions/upload-artifact@v4
         with:
           name: SEBAS-PLAY-18-0-ANDROID-INDEPENDIENTE
