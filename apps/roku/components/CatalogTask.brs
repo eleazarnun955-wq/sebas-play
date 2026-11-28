@@ -79,12 +79,14 @@ sub loadSeriesEpisodes(root as object, baseUrl as string, key as string)
                                     section = CreateObject("roSGNode", "ContentNode")
                                     section.Title = showTitle + " · " + seasonTitle
                                     for each episode in episodeList
+                                        if isDirectPlayableUrl(safeString(episode.video_url)) then
                                         item = section.CreateChild("ContentNode")
                                         item.Title = safeString(episode.episode_number) + ". " + safeString(episode.title)
                                         item.Description = safeString(episode.synopsis)
                                         item.Url = safeString(episode.video_url)
                                         item.StreamFormat = "auto"
                                         item.AddFields({ contentType: "episode", contentId: safeString(episode.id), seriesId: showId, seasonId: seasonId })
+                                        end if
                                     end for
                                     if section.GetChildCount() > 0 then root.AppendChild(section)
                                 end if
@@ -240,7 +242,10 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     request.SetCertificatesFile("common:/certs/ca-bundle.crt")
     request.InitClientCertificates()
     request.SetMinimumTransferRate(1, 20)
-    request.SetUrl(baseUrl + "/rest/v1/" + tableName + "?select=" + fields + "&is_published=eq.true" + (if tableName = "movies" then "&release_year=gte.2023&video_url=not.is.null" else if tableName = "live_channels" then "&stream_url=not.is.null" else "") + "&order=" + sortField + ".desc&limit=40")
+    extraFilter = ""
+    if tableName = "movies" then extraFilter = "&release_year=gte.2023&video_url=not.is.null"
+    if tableName = "live_channels" then extraFilter = "&stream_url=not.is.null"
+    request.SetUrl(baseUrl + "/rest/v1/" + tableName + "?select=" + fields + "&is_published=eq.true" + extraFilter + "&order=" + sortField + ".desc&limit=40")
     request.AddHeader("apikey", key)
     request.AddHeader("Authorization", "Bearer " + SebasPlayAnonJwt())
     request.AddHeader("Accept", "application/json")
@@ -270,6 +275,9 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     section = CreateObject("roSGNode", "ContentNode")
     section.Title = sectionTitle
     for each entry in parsed
+        entryUrl = safeString(entry.stream_url)
+        if tableName = "movies" then entryUrl = safeString(entry.video_url)
+        if isDirectPlayableUrl(entryUrl) then
         item = section.CreateChild("ContentNode")
         if tableName = "live_channels"
             item.Title = safeString(entry.name)
@@ -315,6 +323,7 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
             if tableName = "movies" then item.Url = safeString(entry.video_url)
         end if
         item.AddFields({ ageRating: safeString(entry.age_rating) })
+        end if
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
 end sub
