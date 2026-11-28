@@ -7,30 +7,31 @@ sub init()
     m.rows.ObserveField("rowItemFocused", "onItemFocused")
     m.actions.ObserveField("buttonSelected", "onActionSelected")
     m.focusedItem = invalid
-    m.connectButton = m.actions.CreateChild("Button")
-    m.connectButton.text = "Conectar laptop"
     refreshButton = m.actions.CreateChild("Button")
-    refreshButton.text = "Actualizar catálogo"
+    refreshButton.text = "Actualizar biblioteca de mi laptop"
     m.registry = CreateObject("roRegistrySection", "SEBASPLAY18")
     m.laptopUrl = m.registry.Read("laptopUrl")
     m.laptopToken = m.registry.Read("laptopToken")
+    if m.top.launchLaptopUrl <> invalid and m.top.launchLaptopUrl <> "" then m.laptopUrl = m.top.launchLaptopUrl
+    if m.top.launchLaptopToken <> invalid and m.top.launchLaptopToken <> "" then m.laptopToken = m.top.launchLaptopToken
+    if m.laptopUrl <> invalid and m.laptopUrl <> "" and m.laptopToken <> invalid and m.laptopToken <> ""
+        m.registry.Write("laptopUrl", m.laptopUrl)
+        m.registry.Write("laptopToken", m.laptopToken)
+        m.registry.Flush()
+    end if
     m.deviceToken = m.registry.Read("rokuDeviceToken")
     if m.deviceToken = invalid then m.deviceToken = ""
     m.syncedProgress = {}
     m.syncedFavorites = []
     if m.laptopUrl = invalid then m.laptopUrl = ""
     if m.laptopToken = invalid then m.laptopToken = ""
-    if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
+    if m.laptopUrl <> "" and m.laptopToken <> ""\n        loadCatalog()\n    else\n        m.status.text = "Conecta Mi laptop en Android y pulsa Conectar a Roku para enviar tu biblioteca."\n    end if
     m.actions.SetFocus(true)
 end sub
 
 sub onActionSelected()
     index = m.actions.buttonSelected
-    if index = 0
-        if m.awaitingToken then askLaptopToken() else askLaptopUrl()
-    else if index = 1
-        if m.deviceToken <> "" then syncRokuAccount() else loadCatalog()
-    end if
+    if index = 0\n        loadCatalog()\n    end if
 end sub
 
 sub askLaptopUrl()
