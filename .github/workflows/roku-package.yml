@@ -1,9 +1,9 @@
-name: SEBAS PLAY 17.0 independiente Roku channel
+name: SEBAS PLAY 18.0 independiente Roku channel
 
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-17-direct-roku-20261127]
+    branches: [feature/sebas-play-18-roku-dialog-fix-20261127]
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
@@ -26,8 +26,8 @@ jobs:
           test -f apps/roku/components/HomeScene.xml
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
-          grep -q "title=SEBAS PLAY 17.0" apps/roku/manifest
-          grep -q "major_version=17" apps/roku/manifest
+          grep -q "title=SEBAS PLAY 18.0" apps/roku/manifest
+          grep -q "major_version=18" apps/roku/manifest
           grep -q 'roRegistrySection", "SEBASPLAY17"' apps/roku/components/HomeScene.brs
           grep -q 'roRegistrySection", "SEBASPLAY17"' apps/roku/components/PlayerScene.brs
           ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/HomeScene.brs
@@ -41,21 +41,31 @@ jobs:
           python3 generate-icons.py
           test -s images/icon_focus_hd.png
           test -s images/icon_side_hd.png
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          expected = {"icon_focus_hd.png": (336, 210), "icon_side_hd.png": (214, 144)}
+          for name, size in expected.items():
+              with Image.open(Path("images") / name) as im:
+                  assert im.size == size, f"{name}: expected {size}, got {im.size}"
+          PY
+          grep -q "mm_icon_focus_hd=images/icon_focus_hd.png" manifest
+          grep -q "mm_icon_side_hd=images/icon_side_hd.png" manifest
       - name: Package and verify Roku channel ZIP root
         run: |
           mkdir -p dist/roku
           cd apps/roku
-          zip -r ../../dist/roku/SEBAS-PLAY-Roku-17-0.zip . -x "*.DS_Store" "*.zip"
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-18-0.zip . -x "*.DS_Store" "*.zip"
           cd ../..
-          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-17-0.zip > dist/roku/package-files.txt
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-18-0.zip > dist/roku/package-files.txt
           grep -qx "manifest" dist/roku/package-files.txt
-          ! grep -q "SEBAS-PLAY-Roku-17-0.zip" dist/roku/package-files.txt
+          ! grep -q "SEBAS-PLAY-Roku-18-0.zip" dist/roku/package-files.txt
           grep -qx "source/main.brs" dist/roku/package-files.txt
           grep -qx "components/HomeScene.xml" dist/roku/package-files.txt
           echo "Verified: manifest is at ZIP root and no nested ZIP is present."
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-17-0-ROKU-INDEPENDIENTE
-          path: dist/roku/SEBAS-PLAY-Roku-17-0.zip
+          name: SEBAS-PLAY-18-0-ROKU-INDEPENDIENTE
+          path: dist/roku/SEBAS-PLAY-Roku-18-0.zip
           if-no-files-found: error
           retention-days: 14
