@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 out=Path('images'); out.mkdir(exist_ok=True)
-for filename,size in [('icon_focus_hd.png',(336,210)),('icon_side_hd.png',(214,144))]:
+for filename,size in [('icon_focus_fhd.png',(540,405)),('icon_focus_hd.png',(290,218)),('icon_side_hd.png',(214,144))]:
  w,h=size; im=Image.new('RGB',size,(8,13,26)); p=im.load()
  for y in range(h):
   for x in range(w):
