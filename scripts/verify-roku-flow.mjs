@@ -10,12 +10,13 @@ const player = read("apps/roku/components/PlayerScene.brs");
 const playerXml = read("apps/roku/components/PlayerScene.xml");
 
 const main = read("apps/roku/source/main.brs");
+const manifest = read("apps/roku/manifest");
 
 assert.match(home, /m\.connectButton\.text = "Conectar desde Android"/, "Roku must direct laptop setup through Android instead of asking for codes on TV");
 assert.match(home, /m\.top\.launchLaptopUrl/, "Roku scene must receive the laptop address from Android");
 assert.match(home, /m\.top\.launchLaptopToken/, "Roku scene must receive the laptop token from Android");
-assert.match(home, /ObserveField\("launchLaptopUrl", "onLaunchLaptopConnectionChanged"\)[\s\S]*ObserveField\("launchLaptopToken", "onLaunchLaptopConnectionChanged"\)/, "Roku must observe Android launch arguments even when they arrive after SceneGraph init");
-assert.match(home, /sub onLaunchLaptopConnectionChanged\(\)[\s\S]*loadCatalog\(\)/, "Receiving Android laptop settings must persist them and refresh the Roku library");
+assert.match(home, /ObserveField\("launchLaptopUrl", "onLegacyLaunchLaptopConnectionChanged"\)[\s\S]*ObserveField\("launchLaptopToken", "onLegacyLaunchLaptopConnectionChanged"\)/, "Roku must retain compatibility with older launch arguments");
+assert.match(home, /sub onLaunchLaptopConnectionChanged\(\)[\s\S]*applyLaptopConnection\(/, "Roku must process the atomic ECP input payload");
 assert.match(home, /m\.registry\.Write\("laptopUrl", m\.laptopUrl\)[\s\S]*m\.registry\.Write\("laptopToken", m\.laptopToken\)/, "Roku must persist the laptop connection received from Android");
 assert.match(home, /sub applyLaptopConnection\([\s\S]*loadCatalog\(\)/, "Atomic ECP payload must update saved laptop settings and refresh the library");
 
@@ -24,6 +25,7 @@ assert.match(main, /type\(msg\) = "roInputEvent"[\s\S]*msg\.GetInfo\(\)[\s\S]*sc
 assert.match(homeXml, /field id="launchConnection" type="assocarray"/, "HomeScene must accept the atomic Android connection payload");
 assert.match(home, /ObserveField\("launchConnection", "onLaunchLaptopConnectionChanged"\)/, "HomeScene must observe ECP input launch data");
 assert.match(main, /args\.DoesExist\("laptopUrl"\)[\s\S]*args\.DoesExist\("laptopToken"\)/, "Cold Roku launch must pass both laptop values");
+assert.match(manifest, /supports_input_launch=1/, "Roku must accept ECP deep links without restarting an already-running channel");
 
 assert.match(home, /else if index = 1\s+loadCatalog\(\)/, "Actualizar biblioteca must reload the laptop library");
 assert.doesNotMatch(home, /askLaptopUrl|askLaptopToken/, "Roku must not require manual laptop address or token entry on TV");
