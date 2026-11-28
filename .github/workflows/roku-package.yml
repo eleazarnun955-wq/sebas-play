@@ -8,6 +8,7 @@ on:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
       - "scripts/verify-live-tv.mjs"
+      - "scripts/verify-live-tv.mjs"
       - ".github/workflows/roku-package.yml"
   pull_request:
     branches: [main]
