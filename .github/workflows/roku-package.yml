@@ -7,6 +7,7 @@ on:
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
+      - "scripts/verify-live-tv.mjs"
       - ".github/workflows/roku-package.yml"
   pull_request:
     branches: [main]
@@ -19,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate independent Roku 25.0 channel
+      - name: Validate independent Roku 26.0 channel
         run: |
           test -f apps/roku/manifest
           test -f apps/roku/source/main.brs
