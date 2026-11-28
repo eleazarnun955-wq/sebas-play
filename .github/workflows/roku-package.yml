@@ -3,7 +3,7 @@ name: SEBAS PLAY 19.0 independiente Roku channel
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-19-roku-standard-keyboard-icons-20261128]
+    branches: [feature/sebas-play-19-direct-android-roku-20261128]
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
