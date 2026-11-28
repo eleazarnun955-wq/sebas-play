@@ -24,10 +24,10 @@ assert.match(nativeInstaller,/CHANGE_WIFI_MULTICAST_STATE/,"Android manifest mus
 assert.match(nativeInstaller,/channelId="dev"/,"Native discovery must attempt Roku developer-mode sideloads when app listing omits them");
 assert.match(nativeInstaller,/laptopUrl=/,"Native ECP launch must transfer the laptop address");
 assert.match(nativeInstaller,/laptopToken=/,"Native ECP launch must transfer the laptop token");
-assert.ok(config.includes("com.eleazarcompany.sebasplay.v24.currentcatalog20261128"),"v24 must use a new independent package ID");
-assert.ok(config.includes("SEBAS PLAY 24.0"),"Android app must display version 24.0");
+assert.ok(config.includes("com.eleazarcompany.sebasplay.v25.directlivetv20261128"),"v24 must use a new independent package ID");
+assert.ok(config.includes("SEBAS PLAY 25.0"),"Android app must display version 24.0");
 assert.doesNotMatch(viewer,/Vincular Roku/,"Old manual pairing-code entry must not be visible");
 assert.match(viewer,/release_year",MIN_CURRENT_CATALOG_YEAR/,"Android catalog must request recent releases only");
 assert.match(viewer,/isDirectPlayableUrl\(item\.video_url\)/,"Android movies must require a direct playable media URL");
-assert.match(viewer,/isDirectPlayableUrl\(item\.stream_url\)/,"Android live channels must require direct stream URLs");
-console.log("PASS: v24 Android SSDP/ECP discovery, recent catalog, direct media URLs, separate package, Mi laptop and profiles preserved.");
+assert.match(viewer,/isDirectLiveStreamUrl\(item\.stream_url\)/,"Android live channels must require direct HLS streams");
+console.log("PASS: v25 Android SSDP/ECP discovery, recent catalog, direct media URLs, separate package, Mi laptop and profiles preserved.");
