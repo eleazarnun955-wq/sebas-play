@@ -47,7 +47,6 @@ sub onUrlEntered()
     dialog = m.top.dialog
     if dialog = invalid or dialog.buttonSelected <> 0 then
         dialog.close = true
-        dialog.close = true
         m.top.dialog = invalid
         return
     end if
@@ -68,14 +67,13 @@ sub onUrlEntered()
         m.laptopUrl = Left(m.laptopUrl, Len(m.laptopUrl) - 7)
     end if
     ' Close the keyboard dialog and return focus before opening the token dialog.
-    ' Opening a second KeyboardDialog from the first dialog's button callback can
+    ' Opening a second keyboard dialog from the first dialog's button callback can
     ' leave some Roku firmware versions stuck in the dialog transition.
     dialog.close = true
     m.top.dialog = invalid
     m.awaitingToken = true
     m.connectButton.text = "Introducir token"
     m.status.text = "Dirección aceptada. Pulsa Introducir token para continuar."
-    m.actions.SetFocus(true)
 end sub
 
 sub askLaptopToken()
