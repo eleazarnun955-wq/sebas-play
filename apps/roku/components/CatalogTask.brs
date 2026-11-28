@@ -89,19 +89,14 @@ end sub
 
 sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     ' First verify that the address really points to the Windows media server.
-    healthRequest = CreateObject("roUrlTransfer")
-    healthRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    healthRequest.InitClientCertificates()
-    healthRequest.SetMinimumTransferRate(1, 5)
-    healthRequest.SetUrl(baseUrl + "/health")
-    healthRequest.AddHeader("Accept", "application/json")
-    healthResponse = healthRequest.GetToString()
-    healthCode = healthRequest.GetResponseCode()
+    healthResult = getServerResponse(baseUrl + "/health", "")
+    healthResponse = healthResult.body
+    healthCode = healthResult.code
     if healthCode <> 200
         if healthCode > 0
             m.top.errorMessage = "La dirección respondió HTTP " + healthCode.ToStr() + ". Comprueba la dirección base y que el servidor esté encendido."
         else
-            m.top.errorMessage = "No se pudo contactar la laptop. Comprueba que ambos dispositivos tengan internet y que el servidor esté activo."
+            m.top.errorMessage = "La laptop no respondió en 12 segundos. Comprueba que Roku y la laptop estén en la misma red Wi-Fi y que el servidor esté activo."
         end if
         return
     end if
@@ -111,15 +106,9 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         return
     end if
 
-    request = CreateObject("roUrlTransfer")
-    request.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    request.InitClientCertificates()
-    request.SetMinimumTransferRate(1, 5)
-    request.SetUrl(baseUrl + "/api/catalog")
-    request.AddHeader("Authorization", "Bearer " + token)
-    request.AddHeader("Accept", "application/json")
-    response = request.GetToString()
-    responseCode = request.GetResponseCode()
+    catalogResult = getServerResponse(baseUrl + "/api/catalog", token)
+    response = catalogResult.body
+    responseCode = catalogResult.code
     if responseCode = 401
         m.top.errorMessage = "TOKEN INCORRECTO: vuelve a conectar y pega el código privado de la laptop."
         return
@@ -130,7 +119,7 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         if responseCode > 0
             m.top.errorMessage = "La laptop respondió con HTTP " + responseCode.ToStr() + ". Revisa el servidor."
         else
-            m.top.errorMessage = "La laptop dejó de responder al solicitar el catálogo. Inténtalo de nuevo."
+            if catalogResult.timedOut\n            m.top.errorMessage = "La biblioteca tardó más de 45 segundos en responder. Revisa que el servidor de Windows siga activo y pulsa Actualizar biblioteca."\n        else\n            m.top.errorMessage = "No se pudo completar la solicitud del catálogo. Comprueba la red y vuelve a intentarlo."\n        end if
         end if
         return
     end if
@@ -300,6 +289,35 @@ sub loadCollection(root as object, baseUrl as string, key as string, tableName a
     end for
     if section.GetChildCount() > 0 then root.AppendChild(section)
 end sub
+
+' All server requests are asynchronous so a slow scan or unreachable host
+' cannot freeze the Roku SceneGraph task forever.
+function getServerResponse(url as string, token as string) as object
+    transfer = CreateObject("roUrlTransfer")
+    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    transfer.InitClientCertificates()
+    transfer.SetMinimumTransferRate(1, 5)
+    transfer.SetUrl(url)
+    transfer.AddHeader("Accept", "application/json")
+    if token <> "" then transfer.AddHeader("Authorization", "Bearer " + token)
+
+    port = CreateObject("roMessagePort")
+    transfer.SetMessagePort(port)
+    started = transfer.AsyncGetToString()
+    if not started
+        return { code: 0, body: "", timedOut: false }
+    end if
+
+    timeoutMs = 12000
+    if Instr(1, url, "/api/catalog") > 0 then timeoutMs = 45000
+    event = Wait(timeoutMs, port)
+    if event = invalid
+        transfer.AsyncCancel()
+        return { code: 0, body: "", timedOut: true }
+    end if
+
+    return { code: event.GetResponseCode(), body: event.GetString(), timedOut: false }
+end function
 
 function normalizeBaseUrl(value as string) as string
     cleaned = Trim(value)
