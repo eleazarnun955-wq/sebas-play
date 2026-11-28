@@ -1,9 +1,9 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  // SEBAS PLAY 28.0: unique package ID so all previous versions remain installed.
-  appId: "com.eleazarcompany.sebasplay.v28.cinematicintro20261128",
-  appName: "SEBAS PLAY 28.0",
+  // SEBAS PLAY 29.0: unique package ID so all previous versions remain installed.
+  appId: "com.eleazarcompany.sebasplay.v29.femaleneuralvoice20261128",
+  appName: "SEBAS PLAY 29.0",
   webDir: "dist",
   bundledWebRuntime: false,
   android: { allowMixedContent: true }

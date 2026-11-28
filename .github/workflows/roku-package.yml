@@ -1,9 +1,9 @@
-name: SEBAS PLAY 28.0 independiente Roku channel
+name: SEBAS PLAY 29.0 independiente Roku channel
 
 on:
   workflow_dispatch:
   push:
-    branches: [feature/sebas-play-28-cinematic-intro-20261128]
+    branches: [feature/sebas-play-29-female-neural-voice-20261128]
     paths:
       - "apps/roku/**"
       - "scripts/verify-roku-flow.mjs"
@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate independent Roku 28.0 channel
+      - name: Validate independent Roku 29.0 channel
         run: |
           test -f apps/roku/manifest
           test -f apps/roku/source/main.brs
           test -f apps/roku/components/HomeScene.xml
           test -f apps/roku/components/CatalogTask.xml
           test -f apps/roku/components/PlayerScene.xml
-          grep -q "title=SEBAS PLAY 28.0" apps/roku/manifest
-          grep -q "major_version=28" apps/roku/manifest
+          grep -q "title=SEBAS PLAY 29.0" apps/roku/manifest
+          grep -q "major_version=29" apps/roku/manifest
           grep -q 'roRegistrySection", "SEBASPLAY27"' apps/roku/components/HomeScene.brs
           grep -q 'roRegistrySection", "SEBASPLAY27"' apps/roku/components/PlayerScene.brs
           ! grep -q 'roRegistrySection", "SEBASPLAY"' apps/roku/components/HomeScene.brs
@@ -57,29 +57,28 @@ jobs:
           grep -q "mm_icon_focus_fhd=pkg:/images/icon_focus_fhd.png" manifest
           grep -q "mm_icon_focus_hd=pkg:/images/icon_focus_hd.png" manifest
           grep -q "mm_icon_side_hd=pkg:/images/icon_side_hd.png" manifest
-      - name: Generate original spoken SEBAS PLAY intro audio
+      - name: Generate natural Mexican female neural SEBAS PLAY voice
         run: |
-          sudo apt-get update
-          sudo apt-get install -y espeak
+          python3 -m pip install --quiet edge-tts
           mkdir -p apps/roku/audio
-          espeak -v es-la -s 135 -p 48 -a 180 -w apps/roku/audio/sebas-play-intro.wav "SEBAS PLAY"
-          test -s apps/roku/audio/sebas-play-intro.wav
+          edge-tts --voice es-MX-DaliaNeural --rate=-8% --pitch=+2Hz --text "SEBAS... PLAY" --write-media apps/roku/audio/sebas-play-intro.mp3
+          test -s apps/roku/audio/sebas-play-intro.mp3
       - name: Package and verify Roku channel ZIP root
         run: |
           mkdir -p dist/roku
           cd apps/roku
-          zip -r ../../dist/roku/SEBAS-PLAY-Roku-28-0.zip . -x "*.DS_Store" "*.zip"
+          zip -r ../../dist/roku/SEBAS-PLAY-Roku-29-0.zip . -x "*.DS_Store" "*.zip"
           cd ../..
-          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-28-0.zip > dist/roku/package-files.txt
+          unzip -Z1 dist/roku/SEBAS-PLAY-Roku-29-0.zip > dist/roku/package-files.txt
           grep -qx "manifest" dist/roku/package-files.txt
-          ! grep -q "SEBAS-PLAY-Roku-28-0.zip" dist/roku/package-files.txt
+          ! grep -q "SEBAS-PLAY-Roku-29-0.zip" dist/roku/package-files.txt
           grep -qx "source/main.brs" dist/roku/package-files.txt
           grep -qx "components/HomeScene.xml" dist/roku/package-files.txt
-          grep -qx "audio/sebas-play-intro.wav" dist/roku/package-files.txt
+          grep -qx "audio/sebas-play-intro.mp3" dist/roku/package-files.txt
           echo "Verified: manifest is at ZIP root and no nested ZIP is present."
       - uses: actions/upload-artifact@v4
         with:
-          name: SEBAS-PLAY-28-0-ROKU-INDEPENDIENTE
-          path: dist/roku/SEBAS-PLAY-Roku-28-0.zip
+          name: SEBAS-PLAY-29-0-ROKU-INDEPENDIENTE
+          path: dist/roku/SEBAS-PLAY-Roku-29-0.zip
           if-no-files-found: error
           retention-days: 14
