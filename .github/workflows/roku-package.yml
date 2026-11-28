@@ -9,7 +9,7 @@ on:
       - "scripts/verify-roku-flow.mjs"
       - ".github/workflows/roku-package.yml"
   pull_request:
-    branches: [feature/sebas-play-17-direct-roku-20261127]
+    branches: [feature/sebas-play-16-netflix-visual-20261127]
     paths:
       - "apps/roku/**"
       - ".github/workflows/roku-package.yml"
