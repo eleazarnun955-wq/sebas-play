@@ -89,7 +89,13 @@ end sub
 
 sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
     ' First verify that the address really points to the Windows media server.
-    healthResult = getServerResponse(baseUrl + "/health", "")
+    healthRequest = CreateObject("roUrlTransfer")
+    healthRequest.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    healthRequest.InitClientCertificates()
+    healthRequest.SetMinimumTransferRate(1, 5)
+    healthRequest.SetUrl(baseUrl + "/health")
+    healthRequest.AddHeader("Accept", "application/json")
+    healthResult = getTransferResponse(healthRequest, 12000)
     healthResponse = healthResult.body
     healthCode = healthResult.code
     if healthCode <> 200
@@ -106,7 +112,14 @@ sub loadLaptopCatalog(root as object, baseUrl as string, token as string)
         return
     end if
 
-    catalogResult = getServerResponse(baseUrl + "/api/catalog", token)
+    request = CreateObject("roUrlTransfer")
+    request.SetCertificatesFile("common:/certs/ca-bundle.crt")
+    request.InitClientCertificates()
+    request.SetMinimumTransferRate(1, 5)
+    request.SetUrl(baseUrl + "/api/catalog")
+    request.AddHeader("Authorization", "Bearer " + token)
+    request.AddHeader("Accept", "application/json")
+    catalogResult = getTransferResponse(request, 45000)
     response = catalogResult.body
     responseCode = catalogResult.code
     if responseCode = 401
@@ -296,15 +309,8 @@ end sub
 
 ' All server requests are asynchronous so a slow scan or unreachable host
 ' cannot freeze the Roku SceneGraph task forever.
-function getServerResponse(url as string, token as string) as object
-    transfer = CreateObject("roUrlTransfer")
-    transfer.SetCertificatesFile("common:/certs/ca-bundle.crt")
-    transfer.InitClientCertificates()
-    transfer.SetMinimumTransferRate(1, 5)
-    transfer.SetUrl(url)
-    transfer.AddHeader("Accept", "application/json")
-    if token <> "" then transfer.AddHeader("Authorization", "Bearer " + token)
-
+' Wait for an asynchronous Roku URL event with a hard timeout.
+function getTransferResponse(transfer as object, timeoutMs as integer) as object
     port = CreateObject("roMessagePort")
     transfer.SetMessagePort(port)
     started = transfer.AsyncGetToString()
@@ -312,8 +318,6 @@ function getServerResponse(url as string, token as string) as object
         return { code: 0, body: "", timedOut: false }
     end if
 
-    timeoutMs = 12000
-    if Instr(1, url, "/api/catalog") > 0 then timeoutMs = 45000
     event = Wait(timeoutMs, port)
     if event = invalid
         transfer.AsyncCancel()
