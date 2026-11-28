@@ -77,7 +77,7 @@ public class RokuDiscoveryPlugin extends Plugin {
        byte[] buf=new byte[8192];DatagramPacket reply=new DatagramPacket(buf,buf.length);socket.receive(reply);
        String headers=new String(reply.getData(),0,reply.getLength(),StandardCharsets.UTF_8);
        Matcher m=Pattern.compile("(?im)^LOCATION:\\s*(http://[^\\r\\n]+)").matcher(headers);
-       if(m.find()){String location=m.group(1).trim();String host=location.replaceFirst("^http://","").replaceFirst("/.*$","");devices.put(host,location);}
+       if(m.find()){String location=m.group(1).trim();String host=new URL(location).getHost();if(host!=null&&!host.isEmpty())devices.put(host,location);}
       }catch(java.net.SocketTimeoutException timeout){continue;}
      }
     }
