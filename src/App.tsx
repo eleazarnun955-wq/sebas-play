@@ -251,7 +251,7 @@ export default function App() {
     if (!supabase) return;
     let streamUrl: URL;
     try { streamUrl = new URL(channelForm.stream.trim()); } catch { notify("error", "La señal debe ser una URL HLS directa válida."); return; }
-    if (streamUrl.protocol !== "https:" || !/\\.m3u8$/i.test(streamUrl.pathname) || streamUrl.hash) {
+    if (streamUrl.protocol !== "https:" || !/\.m3u8$/i.test(streamUrl.pathname) || streamUrl.hash) {
       notify("error", "Solo se aceptan señales HLS directas HTTPS terminadas en .m3u8; no páginas web ni enlaces de portales.");
       return;
     }
@@ -277,7 +277,7 @@ export default function App() {
       const { data, error: channelError } = await supabase.from("live_channels").select("stream_url,rights_note").eq("id", id).single();
       if (channelError || !data) { notify("error", channelError?.message || "No se pudo revisar la señal."); return; }
       let directHls = false;
-      try { const parsed = new URL(data.stream_url); directHls = parsed.protocol === "https:" && /\\.m3u8$/i.test(parsed.pathname) && !parsed.hash; } catch { directHls = false; }
+      try { const parsed = new URL(data.stream_url); directHls = parsed.protocol === "https:" && /\.m3u8$/i.test(parsed.pathname) && !parsed.hash; } catch { directHls = false; }
       if (!directHls) { notify("error", "No se puede publicar: el canal no tiene una URL HLS directa HTTPS."); return; }
       if (!String(data.rights_note || "").trim()) { notify("error", "No se puede publicar: primero documenta la autorización o los derechos de esta señal."); return; }
     }
